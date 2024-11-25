@@ -7,6 +7,7 @@ export function Sidebar() {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Accounts', href: '/accounts', icon: FileSpreadsheet },
+    { name: 'Users', href: '/users', icon: Users },
     { name: 'Profile', href: '/profile', icon: Users },
     { name: 'Settings', href: '/settings', icon: Settings }
   ];
