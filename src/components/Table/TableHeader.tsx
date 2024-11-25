@@ -1,4 +1,4 @@
-import { Column, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 type SortDirection = 'asc' | 'desc' | null;
 

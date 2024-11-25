@@ -6,6 +6,9 @@ import { Settings } from './pages/Settings';
 import { Accounts } from './pages/Accounts';
 import { NewAccount } from './pages/NewAccount';
 import { UpdateAccount } from './pages/UpdateAccount';
+import { Users } from './pages/Users';
+import { NewUser } from './pages/NewUser';
+import { UpdateUser } from './pages/UpdateUser';
 import { Login } from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -32,6 +35,9 @@ export default function App() {
             <Route path="accounts" element={<Accounts />} />
             <Route path="accounts/new" element={<NewAccount />} />
             <Route path="accounts/:number" element={<UpdateAccount />} />
+            <Route path="users" element={<Users />} />
+            <Route path="users/new" element={<NewUser />} />
+            <Route path="users/:email" element={<UpdateUser />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
           </Route>
