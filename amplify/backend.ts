@@ -1,11 +1,27 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
+import { storage } from './storage/resource';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
  */
-defineBackend({
+const backend = defineBackend({
   auth,
   data,
+  storage
 });
+
+// extract L1 CfnUserPool resources
+const { cfnUserPool } = backend.auth.resources.cfnResources;
+// modify cfnUserPool policies directly
+cfnUserPool.policies = {
+  passwordPolicy: {
+    minimumLength: 20,
+    requireLowercase: false,
+    requireNumbers: true,
+    requireSymbols: false,
+    requireUppercase: false,
+    temporaryPasswordValidityDays: 20,
+  },
+};

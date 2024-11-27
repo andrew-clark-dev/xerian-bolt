@@ -1,4 +1,4 @@
-import { Column, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -22,16 +22,16 @@ export function TableHeader<T>({
   onSort,
 }: TableHeaderProps<T>) {
   return (
-    <thead className="bg-gray-50">
+    <thead className="bg-gray-50 dark:bg-gray-800">
       <tr>
         {columns.map((column) => (
           <th
             key={column.key as string}
-            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
           >
             {column.sortable ? (
               <button
-                className="flex items-center gap-1 hover:text-gray-700"
+                className="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-300"
                 onClick={() => onSort(column.key)}
               >
                 {column.label}
@@ -39,15 +39,15 @@ export function TableHeader<T>({
                   <ChevronUp
                     className={`w-3 h-3 ${
                       sortColumn === column.key && sortDirection === 'asc'
-                        ? 'text-blue-600'
-                        : 'text-gray-400'
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : 'text-gray-400 dark:text-gray-600'
                     }`}
                   />
                   <ChevronDown
                     className={`w-3 h-3 -mt-1 ${
                       sortColumn === column.key && sortDirection === 'desc'
-                        ? 'text-blue-600'
-                        : 'text-gray-400'
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : 'text-gray-400 dark:text-gray-600'
                     }`}
                   />
                 </span>
