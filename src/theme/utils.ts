@@ -6,9 +6,12 @@ type StatusVariant = keyof typeof themeConfig.colors.status;
 type ComponentVariant = keyof typeof themeConfig.components;
 
 export const theme = {
-  color: (color: ThemeColor, variant: ThemeVariant = 'primary') => {
-    const colorConfig = themeConfig.colors[color][variant as keyof typeof themeConfig.colors[ThemeColor]];
-    return `${colorConfig.light} ${colorConfig.dark}`;
+  color: (color: 'primary', variant: ThemeVariant = 'primary') => {
+    const colorConfig = themeConfig.colors[color];
+    if (!colorConfig || !('light' in colorConfig)) {
+      return '';
+    }
+    return `${colorConfig.bg} ${colorConfig.text}`;
   },
 
   status: (variant: StatusVariant) => {

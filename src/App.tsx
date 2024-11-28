@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
@@ -10,6 +10,7 @@ import { UpdateAccount } from './pages/UpdateAccount';
 import { Users } from './pages/Users';
 import { NewUser } from './pages/NewUser';
 import { UpdateUser } from './pages/UpdateUser';
+import { Maintenance } from './pages/Maintenance';
 import '@aws-amplify/ui-react/styles.css';
 
 export default function App() {
@@ -45,7 +46,6 @@ export default function App() {
       {({ signOut }) => (
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<Navigate to="/" replace />} />
             <Route path="/" element={<Layout onSignOut={signOut} />}>
               <Route index element={<Dashboard />} />
               <Route path="accounts" element={<Accounts />} />
@@ -56,6 +56,7 @@ export default function App() {
               <Route path="users/:email" element={<UpdateUser />} />
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="maintenance" element={<Maintenance />} />
             </Route>
           </Routes>
         </BrowserRouter>
