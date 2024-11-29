@@ -1,51 +1,45 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { getCurrentUser, signIn, signOut, signUp, confirmSignUp } from 'aws-amplify/auth';
+import { userService, type UserData } from '../services/user';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: User | null;
+  user: UserData | null;
   login: (email: string, password: string) => Promise<{ signInStep?: string }>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<{ isSignUpComplete: boolean; nextStep: any }>;
   confirmSignupCode: (email: string, code: string) => Promise<boolean>;
 }
 
-interface User {
-  email: string;
-  name: string;
-}
-
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
 
   const checkAuthState = useCallback(async () => {
     try {
-      const { username, signInDetails } = await getCurrentUser();
-      if (username) {
-        setUser({
-          email: username,
-          name: signInDetails?.loginId || username,
-        });
+      const cognitoUser = await getCurrentUser();
+      if (cognitoUser.username) {
+        const userData = await userService.syncUserData(cognitoUser);
+        setUser(userData);
       }
     } catch (err) {
+      console.error('Auth state check failed:', err);
       setUser(null);
     }
   }, []);
 
-  useState(() => {
+  useEffect(() => {
     checkAuthState();
-  });
+  }, [checkAuthState]);
 
   const login = useCallback(async (email: string, password: string) => {
     const { isSignedIn, nextStep } = await signIn({ username: email, password });
     
     if (isSignedIn) {
-      setUser({
-        email,
-        name: email.split('@')[0],
-      });
+      const cognitoUser = await getCurrentUser();
+      const userData = await userService.syncUserData(cognitoUser);
+      setUser(userData);
     }
     
     return { signInStep: nextStep?.signInStep };

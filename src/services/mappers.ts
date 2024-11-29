@@ -1,4 +1,4 @@
-import { AccountDTO, AccountDAO, UserDTO, UserDAO } from './types';
+import { AccountDTO, AccountDAO, User, UserDAO } from './types';
 
 export const AccountMapper = {
   toDTO(dao: AccountDAO): AccountDTO {
@@ -22,18 +22,18 @@ export const AccountMapper = {
 };
 
 export const UserMapper = {
-  toDTO(dao: UserDAO): UserDTO {
+  toDTO(dao: UserDAO): User {
     return {
       id: dao.id,
       username: dao.username,
       email: dao.email,
       phoneNumber: dao.phoneNumber,
-      status: dao.status as UserDTO['status'],
-      role: dao.role as UserDTO['role'],
+      status: dao.status as User['status'],
+      role: dao.role as User['role'],
     };
   },
 
-  toDAO(dto: Omit<UserDTO, 'id'>): Omit<UserDAO, 'id'> {
+  toDAO(dto: Omit<User, 'id'>): Omit<UserDAO, 'id'> {
     return {
       username: dto.username,
       email: dto.email,

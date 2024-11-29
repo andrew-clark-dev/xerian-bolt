@@ -29,7 +29,7 @@ interface AccountDTO {
   lastUpdated: string;
 }
 
-interface UserDTO {
+interface User {
   id: string;
   username: string;
   email: string;
@@ -61,18 +61,18 @@ const AccountMapper = {
 };
 
 const UserMapper = {
-  toDTO(dao: UserDAO): UserDTO {
+  toDTO(dao: UserDAO): User {
     return {
       id: dao.id,
       username: dao.username,
       email: dao.email,
       phoneNumber: dao.phoneNumber,
-      status: dao.status as UserDTO['status'],
-      role: (dao.role?.[0] || 'None') as UserDTO['role'],
+      status: dao.status as User['status'],
+      role: (dao.role?.[0] || 'None') as User['role'],
     };
   },
 
-  toDAO(dto: Omit<UserDTO, 'id'>): Omit<UserDAO, 'id'> {
+  toDAO(dto: Omit<User, 'id'>): Omit<UserDAO, 'id'> {
     return {
       username: dto.username,
       email: dto.email,
@@ -131,7 +131,7 @@ export const persistenceService = {
       filter: { number: { eq: number } },
       limit: 1,
     });
-    
+
     if (!existing.data[0]) return undefined;
 
     const dao = await client.models.Account.update({
@@ -190,7 +190,7 @@ export const persistenceService = {
   },
 
   // User methods
-  async createUser(data: Omit<UserDTO, 'id'>): Promise<UserDTO> {
+  async createUser(data: Omit<User, 'id'>): Promise<User> {
     await getCurrentUserId(); // Ensure user is authenticated
     const dao = await client.models.User.create({
       ...UserMapper.toDAO(data),
@@ -201,14 +201,14 @@ export const persistenceService = {
 
   async updateUser(
     email: string,
-    data: Partial<UserDTO>
-  ): Promise<UserDTO | undefined> {
+    data: Partial<User>
+  ): Promise<User | undefined> {
     await getCurrentUserId(); // Ensure user is authenticated
     const existing = await client.models.User.list({
       filter: { email: { eq: email } },
       limit: 1,
     });
-    
+
     if (!existing.data[0]) return undefined;
 
     const dao = await client.models.User.update({
@@ -216,12 +216,12 @@ export const persistenceService = {
       ...UserMapper.toDAO({
         ...data,
         email,
-      } as UserDTO),
+      } as User),
     });
     return UserMapper.toDTO(dao);
   },
 
-  async getUserByEmail(email: string): Promise<UserDTO | undefined> {
+  async getUserByEmail(email: string): Promise<User | undefined> {
     await getCurrentUserId(); // Ensure user is authenticated
     const result = await client.models.User.list({
       filter: { email: { eq: email } },
@@ -232,8 +232,8 @@ export const persistenceService = {
   },
 
   async getUsers(
-    options: PaginationOptions<UserDTO>
-  ): Promise<PaginatedResult<UserDTO>> {
+    options: PaginationOptions<User>
+  ): Promise<PaginatedResult<User>> {
     await getCurrentUserId(); // Ensure user is authenticated
     const result = await client.models.User.list({
       page: options.page - 1,
@@ -252,7 +252,7 @@ export const persistenceService = {
     };
   },
 
-  async signUpUser(email: string, password: string): Promise<UserDTO | undefined> {
+  async signUpUser(email: string, password: string): Promise<User | undefined> {
     await getCurrentUserId(); // Ensure user is authenticated
     const user = await this.getUserByEmail(email);
     if (!user) throw new Error('User not found');

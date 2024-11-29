@@ -12,7 +12,7 @@ export interface AccountDTO {
   lastUpdated: string;
 }
 
-export interface UserDTO {
+export interface User {
   id: string;
   username: string;
   email: string;
