@@ -2,6 +2,12 @@ import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { persistenceService } from '../services/persistence';
+import { SuccessMessage } from '../components/SuccessMessage';
+import { RoleCheckboxes } from '../components/user/RoleCheckboxes';
+import type { Schema } from '../../amplify/data/resource';
+import type { UserRole } from '../../amplify/data/resource';
+
+type UserDAO = Schema['User']['type'];
 
 export function NewUser() {
   const navigate = useNavigate();
@@ -9,15 +15,17 @@ export function NewUser() {
     username: '',
     email: '',
     phoneNumber: '',
-    status: 'Pending' as const, // Always pending for new users
-    role: 'Employee' as const,
+    status: 'Pending' as const,
+    roles: ['Employee'] as UserRole[],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setIsLoading(true);
 
     try {
@@ -28,14 +36,25 @@ export function NewUser() {
         return;
       }
 
-      // Only include phoneNumber if it's not empty
-      const userData = {
-        ...formData,
+      const now = new Date().toISOString();
+      const userDao: Omit<UserDAO, 'id'> = {
+        username: formData.username,
+        email: formData.email,
         phoneNumber: formData.phoneNumber || undefined,
+        status: formData.status,
+        role: formData.roles,
+        settings: {},
+        createdAt: now,
+        updatedAt: now,
       };
 
-      await persistenceService.createUser(userData);
-      navigate('/users');
+      const createdUser = await persistenceService.createUser(userDao);
+      setSuccessMessage(`User created successfully with ID: ${createdUser.id}`);
+
+      // Navigate after 2 seconds
+      setTimeout(() => {
+        navigate('/users');
+      }, 2000);
     } catch (err) {
       setError('Failed to create user. Please try again.');
     } finally {
@@ -61,6 +80,13 @@ export function NewUser() {
             <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">
               {error}
             </div>
+          )}
+
+          {successMessage && (
+            <SuccessMessage
+              message={successMessage}
+              onClose={() => setSuccessMessage('')}
+            />
           )}
 
           <div className="space-y-4">
@@ -118,21 +144,18 @@ export function NewUser() {
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                Role
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Roles
               </label>
-              <select
-                id="role"
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="Admin">Admin</option>
-                <option value="Manager">Manager</option>
-                <option value="Employee">Employee</option>
-                <option value="Service">Service</option>
-                <option value="None">None</option>
-              </select>
+              <RoleCheckboxes
+                selectedRoles={formData.roles}
+                onChange={(roles) => setFormData({ ...formData, roles })}
+              />
+              {formData.roles.length === 0 && (
+                <p className="mt-1 text-sm text-red-600">
+                  Please select at least one role
+                </p>
+              )}
             </div>
           </div>
 
@@ -145,7 +168,7 @@ export function NewUser() {
             </Link>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || formData.roles.length === 0}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Creating...' : 'Create User'}

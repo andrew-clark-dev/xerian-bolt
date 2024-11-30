@@ -7,6 +7,20 @@ import { ThemeProvider } from './context/ThemeContext';
 import './index.css';
 import outputs from '../amplify_outputs.json';
 
+// Global error handler
+window.onerror = (message, source, lineno, colno, error) => {
+  // Find the error display element and show the error
+  const event = new CustomEvent('uncaughtError', { detail: error || new Error(String(message)) });
+  window.dispatchEvent(event);
+};
+
+// Global promise rejection handler
+window.onunhandledrejection = (event) => {
+  const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+  const customEvent = new CustomEvent('uncaughtError', { detail: error });
+  window.dispatchEvent(customEvent);
+};
+
 Amplify.configure(outputs);
 
 const theme = {

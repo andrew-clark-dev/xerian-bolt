@@ -1,4 +1,4 @@
-export interface Account {
+export interface AccountCC {
   id: string;
   number: string;
   default_split?: number;
@@ -34,7 +34,7 @@ export interface RecurringFee {
 }
 
 export interface AccountsResponse {
-  data: Account[];
+  data: AccountCC[];
   next_cursor?: string;
   total: number;
 }

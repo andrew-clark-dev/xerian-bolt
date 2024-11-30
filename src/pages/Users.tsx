@@ -3,19 +3,19 @@ import { TableHeader } from '../components/Table/TableHeader';
 import { Pagination } from '../components/Table/Pagination';
 import { Users as UsersIcon, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { persistenceService, type User } from '../services/persistence';
+import { persistenceService, type UserDAO } from '../services/persistence';
 
 const ITEMS_PER_PAGE = 10;
 
 const columns = [
-  { key: 'username' as keyof User, label: 'Username', sortable: true },
-  { key: 'email' as keyof User, label: 'Email', sortable: true },
-  { key: 'phoneNumber' as keyof User, label: 'Phone Number', sortable: true },
-  { key: 'status' as keyof User, label: 'Status', sortable: true },
-  { key: 'role' as keyof User, label: 'Role', sortable: true },
+  { key: 'username' as keyof UserDAO, label: 'Username', sortable: true },
+  { key: 'email' as keyof UserDAO, label: 'Email', sortable: true },
+  { key: 'phoneNumber' as keyof UserDAO, label: 'Phone Number', sortable: true },
+  { key: 'status' as keyof UserDAO, label: 'Status', sortable: true },
+  { key: 'role' as keyof UserDAO, label: 'Role', sortable: true },
 ];
 
-const getStatusColor = (status: User['status']) => {
+const getStatusColor = (status: UserDAO['status']) => {
   const colors = {
     Active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     Inactive: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
@@ -25,7 +25,7 @@ const getStatusColor = (status: User['status']) => {
   return colors[status];
 };
 
-const getRoleColor = (role: User['role']) => {
+const getRoleColor = (role: string) => {
   const colors = {
     Admin: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
     Manager: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
@@ -33,15 +33,15 @@ const getRoleColor = (role: User['role']) => {
     Service: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
     None: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
   };
-  return colors[role];
+  return colors[role] || colors.None;
 };
 
 export function Users() {
   const navigate = useNavigate();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserDAO[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortColumn, setSortColumn] = useState<keyof User>('username');
+  const [sortColumn, setSortColumn] = useState<keyof UserDAO>('username');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -66,7 +66,7 @@ export function Users() {
     }
   };
 
-  const handleSort = (column: keyof User) => {
+  const handleSort = (column: keyof UserDAO) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -143,10 +143,10 @@ export function Users() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(
-                          user.role
+                          user.role[0]
                         )}`}
                       >
-                        {user.role}
+                        {user.role[0]}
                       </span>
                     </td>
                   </tr>
