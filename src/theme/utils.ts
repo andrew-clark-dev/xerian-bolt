@@ -1,17 +1,13 @@
 import { themeConfig } from './config';
 
-type ThemeColor = keyof typeof themeConfig.colors;
 type ThemeVariant = 'primary' | 'secondary' | 'tertiary';
 type StatusVariant = keyof typeof themeConfig.colors.status;
 type ComponentVariant = keyof typeof themeConfig.components;
 
 export const theme = {
-  color: (color: 'primary', variant: ThemeVariant = 'primary') => {
-    const colorConfig = themeConfig.colors[color];
-    if (!colorConfig || !('light' in colorConfig)) {
-      return '';
-    }
-    return `${colorConfig.bg} ${colorConfig.text}`;
+  color: (variant: ThemeVariant = 'primary') => {
+    const colorConfig = themeConfig.colors[variant];
+    return `${colorConfig.light} ${colorConfig.dark}`;
   },
 
   status: (variant: StatusVariant) => {
