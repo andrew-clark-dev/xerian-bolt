@@ -113,10 +113,7 @@ export const persistenceService = {
   // User methods
   async createUser(userDao: Omit<UserDAO, 'id'>): Promise<UserDAO> {
     await getCurrentUserId(); // Ensure user is authenticated
-    return client.models.User.create({
-      ...userDao,
-      id: uuidv4(),
-    });
+    return client.models.User.create(userDao);
   },
 
   async updateUser(
