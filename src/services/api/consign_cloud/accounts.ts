@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_CONFIG } from './config';
-import type { AccountsResponse } from './types/account_cc';
+import type { AccountsResponse } from './types';
 
 interface FetchAccountsOptions {
   cursor?: string | null;
