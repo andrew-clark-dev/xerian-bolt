@@ -1,20 +1,21 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { getCurrentUser, signIn, signOut, signUp, confirmSignUp } from 'aws-amplify/auth';
-import { userService, type UserData } from '../services/user';
+import { userService } from '../services/user';
+import { UserDAO } from '../services/types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: UserData | null;
+  user: UserDAO | null;
   login: (email: string, password: string) => Promise<{ signInStep?: string }>;
   logout: () => Promise<void>;
-  signup: (email: string, password: string) => Promise<{ isSignUpComplete: boolean; nextStep: any }>;
+  signup: (email: string, password: string) => Promise<{ isSignUpComplete: boolean; nextStep: unknown }>;
   confirmSignupCode: (email: string, code: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserData | null>(null);
+  const [user, setUser] = useState<UserDAO | null>(null);
 
   const checkAuthState = useCallback(async () => {
     try {
@@ -35,13 +36,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const { isSignedIn, nextStep } = await signIn({ username: email, password });
-    
+
     if (isSignedIn) {
       const cognitoUser = await getCurrentUser();
       const userData = await userService.syncUserData(cognitoUser);
       setUser(userData);
     }
-    
+
     return { signInStep: nextStep?.signInStep };
   }, []);
 

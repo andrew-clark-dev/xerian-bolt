@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_CONFIG } from './config';
-import type { AccountsResponse } from './consign_cloud/types';
+import type { AccountsResponse } from './types/account_cc';
 
 interface FetchAccountsOptions {
   cursor?: string | null;
@@ -13,7 +13,7 @@ export async function fetchAccounts({
   to = null,
   apiKey,
 }: FetchAccountsOptions): Promise<AccountsResponse> {
-  const queryParameters = new URLSearchParams({
+  const queryParams = new URLSearchParams({
     sort_by: 'created',
     include: [
       'default_split',
@@ -33,18 +33,18 @@ export async function fetchAccounts({
   });
 
   if (cursor) {
-    queryParameters.append('cursor', cursor);
+    queryParams.append('cursor', cursor);
   }
 
   if (to) {
-    queryParameters.append('created:lte', `${to.toISOString()}Z`);
+    queryParams.append('created:lte', `${to.toISOString()}Z`);
   }
 
   const url = new URL(
     `/api/${API_CONFIG.version}/accounts`,
     API_CONFIG.baseUrl
   );
-  url.search = queryParameters.toString();
+  url.search = queryParams.toString();
 
   try {
     const response = await axios.get<AccountsResponse>(url.toString(), {

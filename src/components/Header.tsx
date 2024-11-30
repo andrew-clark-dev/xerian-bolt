@@ -1,12 +1,12 @@
 import { Bell, Search, User, LogOut } from 'lucide-react';
-import { useAuthenticator } from '@aws-amplify/ui-react';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   onSignOut?: () => void;
 }
 
 export function Header({ onSignOut }: HeaderProps) {
-  const { user } = useAuthenticator();
+  const { user } = useAuth();
 
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { TableHeader, Pagination } from '../components/ui/table';
+import { TableHeader } from '../components/Table/TableHeader';
+import { Pagination } from '../components/Table/Pagination';
 import { Users as UsersIcon, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { persistenceService, type UserDAO } from '../services/persistence';

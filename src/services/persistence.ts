@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateClient } from 'aws-amplify/data';
 import { getCurrentUser } from 'aws-amplify/auth';
 import type { Schema } from '../../amplify/data/resource';
+import { AccountDAO, UserDAO } from './types';
 
 // Generate the Amplify Data client
 const client = generateClient<Schema>();
@@ -15,10 +16,6 @@ async function getCurrentUserId(): Promise<string> {
     throw new Error('User must be authenticated');
   }
 }
-
-// Use Schema types for our DAOs
-export type AccountDAO = Schema['Account']['type'];
-export type UserDAO = Schema['User']['type'];
 
 // Repository interfaces
 interface PaginationOptions<T> {
@@ -57,7 +54,7 @@ export const persistenceService = {
       filter: { number: { eq: number } },
       limit: 1,
     });
-    
+
     if (!existing.data[0]) return undefined;
 
     return client.models.Account.update({
@@ -125,7 +122,7 @@ export const persistenceService = {
       filter: { email: { eq: email } },
       limit: 1,
     });
-    
+
     if (!existing.data[0]) return undefined;
 
     return client.models.User.update({
