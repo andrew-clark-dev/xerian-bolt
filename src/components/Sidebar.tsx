@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 
 export function Sidebar() {
   const location = useLocation();
-  
+
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Accounts', href: '/accounts', icon: FileSpreadsheet },
@@ -21,7 +21,7 @@ export function Sidebar() {
         </div>
         <span className="text-xl font-bold text-gray-900 dark:text-white">Dashboard</span>
       </div>
-      
+
       <nav className="flex-1 p-4">
         <ul className="space-y-1">
           {navigation.map((item) => {
@@ -31,15 +31,13 @@ export function Sidebar() {
               <li key={item.name}>
                 <Link
                   to={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                    isActive
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${isActive
                       ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                    }`}
                 >
-                  <Icon className={`w-5 h-5 ${
-                    isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'
-                  }`} />
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'
+                    }`} />
                   <span className="font-medium">{item.name}</span>
                 </Link>
               </li>
@@ -51,7 +49,7 @@ export function Sidebar() {
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-400">
           <div className="flex-1">
-            <p className="font-medium">Modern Dashboard</p>
+            <p className="font-medium">Shop Dashboard</p>
             <p className="text-xs text-gray-500 dark:text-gray-500">Version 1.0.0</p>
           </div>
         </div>

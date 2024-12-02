@@ -39,7 +39,7 @@ const schema = a.schema({
     })
     .authorization(allow => [allow.owner(), allow.group('ADMIN'), allow.authenticated().to(['read'])]),
 
-  UserRole: a.enum(["Admin", "Manager", "Employee", "Service"]),
+  // UserRole: a.enum(["Admin", "Manager", "Employee", "Service"]),
 
   User: a
     .model({
@@ -47,10 +47,10 @@ const schema = a.schema({
       email: a.string().required(),
       phoneNumber: a.string(),
       status: a.enum(["Active", "Inactive", "Suspended", "Pending"]),
-      role: a.ref('UserRole').array(),
+      role: a.enum(["Admin", "Manager", "Employee", "Service"]),
       photo: a.url(),
-      employeeId: a.id(),
-      employee: a.belongsTo('Employee', 'employeeId'),
+      // employeeId: a.id(),
+      // employee: a.belongsTo('Employee', 'employeeId'),
       comments: a.hasMany('Comment', 'userId'),
       actions: a.hasMany('Action', 'userId'),
       accounts: a.hasMany('Account', 'userId'),
@@ -58,6 +58,7 @@ const schema = a.schema({
       categories: a.hasMany('ItemCategory', 'userId'),
       transactions: a.hasMany('Transaction', 'userId'),
       settings: a.json().required(),
+      lastLoginAt: a.datetime(),
       deletedAt: a.datetime(),
     })
     .secondaryIndexes((index) => [index("username")])
@@ -66,7 +67,7 @@ const schema = a.schema({
   Employee: a
     .model({
       name: a.string().required(),
-      user: a.hasOne('User', 'employeeId'),
+      // user: a.hasOne('User', 'employeeId'),
       addressLine1: a.string(),
       addressLine2: a.string(),
       city: a.string(),

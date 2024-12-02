@@ -1,11 +1,10 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { getCurrentUser, signIn, signOut, signUp, confirmSignUp } from 'aws-amplify/auth';
-import { userService } from '../services/user';
-import { UserDAO } from '../services/types';
+import { User, userService } from '../services/user';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: UserDAO | null;
+  user: User | null;
   login: (email: string, password: string) => Promise<{ signInStep?: string }>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<{ isSignUpComplete: boolean; nextStep: unknown }>;
@@ -15,7 +14,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserDAO | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const checkAuthState = useCallback(async () => {
     try {
@@ -39,8 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (isSignedIn) {
       const cognitoUser = await getCurrentUser();
-      const userData = await userService.syncUserData(cognitoUser);
-      setUser(userData);
+      const user = await userService.syncUserData(cognitoUser);
+      setUser(user);
     }
 
     return { signInStep: nextStep?.signInStep };
