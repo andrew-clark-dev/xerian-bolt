@@ -32,11 +32,13 @@ class UserService {
 
       // If user exists, just update the login time
       if (existingUser) {
-        const { data: loggedInUser, errors } = await client.models.User.update({
-          ...existingUser,
-          id: cognitoUser.userId,
-          lastLoginAt: now,
-        });
+
+        const { data: loggedInUser, errors } = await client.models.User.update(
+          {
+            id: existingUser.id,
+            lastLoginAt: now
+          }
+        );
         if (errors) {
           console.error('Error updating user:', errors);
           throw new Error('Failed to update user');

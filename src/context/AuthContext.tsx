@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { getCurrentUser, signIn, signOut, signUp, confirmSignUp } from 'aws-amplify/auth';
+import { getCurrentUser, signIn, signOut, signUp, confirmSignUp, confirmSignIn as amplifyConfirmSignIn } from 'aws-amplify/auth';
 import { User, userService } from '../services/user';
 
 interface AuthContextType {
@@ -9,6 +9,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<{ isSignUpComplete: boolean; nextStep: unknown }>;
   confirmSignupCode: (email: string, code: string) => Promise<boolean>;
+  confirmSignIn: (newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -43,6 +44,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return { signInStep: nextStep?.signInStep };
+  }, []);
+
+  const confirmSignIn = useCallback(async (newPassword: string) => {
+    const { isSignedIn } = await amplifyConfirmSignIn({ challengeResponse: newPassword });
+    
+    if (isSignedIn) {
+      const cognitoUser = await getCurrentUser();
+      const user = await userService.syncUserData(cognitoUser);
+      setUser(user);
+    } else {
+      throw new Error('Failed to confirm sign in');
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -86,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         signup,
         confirmSignupCode,
+        confirmSignIn,
       }}
     >
       {children}
