@@ -4,7 +4,7 @@ import type { Schema } from '../../amplify/data/resource';
 
 const client = generateClient<Schema>();
 
-export type User = Schema['User']['type'];
+export type User = Omit<Schema['User']['type'], 'updatedAt' | 'createdAt'>;
 
 class UserService {
   private async handleServiceError(error: unknown, context: string): Promise<never> {
