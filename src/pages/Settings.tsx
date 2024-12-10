@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Bell, Moon, Sun, Key } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { settingsService } from '../services/settings';
+import { settingsService } from '../services/settings.service';
 import { Input } from '../components/ui/Input';
 
 export function Settings() {
@@ -90,7 +90,7 @@ export function Settings() {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-4 relative">
             <Input
               type="password"
@@ -99,7 +99,7 @@ export function Settings() {
               placeholder="Enter your API key"
               className="max-w-md pr-20"
             />
-            <span 
+            <span
               className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm transition-colors ${getApiKeyStatusColor()}`}
             >
               {getApiKeyStatusText()}
