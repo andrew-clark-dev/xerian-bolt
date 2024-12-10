@@ -8,6 +8,7 @@ interface TaskDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (task: AutomatedTaskConfig) => void;
+  apiKey?: string;
 }
 
 export type ModelType = 'Account' | 'Item' | 'Sale';
@@ -19,6 +20,7 @@ export interface AutomatedTaskConfig {
   schedule: 'now' | 'daily' | 'weekly' | 'monthly';
   retentionDays: number;
   notifyOnComplete: boolean;
+  upToDate?: Date;
 }
 
 const taskTypes = [
@@ -39,7 +41,7 @@ const scheduleTypes = [
   { value: 'monthly', label: 'Monthly' },
 ];
 
-export function TaskDialog({ isOpen, onClose, onSubmit }: TaskDialogProps) {
+export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProps) {
   const [config, setConfig] = useState<AutomatedTaskConfig>({
     name: '',
     type: 'backup',
@@ -81,14 +83,14 @@ export function TaskDialog({ isOpen, onClose, onSubmit }: TaskDialogProps) {
         name: 'Import Account',
       });
     } else if (type === 'reset') {
-      const { modelType, ...rest } = config;
+      const { modelType, upToDate, ...rest } = config;
       setConfig({
         ...rest,
         type,
         name: 'Reset All Data',
       });
     } else {
-      const { modelType, ...rest } = config;
+      const { modelType, upToDate, ...rest } = config;
       setConfig({
         ...rest,
         type,
@@ -96,6 +98,8 @@ export function TaskDialog({ isOpen, onClose, onSubmit }: TaskDialogProps) {
       });
     }
   };
+
+  const showApiKeyWarning = config.type === 'import' && config.modelType === 'Account' && !apiKey;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -152,6 +156,25 @@ export function TaskDialog({ isOpen, onClose, onSubmit }: TaskDialogProps) {
                   </option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {config.type === 'import' && config.modelType === 'Account' && (
+            <div>
+              <label htmlFor="upToDate" className={`block text-sm font-medium ${theme.text()} mb-1`}>
+                Import Up To Date
+              </label>
+              <Input
+                type="datetime-local"
+                id="upToDate"
+                value={config.upToDate?.toISOString().slice(0, 16) || ''}
+                onChange={(e) => setConfig({ 
+                  ...config, 
+                  upToDate: e.target.value ? new Date(e.target.value) : undefined 
+                })}
+                className="w-full"
+                required
+              />
             </div>
           )}
 
@@ -218,6 +241,15 @@ export function TaskDialog({ isOpen, onClose, onSubmit }: TaskDialogProps) {
             </label>
           </div>
 
+          {showApiKeyWarning && (
+            <div className={`p-4 ${theme.status('error')} rounded-lg`}>
+              <p className="text-sm font-medium">API Key Required</p>
+              <p className="text-sm mt-1">
+                Please set up your API key in Settings before importing accounts.
+              </p>
+            </div>
+          )}
+
           {config.type === 'reset' && (
             <div className={`p-4 ${theme.status('error')} rounded-lg`}>
               <p className="text-sm font-medium">Warning: This action cannot be undone</p>
@@ -234,6 +266,7 @@ export function TaskDialog({ isOpen, onClose, onSubmit }: TaskDialogProps) {
             <Button 
               type="submit"
               variant={config.type === 'reset' ? 'danger' : 'primary'}
+              disabled={showApiKeyWarning}
             >
               {config.type === 'reset' ? 'Reset All Data' : 'Start Task'}
             </Button>

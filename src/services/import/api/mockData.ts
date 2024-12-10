@@ -1,14 +1,20 @@
 import { ModelType } from '../types';
 
 export function generateMockData(modelType: ModelType, index: number): any {
+  const now = new Date().toISOString();
+  
   switch (modelType) {
     case 'Account':
       return {
         number: `ACC-${String(index).padStart(5, '0')}`,
-        firstName: `John ${index}`,
-        lastName: 'Doe',
-        email: `john${index}@example.com`,
+        name: `Test Account ${index}`,
         status: 'Active',
+        balance: 0,
+        noSales: 0,
+        noItems: 0,
+        lastActivityAt: now,
+        createdAt: now,
+        updatedAt: now,
       };
     case 'User':
       return {
@@ -16,6 +22,9 @@ export function generateMockData(modelType: ModelType, index: number): any {
         email: `user${index}@example.com`,
         status: 'Active',
         role: ['Employee'],
+        settings: {},
+        createdAt: now,
+        updatedAt: now,
       };
     case 'Item':
       return {
@@ -25,11 +34,15 @@ export function generateMockData(modelType: ModelType, index: number): any {
         quantity: 1,
         split: 50,
         price: 1000,
+        createdAt: now,
+        updatedAt: now,
       };
     default:
-      return { 
-        id: `${index}`, 
-        name: `${modelType} ${index}` 
+      return {
+        id: `${index}`,
+        name: `${modelType} ${index}`,
+        createdAt: now,
+        updatedAt: now,
       };
   }
 }

@@ -6,14 +6,22 @@ import { TaskDialog, type AutomatedTaskConfig } from '../components/maintenance/
 import { TaskProgress } from '../components/maintenance/TaskProgress';
 import { TaskOutput } from '../components/maintenance/TaskOutput';
 import { automatedTaskService, type TaskProgress as TaskProgressType } from '../services/automatedTasks';
+import { settingsService } from '../services/settings';
 import { theme } from '../theme';
 
 export function Maintenance() {
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [activeTasks, setActiveTasks] = useState<TaskProgressType[]>([]);
   const [taskMessages, setTaskMessages] = useState<string[]>(['System initialized and ready...']);
+  const [apiKey, setApiKey] = useState<string>();
 
   useEffect(() => {
+    // Load API key from settings
+    settingsService.getSettings().then(settings => {
+      setApiKey(settings.apiKey);
+    });
+
+    // Subscribe to task updates
     return automatedTaskService.subscribe((tasks) => {
       setActiveTasks(tasks);
       
@@ -31,7 +39,18 @@ export function Maintenance() {
   }, []);
 
   const handleStartTask = async (config: AutomatedTaskConfig) => {
-    await automatedTaskService.startTask(config);
+    if (config.type === 'import' && config.modelType === 'Account') {
+      if (!apiKey) {
+        setTaskMessages(prev => [...prev, 'Error: API key not configured']);
+        return;
+      }
+      if (!config.upToDate) {
+        setTaskMessages(prev => [...prev, 'Error: Up to date not specified']);
+        return;
+      }
+    }
+
+    await automatedTaskService.startTask(config, apiKey);
     setShowTaskDialog(false);
   };
 
@@ -101,6 +120,7 @@ export function Maintenance() {
         isOpen={showTaskDialog}
         onClose={() => setShowTaskDialog(false)}
         onSubmit={handleStartTask}
+        apiKey={apiKey}
       />
     </div>
   );

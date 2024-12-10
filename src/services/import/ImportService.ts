@@ -3,7 +3,6 @@ import { getCurrentUser } from 'aws-amplify/auth';
 import { Schema } from '../../../amplify/data/resource';
 import { ImportConfig, ImportProgress, ImportResult } from './types';
 import { fetchTotalCount, fetchBatch } from './api';
-import { mapToModel } from './mappers';
 import { mergeConfig } from './config';
 
 export class ImportService {
@@ -15,12 +14,8 @@ export class ImportService {
     this.config = mergeConfig(config);
   }
 
-  public async init(): Promise<number> {
-    return fetchTotalCount(this.config.modelType);
-  }
-
   public async *execute(): AsyncGenerator<ImportProgress, ImportResult> {
-    const total = await this.init();
+    const total = await fetchTotalCount(this.config.modelType);
     let processed = 0;
     let failed = 0;
     const errors: Error[] = [];
@@ -72,10 +67,10 @@ export class ImportService {
     } catch (error) {
       return {
         success: false,
-        message: `Import failed: ${error.message}`,
+        message: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         processed,
         failed,
-        errors: [...errors, error]
+        errors: [...errors, error instanceof Error ? error : new Error('Unknown error')]
       };
     }
   }
@@ -96,8 +91,10 @@ export class ImportService {
   }
 
   private async processItem(item: any, userId: string): Promise<void> {
-    const mapped = mapToModel(this.config.modelType, item, userId);
-    await this.client.models[this.config.modelType].create(mapped);
+    await this.client.models[this.config.modelType].create({
+      ...item,
+      userId
+    });
   }
 
   private delay(ms: number): Promise<void> {

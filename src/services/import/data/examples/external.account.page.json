@@ -1,0 +1,49 @@
+{
+  "count": 154,
+  "data": [
+    {
+      "address_line_1": "123 Main St.",
+      "address_line_2": "Suite 100",
+      "balance": 7700,
+      "city": "San Francisco",
+      "company": "Acme Inc.",
+      "created": "2019-08-24T14:15:22Z",
+      "created_by": "4c1f9fb6-5717-4df3-9786-e96deaab9ed8",
+      "custom_fields": [
+        {
+          "slug": "nickname",
+          "value": "Bob"
+        }
+      ],
+      "default_inventory_type": "consignment",
+      "default_split": 0.5,
+      "default_terms": "return_to_consignor",
+      "deleted": "2019-08-24T14:15:22Z",
+      "email": "john.doe@gmail.com",
+      "email_notifications_enabled": true,
+      "first_name": "John",
+      "id": "4c1f9fb6-5717-4df3-9786-e96deaab9ed8",
+      "last_activity": "2019-08-24T14:15:22Z",
+      "last_item_entered": "2019-08-24T14:15:22Z",
+      "last_name": "Doe",
+      "last_settlement": "2019-08-24T14:15:22Z",
+      "locations": [
+        "4c1f9fb6-5717-4df3-9786-e96deaab9ed8"
+      ],
+      "number": "000031",
+      "number_of_items": 5,
+      "number_of_purchases": 3,
+      "phone_number": "555-555-5555",
+      "postal_code": "94103",
+      "recurring_fees": [
+        "4c1f9fb6-5717-4df3-9786-e96deaab9ed8"
+      ],
+      "state": "CA",
+      "tags": [
+        "VIP"
+      ],
+      "unpaid_balance_from": 7700
+    }
+  ],
+  "next_cursor": "eyJuZXh0UGFnZSI6ICJodHRwczovL3lvdXR1LmJlL2RRdzR3OVdnWGNRIn0="
+}
