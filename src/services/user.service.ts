@@ -1,6 +1,7 @@
 import { generateClient } from 'aws-amplify/data';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import type { Schema } from '../../amplify/data/resource';
+import { getCurrentUser } from 'aws-amplify/auth';
 
 const client = generateClient<Schema>();
 
@@ -86,13 +87,16 @@ class UserService {
     return null;
   }
 
-  async getUser(userId: string): Promise<User> {
-    const user = await this.findUser(userId);
+  async getUser(userId?: string): Promise<User> {
+    const id = userId ?? (await getCurrentUser()).userId;
+
+    const user = await this.findUser(id);
     if (!user) {
       throw new Error('User not found');
     }
     return user;
   }
+
 
   async createUser(user: UserCreate): Promise<User> {
     try {
