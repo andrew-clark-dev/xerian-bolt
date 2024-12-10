@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bell, Moon, Sun, Key } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { settingsService, type UserSettings, initialSettings } from '../services/settings.service';
-import { Input } from '../components/ui/Input';
+import { ApiKeyInput } from '../components/settings/ApiKeyInput';
 
 export function Settings() {
   const [settings, setSettings] = useState<UserSettings>(initialSettings);
@@ -44,32 +44,6 @@ export function Settings() {
     }
   };
 
-  const getApiKeyStatusColor = () => {
-    switch (apiKeyStatus) {
-      case 'saving':
-        return 'text-blue-600 dark:text-blue-400';
-      case 'success':
-        return 'text-green-600 dark:text-green-400';
-      case 'error':
-        return 'text-red-600 dark:text-red-400';
-      default:
-        return 'text-transparent';
-    }
-  };
-
-  const getApiKeyStatusText = () => {
-    switch (apiKeyStatus) {
-      case 'saving':
-        return 'Saving...';
-      case 'success':
-        return 'Saved';
-      case 'error':
-        return 'Failed to save';
-      default:
-        return '';
-    }
-  };
-
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Settings</h1>
@@ -88,23 +62,14 @@ export function Settings() {
             </div>
           </div>
 
-          <div className="mt-4 relative">
-            <Input
-              type="password"
-              value={settings.apiKey || ''}
-              onChange={(e) => {
-                setApiKeyStatus('saving');
-                handleSettingChange('apiKey', e.target.value);
-              }}
-              placeholder="Enter your API key"
-              className="max-w-md pr-20"
-            />
-            <span
-              className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm transition-colors ${getApiKeyStatusColor()}`}
-            >
-              {getApiKeyStatusText()}
-            </span>
-          </div>
+          <ApiKeyInput
+            value={settings.apiKey || ''}
+            onChange={(value) => {
+              setApiKeyStatus('saving');
+              handleSettingChange('apiKey', value);
+            }}
+            status={apiKeyStatus}
+          />
         </div>
 
         <div className="p-6">
