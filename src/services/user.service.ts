@@ -5,6 +5,9 @@ import type { Schema } from '../../amplify/data/resource';
 const client = generateClient<Schema>();
 
 export type User = Omit<Schema['User']['type'], 'updatedAt' | 'createdAt'>;
+export type UserUpdate = Partial<Omit<User, 'id' | 'comments' | 'actions' | 'accounts' | 'items' | 'categories' | 'transactions'>>;
+export type UserCreate = Partial<Omit<User, 'id' | 'comments' | 'actions' | 'accounts' | 'items' | 'categories' | 'transactions'>>;
+
 
 class UserService {
   private async handleServiceError(error: unknown, context: string): Promise<never> {
@@ -91,10 +94,21 @@ class UserService {
     return user;
   }
 
-  async createUser(user: Omit<User, 'id'>): Promise<User> {
+  async createUser(user: UserCreate): Promise<User> {
     try {
+      if (!user.username || !user.email) {
+        throw new Error('Username and email are required to create a user');
+      }
+
+      if (!user.username || !user.email) {
+        throw new Error('Username and email are required to create a user');
+      }
+
       const { data: newUser, errors } = await client.models.User.create({
         ...user,
+        username: user.username!,
+        email: user.email!,
+        settings: user.settings!,
       });
 
       if (errors) {
