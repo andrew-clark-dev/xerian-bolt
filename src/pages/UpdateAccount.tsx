@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { persistenceService } from '../services/persistence';
+import { accountService } from '../services/account.service';
 
 export function UpdateAccount() {
   const navigate = useNavigate();
   const { number } = useParams();
   const [formData, setFormData] = useState({
     name: '',
-    status: 'active' as const,
+    status: 'Active' as const,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,7 +21,7 @@ export function UpdateAccount() {
       }
 
       try {
-        const account = await persistenceService.getAccountByNumber(number);
+        const account = await accountService.findAccountByNumber(number);
         if (!account) {
           navigate('/accounts');
           return;
@@ -47,7 +47,12 @@ export function UpdateAccount() {
     try {
       if (!number) return;
       
-      await persistenceService.updateAccount(number, formData);
+      const account = await accountService.findAccountByNumber(number);
+      if (!account) {
+        throw new Error('Account not found');
+      }
+
+      await accountService.updateAccount(account.id, formData);
       navigate('/accounts');
     } catch (err) {
       setError('Failed to update account. Please try again.');
@@ -113,9 +118,9 @@ export function UpdateAccount() {
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="pending">Pending</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Suspended">Suspended</option>
               </select>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { persistenceService } from '../services/persistence';
+import { accountService } from '../services/account.service';
 
 export function NewAccount() {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ export function NewAccount() {
 
   // Get next account number
   useEffect(() => {
-    persistenceService.getNextAccountNumber().then(number => {
+    accountService.getNextAccountNumber().then(number => {
       setFormData(prev => ({ ...prev, number }));
     });
   }, []);
@@ -26,7 +26,7 @@ export function NewAccount() {
     setIsLoading(true);
 
     try {
-      await persistenceService.createAccount(formData);
+      await accountService.createAccount(formData);
       navigate('/accounts');
     } catch (err) {
       setError('Failed to create account. Please try again.');

@@ -14,18 +14,18 @@ import { Maintenance } from './pages/Maintenance';
 import { useAuth } from './context/AuthContext';
 
 export default function App() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, isLoading, logout } = useAuth();
+
+  if (isLoading) {
+    return null; // AuthContext already shows loading state
+  }
 
   if (!isAuthenticated) {
     return <LoginForm />;
   }
 
   return (
-    <BrowserRouter
-      future={{
-        v7_relativeSplatPath: true,
-        v7_startTransition: true,
-      }}>
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout onSignOut={logout} />}>
           <Route index element={<Dashboard />} />

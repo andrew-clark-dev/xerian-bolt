@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react';
-import { TableHeader } from '../components/Table/TableHeader';
-import { Pagination } from '../components/Table/Pagination';
+import { TableHeader } from '../components/table/TableHeader';
+import { Pagination } from '../components/table/Pagination';
 import { Users as UsersIcon, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { persistenceService, type UserDAO } from '../services/persistence';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../../amplify/data/resource';
 
+const client = generateClient<Schema>();
 const ITEMS_PER_PAGE = 10;
 
 const columns = [
-  { key: 'username' as keyof UserDAO, label: 'Username', sortable: true },
-  { key: 'email' as keyof UserDAO, label: 'Email', sortable: true },
-  { key: 'phoneNumber' as keyof UserDAO, label: 'Phone Number', sortable: true },
-  { key: 'status' as keyof UserDAO, label: 'Status', sortable: true },
-  { key: 'role' as keyof UserDAO, label: 'Role', sortable: true },
+  { key: 'username' as keyof Schema['User']['type'], label: 'Username', sortable: true },
+  { key: 'email' as keyof Schema['User']['type'], label: 'Email', sortable: true },
+  { key: 'phoneNumber' as keyof Schema['User']['type'], label: 'Phone Number', sortable: true },
+  { key: 'status' as keyof Schema['User']['type'], label: 'Status', sortable: true },
+  { key: 'role' as keyof Schema['User']['type'], label: 'Role', sortable: true },
 ];
 
-const getStatusColor = (status: UserDAO['status']) => {
+const getStatusColor = (status: Schema['User']['type']['status']) => {
   const colors = {
     Active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     Inactive: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
@@ -38,27 +40,36 @@ const getRoleColor = (role: string) => {
 
 export function Users() {
   const navigate = useNavigate();
-  const [users, setUsers] = useState<UserDAO[]>([]);
+  const [users, setUsers] = useState<Schema['User']['type'][]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortColumn, setSortColumn] = useState<keyof UserDAO>('username');
+  const [sortColumn, setSortColumn] = useState<keyof Schema['User']['type']>('username');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isLoading, setIsLoading] = useState(true);
+  const [nextToken, setNextToken] = useState<string | null>(null);
+  const [prevTokens, setPrevTokens] = useState<string[]>([]);
 
   useEffect(() => {
     loadUsers();
-  }, [currentPage, sortColumn, sortDirection]);
+  }, [sortColumn, sortDirection]);
 
-  const loadUsers = async () => {
+  const loadUsers = async (token?: string | null) => {
     try {
-      const result = await persistenceService.getUsers({
-        page: currentPage,
-        pageSize: ITEMS_PER_PAGE,
-        sortColumn,
-        sortDirection,
+      setIsLoading(true);
+      const { data: fetchedUsers, nextToken: newNextToken } = await client.models.User.list({
+        limit: ITEMS_PER_PAGE,
+        nextToken: token,
+        sort: {
+          field: sortColumn,
+          direction: sortDirection,
+        },
       });
-      setUsers(result.items);
-      setTotalPages(result.totalPages);
+
+      setUsers(fetchedUsers);
+      setNextToken(newNextToken);
+      
+      // Calculate total pages based on whether there's a next page
+      setTotalPages(newNextToken ? currentPage + 1 : currentPage);
     } catch (error) {
       console.error('Failed to load users:', error);
     } finally {
@@ -66,13 +77,35 @@ export function Users() {
     }
   };
 
-  const handleSort = (column: keyof UserDAO) => {
+  const handleNextPage = () => {
+    if (nextToken) {
+      setPrevTokens([...prevTokens, nextToken]);
+      setCurrentPage(currentPage + 1);
+      loadUsers(nextToken);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      const newPrevTokens = [...prevTokens];
+      const prevToken = newPrevTokens.pop();
+      setPrevTokens(newPrevTokens);
+      setCurrentPage(currentPage - 1);
+      loadUsers(prevToken);
+    }
+  };
+
+  const handleSort = (column: keyof Schema['User']['type']) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortColumn(column);
       setSortDirection('asc');
     }
+    // Reset pagination when sorting changes
+    setCurrentPage(1);
+    setNextToken(null);
+    setPrevTokens([]);
   };
 
   return (
@@ -158,7 +191,13 @@ export function Users() {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          onPageChange={(page) => {
+            if (page > currentPage) {
+              handleNextPage();
+            } else {
+              handlePrevPage();
+            }
+          }}
         />
       </div>
     </div>

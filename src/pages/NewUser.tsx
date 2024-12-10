@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { persistenceService } from '../services/persistence';
+import { userService } from '../services/user.service';
 import { SuccessMessage } from '../components/SuccessMessage';
 import { RoleCheckboxes } from '../components/user/RoleCheckboxes';
 import type { Schema } from '../../amplify/data/resource';
 import type { UserRole } from '../../amplify/data/resource';
 
-type UserDAO = Schema['User']['type'];
+type User = Schema['User']['type'];
 
 export function NewUser() {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ export function NewUser() {
     email: '',
     phoneNumber: '',
     status: 'Pending' as const,
-    roles: ['Employee'] as UserRole[],
+    role: ['Employee'] as UserRole[],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,25 +30,25 @@ export function NewUser() {
 
     try {
       // Check if user with email already exists
-      const existingUser = await persistenceService.getUserByEmail(formData.email);
+      const existingUser = await userService.findUser(formData.email);
       if (existingUser) {
         setError('A user with this email already exists.');
         return;
       }
 
       const now = new Date().toISOString();
-      const userDao: Omit<UserDAO, 'id'> = {
+      const userData: Omit<User, 'id'> = {
         username: formData.username,
         email: formData.email,
         phoneNumber: formData.phoneNumber || undefined,
         status: formData.status,
-        role: formData.roles,
+        role: formData.role,
         settings: {},
         createdAt: now,
         updatedAt: now,
       };
 
-      const createdUser = await persistenceService.createUser(userDao);
+      const createdUser = await userService.createUser(userData);
       setSuccessMessage(`User created successfully with ID: ${createdUser.id}`);
 
       // Navigate after 2 seconds
@@ -148,10 +148,10 @@ export function NewUser() {
                 Roles
               </label>
               <RoleCheckboxes
-                selectedRoles={formData.roles}
-                onChange={(roles) => setFormData({ ...formData, roles })}
+                selectedRoles={formData.role}
+                onChange={(roles) => setFormData({ ...formData, role: roles })}
               />
-              {formData.roles.length === 0 && (
+              {formData.role.length === 0 && (
                 <p className="mt-1 text-sm text-red-600">
                   Please select at least one role
                 </p>
@@ -168,7 +168,7 @@ export function NewUser() {
             </Link>
             <button
               type="submit"
-              disabled={isLoading || formData.roles.length === 0}
+              disabled={isLoading || formData.role.length === 0}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Creating...' : 'Create User'}

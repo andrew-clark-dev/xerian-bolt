@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { getCurrentUser, signIn, signOut, signUp, confirmSignUp, confirmSignIn as amplifyConfirmSignIn } from 'aws-amplify/auth';
-import { User, userService } from '../services/user';
+import { getCurrentUser, signIn, signOut, signUp, confirmSignUp, confirmSignIn as amplifyConfirmSignIn, type AuthUser } from 'aws-amplify/auth';
+import { User, userService } from '../services/user.service';
+import { Loader } from 'lucide-react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isLoading: boolean;
   user: User | null;
   login: (email: string, password: string) => Promise<{ signInStep?: string }>;
   logout: () => Promise<void>;
@@ -16,17 +18,31 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [cognitoUser, setCognitoUser] = useState<AuthUser | null>(null);
 
   const checkAuthState = useCallback(async () => {
     try {
-      const cognitoUser = await getCurrentUser();
-      if (cognitoUser.username) {
-        const userData = await userService.syncUserData(cognitoUser);
+      const currentUser = await getCurrentUser();
+      setCognitoUser(currentUser);
+      
+      // Only sync user data if we have a valid Cognito user
+      if (currentUser?.userId) {
+        const userData = await userService.syncUserData(currentUser);
         setUser(userData);
+      } else {
+        setUser(null);
       }
     } catch (err) {
-      console.error('Auth state check failed:', err);
+      // Only set error for non-authentication errors
+      if (err instanceof Error && err.name !== 'UserUnAuthenticatedException') {
+        setError(err);
+      }
       setUser(null);
+      setCognitoUser(null);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -35,65 +51,113 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [checkAuthState]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { isSignedIn, nextStep } = await signIn({ username: email, password });
+    setIsLoading(true);
+    try {
+      const { isSignedIn, nextStep } = await signIn({ username: email, password });
 
-    if (isSignedIn) {
-      const cognitoUser = await getCurrentUser();
-      const user = await userService.syncUserData(cognitoUser);
-      setUser(user);
+      if (isSignedIn) {
+        await checkAuthState();
+      }
+
+      return { signInStep: nextStep?.signInStep };
+    } catch (err) {
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
-
-    return { signInStep: nextStep?.signInStep };
-  }, []);
+  }, [checkAuthState]);
 
   const confirmSignIn = useCallback(async (newPassword: string) => {
-    const { isSignedIn } = await amplifyConfirmSignIn({ challengeResponse: newPassword });
-    
-    if (isSignedIn) {
-      const cognitoUser = await getCurrentUser();
-      const user = await userService.syncUserData(cognitoUser);
-      setUser(user);
-    } else {
-      throw new Error('Failed to confirm sign in');
+    setIsLoading(true);
+    try {
+      const { isSignedIn } = await amplifyConfirmSignIn({ challengeResponse: newPassword });
+      
+      if (isSignedIn) {
+        await checkAuthState();
+      } else {
+        throw new Error('Failed to confirm sign in');
+      }
+    } catch (err) {
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  }, [checkAuthState]);
 
   const logout = useCallback(async () => {
+    setIsLoading(true);
     try {
       await signOut();
       setUser(null);
+      setCognitoUser(null);
     } catch (err) {
       console.error('Error signing out:', err);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   const signup = useCallback(async (email: string, password: string) => {
-    const { isSignUpComplete, nextStep } = await signUp({
-      username: email,
-      password,
-      options: {
-        userAttributes: {
-          email,
+    setIsLoading(true);
+    try {
+      const { isSignUpComplete, nextStep } = await signUp({
+        username: email,
+        password,
+        options: {
+          userAttributes: {
+            email,
+          },
         },
-      },
-    });
+      });
 
-    return { isSignUpComplete, nextStep };
+      return { isSignUpComplete, nextStep };
+    } catch (err) {
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const confirmSignupCode = useCallback(async (email: string, code: string) => {
-    const { isSignUpComplete } = await confirmSignUp({
-      username: email,
-      confirmationCode: code,
-    });
+    setIsLoading(true);
+    try {
+      const { isSignUpComplete } = await confirmSignUp({
+        username: email,
+        confirmationCode: code,
+      });
 
-    return isSignUpComplete;
+      return isSignUpComplete;
+    } catch (err) {
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-red-600 text-center">
+          <p className="text-lg font-semibold">An error occurred</p>
+          <p className="text-sm">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated: !!user,
+        isAuthenticated: !!cognitoUser?.userId,
+        isLoading,
         user,
         login,
         logout,

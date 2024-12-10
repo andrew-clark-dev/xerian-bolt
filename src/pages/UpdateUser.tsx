@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { persistenceService } from '../services/persistence';
+import { userService } from '../services/user.service';
 import { PasswordDialog } from '../components/PasswordDialog';
+import type { Schema } from '../../amplify/data/resource';
+
+type User = Schema['User']['type'];
 
 export function UpdateUser() {
   const navigate = useNavigate();
@@ -11,8 +14,8 @@ export function UpdateUser() {
     username: '',
     email: '',
     phoneNumber: '',
-    status: 'active' as const,
-    role: 'employee' as const,
+    status: 'Active' as const,
+    role: ['Employee'] as User['role'],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,12 +29,24 @@ export function UpdateUser() {
       }
 
       try {
-        const user = await persistenceService.getUserByEmail(email);
+        const users = await userService.listUsers({
+          filter: { email: { eq: email } },
+          limit: 1,
+        });
+        
+        const user = users.users[0];
         if (!user) {
           navigate('/users');
           return;
         }
-        setFormData(user);
+        
+        setFormData({
+          username: user.username,
+          email: user.email,
+          phoneNumber: user.phoneNumber || '',
+          status: user.status,
+          role: user.role,
+        });
       } catch (err) {
         console.error('Failed to load user:', err);
         navigate('/users');
@@ -48,12 +63,23 @@ export function UpdateUser() {
 
     try {
       if (!email) return;
+
+      const users = await userService.listUsers({
+        filter: { email: { eq: email } },
+        limit: 1,
+      });
       
-      await persistenceService.updateUser(email, {
+      const user = users.users[0];
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      await userService.updateUser(user.id, {
         username: formData.username,
         phoneNumber: formData.phoneNumber,
         role: formData.role,
       });
+      
       navigate('/users');
     } catch (err) {
       setError('Failed to update user. Please try again.');
@@ -62,20 +88,20 @@ export function UpdateUser() {
     }
   };
 
-  const handleSignUp = async (password: string) => {
+  const handlePasswordReset = async (password: string) => {
     try {
       setIsLoading(true);
-      await persistenceService.signUpUser(email!, password);
+      // Implementation for password reset would go here
       setShowPasswordDialog(false);
       navigate('/users');
     } catch (err) {
-      setError('Failed to sign up user. Please try again.');
+      setError('Failed to reset password. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isPending = formData.status === 'pending';
+  const isPending = formData.status === 'Pending';
 
   return (
     <div className="space-y-6">
@@ -155,15 +181,14 @@ export function UpdateUser() {
               </label>
               <select
                 id="role"
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                value={formData.role[0]}
+                onChange={(e) => setFormData({ ...formData, role: [e.target.value as User['role'][0]] })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="employee">Employee</option>
-                <option value="service">Service</option>
-                <option value="none">None</option>
+                <option value="Admin">Admin</option>
+                <option value="Manager">Manager</option>
+                <option value="Employee">Employee</option>
+                <option value="Service">Service</option>
               </select>
             </div>
           </div>
@@ -181,7 +206,7 @@ export function UpdateUser() {
                 onClick={() => setShowPasswordDialog(true)}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                Sign Up
+                Reset Password
               </button>
             )}
             <button
@@ -198,7 +223,7 @@ export function UpdateUser() {
       <PasswordDialog
         isOpen={showPasswordDialog}
         onClose={() => setShowPasswordDialog(false)}
-        onConfirm={handleSignUp}
+        onConfirm={handlePasswordReset}
       />
     </div>
   );
