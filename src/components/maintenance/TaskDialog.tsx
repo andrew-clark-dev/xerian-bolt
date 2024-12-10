@@ -142,8 +142,8 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
               <select
                 id="modelType"
                 value={config.modelType}
-                onChange={(e) => setConfig({ 
-                  ...config, 
+                onChange={(e) => setConfig({
+                  ...config,
                   modelType: e.target.value as ModelType,
                   name: `Import ${e.target.value}`
                 })}
@@ -168,9 +168,9 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
                 type="datetime-local"
                 id="upToDate"
                 value={config.upToDate?.toISOString().slice(0, 16) || ''}
-                onChange={(e) => setConfig({ 
-                  ...config, 
-                  upToDate: e.target.value ? new Date(e.target.value) : undefined 
+                onChange={(e) => setConfig({
+                  ...config,
+                  upToDate: e.target.value ? new Date(e.target.value) : undefined
                 })}
                 className="w-full"
                 required
@@ -263,7 +263,7 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
             <Button type="button" variant="secondary" onClick={onClose}>
               Cancel
             </Button>
-            <Button 
+            <Button
               type="submit"
               variant={config.type === 'reset' ? 'danger' : 'primary'}
               disabled={showApiKeyWarning}

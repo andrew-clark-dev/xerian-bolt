@@ -6,7 +6,7 @@ import { TaskDialog, type AutomatedTaskConfig } from '../components/maintenance/
 import { TaskProgress } from '../components/maintenance/TaskProgress';
 import { TaskOutput } from '../components/maintenance/TaskOutput';
 import { automatedTaskService, type TaskProgress as TaskProgressType } from '../services/automatedTasks';
-import { settingsService } from '../services/settings';
+import { settingsService } from '../services/settings.service';
 import { theme } from '../theme';
 
 export function Maintenance() {
@@ -24,7 +24,7 @@ export function Maintenance() {
     // Subscribe to task updates
     return automatedTaskService.subscribe((tasks) => {
       setActiveTasks(tasks);
-      
+
       // Add new messages for task status changes
       tasks.forEach(task => {
         setTaskMessages(prev => {

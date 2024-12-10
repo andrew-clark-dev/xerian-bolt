@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const currentUser = await getCurrentUser();
       setCognitoUser(currentUser);
-      
+
       // Only sync user data if we have a valid Cognito user
       if (currentUser?.userId) {
         const userData = await userService.syncUserData(currentUser);
@@ -60,8 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       return { signInStep: nextStep?.signInStep };
-    } catch (err) {
-      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -71,14 +69,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const { isSignedIn } = await amplifyConfirmSignIn({ challengeResponse: newPassword });
-      
+
       if (isSignedIn) {
         await checkAuthState();
       } else {
         throw new Error('Failed to confirm sign in');
       }
-    } catch (err) {
-      throw err;
+
     } finally {
       setIsLoading(false);
     }
@@ -111,8 +108,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       return { isSignUpComplete, nextStep };
-    } catch (err) {
-      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -127,8 +122,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       return isSignUpComplete;
-    } catch (err) {
-      throw err;
     } finally {
       setIsLoading(false);
     }

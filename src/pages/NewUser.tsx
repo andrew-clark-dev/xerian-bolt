@@ -1,22 +1,25 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { userService } from '../services/user.service';
+import { UserUpdate, userService } from '../services/user.service';
 import { SuccessMessage } from '../components/SuccessMessage';
 import { RoleCheckboxes } from '../components/user/RoleCheckboxes';
-import type { Schema } from '../../amplify/data/resource';
-import type { UserRole } from '../../amplify/data/resource';
 
-type User = Schema['User']['type'];
 
 export function NewUser() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    username: string;
+    email: string;
+    phoneNumber: string;
+    status: 'Pending';
+    role: 'Employee' | 'Admin' | 'Manager' | 'Service' | null | undefined;
+  }>({
     username: '',
     email: '',
     phoneNumber: '',
-    status: 'Pending' as const,
-    role: ['Employee'] as UserRole[],
+    status: 'Pending',
+    role: 'Employee',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -36,16 +39,12 @@ export function NewUser() {
         return;
       }
 
-      const now = new Date().toISOString();
-      const userData: Omit<User, 'id'> = {
+      const userData: Omit<UserUpdate, 'id'> = {
         username: formData.username,
         email: formData.email,
         phoneNumber: formData.phoneNumber || undefined,
         status: formData.status,
         role: formData.role,
-        settings: {},
-        createdAt: now,
-        updatedAt: now,
       };
 
       const createdUser = await userService.createUser(userData);

@@ -2,31 +2,31 @@ import { generateClient } from 'aws-amplify/data';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import type { Schema } from '../../amplify/data/resource';
 import { getCurrentUser } from 'aws-amplify/auth';
+import { initialSettings } from './settings.service';
 
 const client = generateClient<Schema>();
 
 export type User = Omit<Schema['User']['type'], 'updatedAt' | 'createdAt'>;
 export type UserUpdate = Partial<Omit<User, 'id' | 'comments' | 'actions' | 'accounts' | 'items' | 'categories' | 'transactions'>>;
-export type UserCreate = Partial<Omit<User, 'id' | 'comments' | 'actions' | 'accounts' | 'items' | 'categories' | 'transactions'>>;
+export type UserCreate = Partial<Omit<User, 'comments' | 'actions' | 'accounts' | 'items' | 'categories' | 'transactions'>>;
 
 
 class UserService {
-  private async handleServiceError(error: unknown, context: string): Promise<never> {
+  private handleServiceError(error: unknown, context: string): Error {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error(`Error in ${context}:`, error);
-    throw new Error(`${context}: ${message}`);
+    return new Error(`${context}: ${message}`);
   }
 
   async syncUserData(cognitoUser: {
     userId: string;
     username: string;
-  }): Promise<User | undefined> {
+  }): Promise<User> {
     try {
       const now = new Date().toISOString();
 
       // Fetch user attributes
-      const userAttributes = await fetchUserAttributes()
-        .catch(() => this.handleServiceError(new Error('Failed to fetch user attributes'), 'syncUserData'));
+      const userAttributes = await fetchUserAttributes();
 
       // Try to get existing user by ID
       const { data: existingUserById, errors: getErrors } = await client.models.User.get({
@@ -48,27 +48,21 @@ class UserService {
       }
 
       // Create new user if not found
-      const { data: newUser, errors: createErrors } = await client.models.User.create({
+      const loginSettings = { ...initialSettings, hasLogin: true };
+      const newUser = await this.createUser({
         id: cognitoUser.userId,
         username: cognitoUser.username,
         email: userAttributes.email!,
         status: 'Active',
         role: 'Employee',
-        settings: JSON.stringify({
-          notifications: true,
-          theme: 'light',
-        }),
+        settings: JSON.stringify(loginSettings),
         lastLoginAt: now,
       });
-
-      if (createErrors) {
-        this.handleServiceError(createErrors, 'syncUserData - create new user');
-      }
 
       return newUser!;
 
     } catch (error) {
-      this.handleServiceError(error, 'syncUserData');
+      throw this.handleServiceError(error, 'syncUserData');
     }
   }
 
@@ -112,7 +106,7 @@ class UserService {
         ...user,
         username: user.username!,
         email: user.email!,
-        settings: user.settings!,
+        settings: user.settings ?? JSON.stringify(initialSettings),
       });
 
       if (errors) {
