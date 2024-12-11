@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { theme } from '../../theme';
-import { TaskConfig } from '../../services/tasks/types';
+import { TaskConfig, ModelType } from '../../services/tasks/types';
 
 interface TaskDialogProps {
   isOpen: boolean;
@@ -19,13 +19,17 @@ const scheduleTypes = [
   { value: 'monthly', label: 'Monthly' },
 ];
 
+const modelTypes: ModelType[] = ['Account'];
+
 export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProps) {
   const [config, setConfig] = useState<TaskConfig>({
     name: 'Import Accounts',
+    modelType: 'Account',
     schedule: 'now',
     retentionDays: 30,
     notifyOnComplete: true,
   });
+  const [showApiKey, setShowApiKey] = useState(false);
 
   if (!isOpen) return null;
 
@@ -51,6 +55,55 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          <div>
+            <label className={`block text-sm font-medium ${theme.text()} mb-1`}>
+              API Key
+            </label>
+            <div className="relative">
+              <Input
+                type={showApiKey ? "text" : "password"}
+                value={apiKey || ''}
+                readOnly
+                className="w-full pr-10"
+                placeholder="No API key configured"
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+              >
+                {showApiKey ? (
+                  <EyeOff className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                ) : (
+                  <Eye className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="modelType" className={`block text-sm font-medium ${theme.text()} mb-1`}>
+              Model Type
+            </label>
+            <select
+              id="modelType"
+              value={config.modelType}
+              onChange={(e) => setConfig({
+                ...config,
+                modelType: e.target.value as ModelType,
+                name: `Import ${e.target.value}`
+              })}
+              className={`w-full px-3 py-2 ${theme.border()} border rounded-lg ${theme.surface('secondary')} ${theme.text()}`}
+              required
+            >
+              {modelTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label htmlFor="upToDate" className={`block text-sm font-medium ${theme.text()} mb-1`}>
               Import Up To Date

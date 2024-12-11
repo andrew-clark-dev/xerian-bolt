@@ -8,7 +8,7 @@ import { TaskOutput } from '../components/maintenance/TaskOutput';
 import { taskManager } from '../services/tasks/TaskManager';
 import { settingsService } from '../services/settings.service';
 import { theme } from '../theme';
-import type { TaskConfig, TaskProgress as TaskProgressType } from '../services/tasks/types';
+import type { TaskProgress as TaskProgressType } from '../services/tasks/types';
 
 export function Maintenance() {
   const [showTaskDialog, setShowTaskDialog] = useState(false);

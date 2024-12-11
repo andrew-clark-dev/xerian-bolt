@@ -27,9 +27,10 @@ export class TaskManager {
     const task: TaskProgress = {
       id: taskId,
       name: config.name,
+      modelType: config.modelType,
       progress: 0,
       status: 'running',
-      message: 'Initializing account import...',
+      message: `Initializing ${config.modelType} import...`,
       startedAt: new Date(),
     };
 
@@ -107,7 +108,7 @@ export class TaskManager {
     this.tasks.set(taskId, {
       ...task,
       status: 'failed',
-      message: `Failed to import accounts: ${error.message}`,
+      message: `Failed to import ${task.modelType}: ${error.message}`,
       completedAt: new Date(),
     });
 

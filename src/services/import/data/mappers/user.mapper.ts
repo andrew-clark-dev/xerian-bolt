@@ -1,21 +1,13 @@
-
-import type { ExternalUser } from '../types';
 import type { UserUpdate } from '../../../user.service';
+import type { ExternalUser } from '../types';
 import { initialSettings } from '../../../settings.service';
 
-
-/**
- * Maps an external user to our internal User type
- */
 export function mapExternalUser(external: ExternalUser): UserUpdate {
-
   return {
     username: external.name,
     email: `${external.name}@xerian.com`,
-    status: 'Pending',
+    status: 'Active',
     role: 'Employee',
-    settings: initialSettings,
-
-    // Add other missing properties with default values if necessary
+    settings: JSON.stringify(initialSettings),
   };
 }
