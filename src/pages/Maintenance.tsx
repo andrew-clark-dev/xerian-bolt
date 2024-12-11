@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { Wrench, Play } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { TaskDialog, type AutomatedTaskConfig } from '../components/maintenance/TaskDialog';
+import { TaskDialog } from '../components/maintenance/TaskDialog';
 import { TaskProgress } from '../components/maintenance/TaskProgress';
 import { TaskOutput } from '../components/maintenance/TaskOutput';
-import { automatedTaskService, type TaskProgress as TaskProgressType } from '../services/automatedTasks';
+import { taskManager } from '../services/tasks/TaskManager';
 import { settingsService } from '../services/settings.service';
 import { theme } from '../theme';
+import type { TaskConfig, TaskProgress as TaskProgressType } from '../services/tasks/types';
 
 export function Maintenance() {
   const [showTaskDialog, setShowTaskDialog] = useState(false);
@@ -22,7 +23,7 @@ export function Maintenance() {
     });
 
     // Subscribe to task updates
-    return automatedTaskService.subscribe((tasks) => {
+    return taskManager.subscribe((tasks) => {
       setActiveTasks(tasks);
 
       // Add new messages for task status changes
@@ -38,24 +39,18 @@ export function Maintenance() {
     });
   }, []);
 
-  const handleStartTask = async (config: AutomatedTaskConfig) => {
-    if (config.type === 'import' && config.modelType === 'Account') {
-      if (!apiKey) {
-        setTaskMessages(prev => [...prev, 'Error: API key not configured']);
-        return;
-      }
-      if (!config.upToDate) {
-        setTaskMessages(prev => [...prev, 'Error: Up to date not specified']);
-        return;
-      }
+  const handleStartTask = async (config: TaskConfig) => {
+    if (!apiKey) {
+      setTaskMessages(prev => [...prev, 'Error: API key not configured']);
+      return;
     }
 
-    await automatedTaskService.startTask(config, apiKey);
+    await taskManager.startTask(config, apiKey);
     setShowTaskDialog(false);
   };
 
   const handleCancelTask = (taskId: string) => {
-    automatedTaskService.cancelTask(taskId);
+    taskManager.cancelTask(taskId);
   };
 
   // Sort tasks with running tasks first, then by start time (newest first)
@@ -67,7 +62,6 @@ export function Maintenance() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -79,11 +73,10 @@ export function Maintenance() {
         </div>
         <Button onClick={() => setShowTaskDialog(true)}>
           <Play className="w-4 h-4 mr-2" />
-          Start Automated Task
+          Start Import Task
         </Button>
       </div>
 
-      {/* Main Content Area - Scrollable */}
       <div className="flex-1 min-h-0 flex flex-col">
         <div className="flex-1 overflow-y-auto mb-6">
           {sortedTasks.length > 0 && (
@@ -105,7 +98,6 @@ export function Maintenance() {
           )}
         </div>
 
-        {/* Task Output - Fixed Height */}
         <div className="flex-none">
           <Card>
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
