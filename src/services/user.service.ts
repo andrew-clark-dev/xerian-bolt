@@ -12,7 +12,8 @@ export type UserCreate = Partial<Omit<User, 'comments' | 'actions' | 'accounts' 
 
 
 class UserService {
-  private handleServiceError(error: unknown, context: string): Error {
+
+  private serviceError(error: unknown, context: string): Error {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error(`Error in ${context}:`, error);
     return new Error(`${context}: ${message}`);
@@ -62,7 +63,7 @@ class UserService {
       return newUser!;
 
     } catch (error) {
-      throw this.handleServiceError(error, 'syncUserData');
+      throw this.serviceError(error, 'syncUserData');
     }
   }
 
@@ -71,12 +72,12 @@ class UserService {
       const { data: user, errors } = await client.models.User.get({ id: userId });
 
       if (errors) {
-        this.handleServiceError(errors, 'findUser');
+        throw this.serviceError(errors, 'findUser');
       }
 
       return user;
     } catch (error) {
-      this.handleServiceError(error, 'findUser');
+      throw this.serviceError(error, 'findUser');
     }
     return null;
   }
@@ -91,6 +92,22 @@ class UserService {
     return user;
   }
 
+  async findUserByName(userName: string): Promise<User | null> {
+    try {
+      const { data: user, errors } = await client.models.User.listUserByUsername({
+        username: userName
+      });
+
+      if (errors) {
+        throw this.serviceError(errors, 'findUser');
+        return null
+      }
+
+      return user[0];
+    } catch (error) {
+      throw this.serviceError(error, 'findUser');
+    }
+  }
 
   async createUser(user: UserCreate): Promise<User> {
     try {
@@ -110,14 +127,13 @@ class UserService {
       });
 
       if (errors) {
-        this.handleServiceError(errors, 'createUser');
+        throw this.serviceError(errors, 'createUser');
       }
 
       return newUser!;
     } catch (error) {
-      this.handleServiceError(error, 'createUser');
+      throw this.serviceError(error, 'createUser');
     }
-    throw new Error('Failed to create user');
   }
 
   async updateUser(userId: string, updates: Partial<User>): Promise<User> {
@@ -129,14 +145,13 @@ class UserService {
       });
 
       if (errors) {
-        this.handleServiceError(errors, 'updateUser');
+        throw this.serviceError(errors, 'updateUser');
       }
 
       return user!;
     } catch (error) {
-      this.handleServiceError(error, 'updateUser');
+      throw this.serviceError(error, 'updateUser');
     }
-    throw new Error('Failed to update user');
   }
 }
 

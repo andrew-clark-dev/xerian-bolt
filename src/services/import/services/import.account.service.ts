@@ -3,7 +3,7 @@ import { accountService } from '../../account.service';
 import { userService } from '../../user.service';
 import { mapExternalAccount } from '../data/mappers/account.mapper';
 import { mapExternalUser } from '../data/mappers/user.mapper';
-import type { ExternalAccountPage } from '../data/types';
+import type { ExternalAccountPage, ExternalUser } from '../data/types';
 
 interface FetchAccountsOptions {
   cursor?: string | null;
@@ -97,13 +97,9 @@ export class ImportAccountService {
   private async getOrCreateUser(externalUser: ExternalUser): Promise<string> {
     try {
       // Try to find existing user by username
-      const { users } = await userService.listUsers({
-        filter: { username: { eq: externalUser.name } },
-        limit: 1,
-      });
-
-      if (users.length > 0) {
-        return users[0].id;
+      const user = await userService.findUserByName(externalUser.name);
+      if (user) {
+        return user.id;
       }
 
       // Create new user if not found
@@ -120,7 +116,7 @@ export class ImportAccountService {
   /**
    * Imports accounts from the external API, mapping and saving them to our system
    */
-  async *importAccounts(apiKey: string, upTo: Date, userId: string): AsyncGenerator<ImportProgress, ImportResult> {
+  async *importAccounts(apiKey: string, upTo: Date): AsyncGenerator<ImportProgress, ImportResult> {
     this.abortController = new AbortController();
     const { signal } = this.abortController;
 
