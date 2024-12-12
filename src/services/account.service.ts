@@ -1,28 +1,31 @@
+import { v4 as uuidv4 } from 'uuid'
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 
 const client = generateClient<Schema>();
 
 export type Account = Schema['Account']['type'];
+export type AccountCreate = Omit<Account, 'items' | 'transactions' | 'updatedAt' | 'createdBy'>;
 
 class AccountService {
-  private async handleServiceError(error: unknown, context: string): never {
+
+  private serviceError(error: unknown, context: string): Error {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error(`Error in ${context}:`, error);
-    throw new Error(`${context}: ${message}`);
+    return new Error(`${context}: ${message}`);
   }
-
-  async findAccount(accountId: string): Promise<Account | null> {
+  
+  async findAccount(number: string): Promise<Account | null> {
     try {
-      const { data: account, errors } = await client.models.Account.get({ id: accountId });
-      
+      const { data: account, errors } = await client.models.Account.get({ number: number });
+
       if (errors) {
-        this.handleServiceError(errors, 'findAccount');
+        throw this.serviceError(errors, 'findAccount');
       }
-      
+
       return account;
     } catch (error) {
-      this.handleServiceError(error, 'findAccount');
+      throw this.serviceError(error, 'findAccount');
     }
   }
 
@@ -42,35 +45,32 @@ class AccountService {
       });
 
       if (errors) {
-        this.handleServiceError(errors, 'findAccountByNumber');
+        throw this.serviceError(errors, 'findAccountByNumber');
       }
 
       return accounts[0] || null;
     } catch (error) {
-      this.handleServiceError(error, 'findAccountByNumber');
+      throw this.serviceError(error, 'findAccountByNumber');
     }
   }
 
-  async createAccount(account: Omit<Account, 'id'>): Promise<Account> {
+  async createAccount(account: AccountCreate): Promise<Account> {
     try {
-      const now = new Date().toISOString();
       const { data: newAccount, errors } = await client.models.Account.create({
         ...account,
-        createdAt: now,
-        updatedAt: now,
-        lastActivityAt: now,
+        id: uuidv4(),
         balance: account.balance ?? 0,
         noSales: account.noSales ?? 0,
         noItems: account.noItems ?? 0,
       });
 
       if (errors) {
-        this.handleServiceError(errors, 'createAccount');
+        throw this.serviceError(errors, 'createAccount');
       }
 
       return newAccount!;
     } catch (error) {
-      this.handleServiceError(error, 'createAccount');
+      throw this.serviceError(error, 'createAccount');
     }
   }
 
@@ -86,74 +86,15 @@ class AccountService {
       });
 
       if (errors) {
-        this.handleServiceError(errors, 'updateAccount');
+        throw this.serviceError(errors, 'updateAccount');
       }
 
       return account!;
     } catch (error) {
-      this.handleServiceError(error, 'updateAccount');
+      throw this.serviceError(error, 'updateAccount');
     }
   }
 
-  async deleteAccount(accountId: string): Promise<void> {
-    try {
-      const { errors } = await client.models.Account.delete({ id: accountId });
-      
-      if (errors) {
-        this.handleServiceError(errors, 'deleteAccount');
-      }
-    } catch (error) {
-      this.handleServiceError(error, 'deleteAccount');
-    }
-  }
-
-  async listAccounts(options: {
-    limit?: number;
-    nextToken?: string;
-    filter?: Record<string, any>;
-    sort?: {
-      field: keyof Account;
-      direction: 'asc' | 'desc';
-    };
-  } = {}): Promise<{
-    accounts: Account[];
-    nextToken?: string;
-  }> {
-    try {
-      const { data: accounts, errors, nextToken } = await client.models.Account.list({
-        limit: options.limit,
-        nextToken: options.nextToken,
-        filter: options.filter,
-        sort: options.sort,
-      });
-
-      if (errors) {
-        this.handleServiceError(errors, 'listAccounts');
-      }
-
-      return { accounts, nextToken };
-    } catch (error) {
-      this.handleServiceError(error, 'listAccounts');
-    }
-  }
-
-  async getNextAccountNumber(): Promise<string> {
-    try {
-      const { accounts } = await this.listAccounts({
-        limit: 1,
-        sort: {
-          field: 'number',
-          direction: 'desc',
-        },
-      });
-
-      const lastNumber = accounts[0]?.number || 'ACC-00000';
-      const numberPart = parseInt(lastNumber.split('-')[1], 10);
-      return `ACC-${String(numberPart + 1).padStart(5, '0')}`;
-    } catch (error) {
-      this.handleServiceError(error, 'getNextAccountNumber');
-    }
-  }
 }
 
 export const accountService = new AccountService();

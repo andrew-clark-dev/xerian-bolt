@@ -617,6 +617,16 @@
               }
             },
             {
+              "type": "key",
+              "properties": {
+                "name": "usersByEmail",
+                "queryField": "listUserByEmail",
+                "fields": [
+                  "email"
+                ]
+              }
+            },
+            {
               "type": "auth",
               "properties": {
                 "rules": [
@@ -921,8 +931,8 @@
                 ]
               }
             },
-            "transaction": {
-              "name": "transaction",
+            "transactions": {
+              "name": "transactions",
               "isArray": true,
               "type": {
                 "model": "Transaction"
@@ -1227,8 +1237,8 @@
               "isRequired": false,
               "attributes": []
             },
-            "transaction": {
-              "name": "transaction",
+            "transactions": {
+              "name": "transactions",
               "isArray": true,
               "type": {
                 "model": "Transaction"

@@ -10,6 +10,7 @@ export type User = Omit<Schema['User']['type'], 'updatedAt' | 'createdAt'>;
 export type UserUpdate = Partial<Omit<User, 'id' | 'comments' | 'actions' | 'accounts' | 'items' | 'categories' | 'transactions'>>;
 export type UserCreate = Partial<Omit<User, 'comments' | 'actions' | 'accounts' | 'items' | 'categories' | 'transactions'>>;
 
+export type UserRole = Schema['User']['type']['role'];
 
 class UserService {
 
@@ -106,6 +107,22 @@ class UserService {
       return user[0];
     } catch (error) {
       throw this.serviceError(error, 'findUser');
+    }
+  }
+
+  async findUserByEmail(email: string): Promise<User | null> {
+    try {
+      const { data: user, errors } = await client.models.User.listUserByEmail({
+        email: email
+      });
+
+      if (errors) {
+        throw this.serviceError(errors, 'findUserByEmail');
+      }
+
+      return user[0];
+    } catch (error) {
+      throw this.serviceError(error, 'findUserByEmail');
     }
   }
 

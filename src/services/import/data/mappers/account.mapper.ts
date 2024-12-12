@@ -1,11 +1,8 @@
-import type { Schema } from '../../../../amplify/data/resource';
+import { AccountCreate } from '../../../account.service';
 import type { ExternalAccount } from '../types';
 import { isMobileNumber } from '../utils/phone.utils';
 
-type Account = Schema['Account']['type'];
-
-export function mapExternalAccount(external: ExternalAccount): Omit<Account, 'id'> {
-  const now = new Date().toISOString();
+export function mapExternalAccount(external: ExternalAccount, userId: string): AccountCreate {
 
   return {
     number: external.number,
@@ -30,8 +27,19 @@ export function mapExternalAccount(external: ExternalAccount): Omit<Account, 'id
     lastSettlementAt: external.last_settlement,
     tags: external.tags,
     createdAt: external.created,
-    updatedAt: now,
     deletedAt: external.deleted || undefined,
-    comunicationPreferences: 'None',
+    comunicationPreferences: comunicationPreferences(external.phone_number, external.email),
+    userId: userId,
+    id: external.id,
   };
+}
+
+function comunicationPreferences(phone_number: string, email: string): "TextMessage" | "Email" | "Whatsapp" | "None" {
+  if (phone_number && isMobileNumber(phone_number)) {
+    return "TextMessage";
+  } else if (email) {
+    return "Email";
+  } else {
+    return "None";
+  }
 }

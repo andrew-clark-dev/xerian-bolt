@@ -61,7 +61,7 @@ const schema = a.schema({
       lastLoginAt: a.datetime(),
       deletedAt: a.datetime(),
     })
-    .secondaryIndexes((index) => [index("username")])
+    .secondaryIndexes((index) => [index("username"), index("email")])
     .authorization(allow => [allow.owner(), allow.group('ADMIN'), allow.authenticated().to(['read'])]),
 
   Employee: a
@@ -98,7 +98,7 @@ const schema = a.schema({
       kind: a.enum(["Standard", "VIP", "Vender", "Employee"]),
       defaultSplit: a.integer(),
       items: a.hasMany("Item", "accountNumber"), // setup relationships between main types
-      transaction: a.hasMany("Transaction", "accountNumber"), // setup relationships between types
+      transactions: a.hasMany("Transaction", "accountNumber"), // setup relationships between types
       balance: a.integer().required(),
       noSales: a.integer().required().default(0),
       noItems: a.integer().required().default(0),
@@ -137,7 +137,7 @@ const schema = a.schema({
       split: a.integer().required(),
       price: a.integer().required(),
       status: a.enum(['Tagged', 'HungOut', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen']),
-      transaction: a.hasMany("Transaction", "itemSku"), // setup relationships between types
+      transactions: a.hasMany("Transaction", "itemSku"), // setup relationships between types
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
       lastViewedAt: a.datetime(),

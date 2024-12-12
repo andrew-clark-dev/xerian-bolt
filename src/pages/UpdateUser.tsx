@@ -14,8 +14,8 @@ export function UpdateUser() {
     username: '',
     email: '',
     phoneNumber: '',
-    status: 'Active' as const,
-    role: ['Employee'] as User['role'],
+    status: 'Active' as User['status'],
+    role: 'Employee' as User['role'],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,17 +29,12 @@ export function UpdateUser() {
       }
 
       try {
-        const users = await userService.listUsers({
-          filter: { email: { eq: email } },
-          limit: 1,
-        });
-        
-        const user = users.users[0];
+        const user = await userService.findUserByEmail(email);
         if (!user) {
           navigate('/users');
           return;
         }
-        
+
         setFormData({
           username: user.username,
           email: user.email,
@@ -64,12 +59,7 @@ export function UpdateUser() {
     try {
       if (!email) return;
 
-      const users = await userService.listUsers({
-        filter: { email: { eq: email } },
-        limit: 1,
-      });
-      
-      const user = users.users[0];
+      const user = await userService.findUserByEmail(email);
       if (!user) {
         throw new Error('User not found');
       }
@@ -79,9 +69,11 @@ export function UpdateUser() {
         phoneNumber: formData.phoneNumber,
         role: formData.role,
       });
-      
+
       navigate('/users');
     } catch (err) {
+      console.error('Failed to update user:', err);
+
       setError('Failed to update user. Please try again.');
     } finally {
       setIsLoading(false);
@@ -92,9 +84,13 @@ export function UpdateUser() {
     try {
       setIsLoading(true);
       // Implementation for password reset would go here
+      console.error('reset password not implemented: ', password);
+
       setShowPasswordDialog(false);
       navigate('/users');
     } catch (err) {
+      console.error('reset password:', err);
+
       setError('Failed to reset password. Please try again.');
     } finally {
       setIsLoading(false);
@@ -169,7 +165,7 @@ export function UpdateUser() {
               </label>
               <input
                 type="text"
-                value={formData.status}
+                value={formData.status ?? ''}
                 readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
               />
@@ -181,8 +177,8 @@ export function UpdateUser() {
               </label>
               <select
                 id="role"
-                value={formData.role[0]}
-                onChange={(e) => setFormData({ ...formData, role: [e.target.value as User['role'][0]] })}
+                value={formData.role ?? ''}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as User['role'] })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="Admin">Admin</option>

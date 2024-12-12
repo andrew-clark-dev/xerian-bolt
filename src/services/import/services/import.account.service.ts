@@ -12,6 +12,14 @@ interface FetchAccountsOptions {
 }
 
 export class ImportAccountService {
+
+  private serviceError(error: unknown, context: string): Error {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`Error in ${context}:`, error);
+    return new Error(`${context}: ${message}`);
+  }
+
+
   private abortController: AbortController | null = null;
 
   private async fetchAccounts({
@@ -20,7 +28,13 @@ export class ImportAccountService {
     apiKey,
   }: FetchAccountsOptions): Promise<ExternalAccountPage> {
     try {
-      const params = new URLSearchParams({
+      const params: {
+        sort_by: string;
+        include: string[];
+        expand: string[];
+        cursor?: string;
+        'created:lte'?: string;
+      } = {
         sort_by: 'created',
         include: [
           'default_split',
@@ -35,16 +49,16 @@ export class ImportAccountService {
           'locations',
           'recurring_fees',
           'tags',
-        ].join(','),
-        expand: ['created_by', 'locations', 'recurring_fees'].join(','),
-      });
+        ],
+        expand: ['created_by', 'locations', 'recurring_fees'],
+      };
 
       if (cursor) {
-        params.append('cursor', cursor);
+        params['cursor'] = cursor;
       }
 
       if (to) {
-        params.append('created:lte', to.toISOString());
+        params['created:lte'] = to.toISOString();
       }
 
       apiClient.setAuthToken(apiKey);
@@ -52,7 +66,7 @@ export class ImportAccountService {
       console.log('Fetching accounts with params:', params.toString());
 
       const response = await apiClient.get<ExternalAccountPage>(
-        `/v1/accounts}`
+        `/v1/accounts`, { params: params }
       );
 
       console.log('Received response:', response);
@@ -75,8 +89,7 @@ export class ImportAccountService {
       const newUser = await userService.createUser(mappedUser);
       return newUser.id;
     } catch (error) {
-      console.error('Error getting/creating user:', error);
-      throw error;
+      throw this.serviceError(error, 'get or create user');
     }
   }
 
@@ -112,7 +125,7 @@ export class ImportAccountService {
 
           try {
             const createdById = await this.getOrCreateUser(externalAccount.created_by);
-            const mappedAccount = mapExternalAccount(externalAccount);
+            const mappedAccount = mapExternalAccount(externalAccount, createdById);
             const existingAccount = await accountService.findAccountByNumber(mappedAccount.number);
 
             if (existingAccount) {
@@ -145,6 +158,7 @@ export class ImportAccountService {
 
       return {
         success: failed === 0 && !signal.aborted,
+        message: failed === 0 && !signal.aborted ? 'Import completed successfully' : 'Import encountered errors',
         processed,
         failed,
         errors,
@@ -152,6 +166,7 @@ export class ImportAccountService {
     } catch (error) {
       return {
         success: false,
+        message: 'Import encountered errors',
         processed,
         failed,
         errors: [...errors, error instanceof Error ? error : new Error('Unknown error')],

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '../ui/Input';
-import { theme } from '../../theme';
 
 interface ApiKeyInputProps {
   value: string;

@@ -1,19 +1,18 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+
 import { API_CONFIG } from './config/api';
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
 export class ApiClient {
   private client: AxiosInstance;
 
-  constructor(config: AxiosRequestConfig = {}) {
+  constructor() {
     this.client = axios.create({
-      baseURL: '/api',
+      baseURL: 'api',
       headers: {
         ...API_CONFIG.defaultHeaders,
-        'Accept': 'application/json',
       },
-      withCredentials: false,
+      withCredentials: API_CONFIG.cors.credentials,
       timeout: 30000, // 30 second timeout
-      ...config,
     });
 
     // Request interceptor
@@ -75,7 +74,7 @@ export class ApiClient {
     }
   }
 
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     try {
       const response = await this.client.post<T>(url, data, config);
       return response.data;
@@ -85,7 +84,7 @@ export class ApiClient {
     }
   }
 
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     try {
       const response = await this.client.put<T>(url, data, config);
       return response.data;
@@ -107,3 +106,4 @@ export class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+

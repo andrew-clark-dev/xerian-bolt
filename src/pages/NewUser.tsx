@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserUpdate, userService } from '../services/user.service';
+import { UserRole, UserUpdate, userService } from '../services/user.service';
 import { SuccessMessage } from '../components/SuccessMessage';
-import { RoleCheckboxes } from '../components/user/RoleCheckboxes';
-
 
 export function NewUser() {
+
   const navigate = useNavigate();
+  const userRoles: UserRole[] = ['Admin', 'Employee', 'Manager']; // Define the roles array
   const [formData, setFormData] = useState<{
     username: string;
     email: string;
     phoneNumber: string;
     status: 'Pending';
-    role: 'Employee' | 'Admin' | 'Manager' | 'Service' | null | undefined;
+    role: UserRole;
   }>({
     username: '',
     email: '',
@@ -55,6 +55,7 @@ export function NewUser() {
         navigate('/users');
       }, 2000);
     } catch (err) {
+      console.error('Failed to create user:', err);
       setError('Failed to create user. Please try again.');
     } finally {
       setIsLoading(false);
@@ -143,18 +144,22 @@ export function NewUser() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Roles
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                Role
               </label>
-              <RoleCheckboxes
-                selectedRoles={formData.role}
-                onChange={(roles) => setFormData({ ...formData, role: roles })}
-              />
-              {formData.role.length === 0 && (
-                <p className="mt-1 text-sm text-red-600">
-                  Please select at least one role
-                </p>
-              )}
+              <select
+                id="role"
+                value={formData.role || ''}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                {userRoles.map(role => (
+                  <option key={role} value={role || ''}>
+                    {role}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -167,14 +172,14 @@ export function NewUser() {
             </Link>
             <button
               type="submit"
-              disabled={isLoading || formData.role.length === 0}
+              disabled={isLoading}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Creating...' : 'Create User'}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
