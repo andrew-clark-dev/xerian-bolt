@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { accountService } from '../services/account.service';
+import { accountService, type Account } from '../services/account.service';
+import { AccountForm } from '../components/accounts/AccountForm';
+import { Button } from '../components/ui/Button';
+import { theme } from '../theme';
 
 export function UpdateAccount() {
   const navigate = useNavigate();
   const { number } = useParams();
-  const [formData, setFormData] = useState({
-    name: '',
-    status: 'Active' as const,
-  });
+  const [formData, setFormData] = useState<Partial<Account>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,15 +21,12 @@ export function UpdateAccount() {
       }
 
       try {
-        const account = await accountService.findAccountByNumber(number);
+        const account = await accountService.findAccount(number);
         if (!account) {
           navigate('/accounts');
           return;
         }
-        setFormData({
-          name: account.name,
-          status: account.status,
-        });
+        setFormData(account);
       } catch (err) {
         console.error('Failed to load account:', err);
         navigate('/accounts');
@@ -39,6 +36,10 @@ export function UpdateAccount() {
     loadAccount();
   }, [number, navigate]);
 
+  const handleFieldChange = (field: keyof Account, value: string | number | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -46,8 +47,8 @@ export function UpdateAccount() {
 
     try {
       if (!number) return;
-      
-      const account = await accountService.findAccountByNumber(number);
+
+      const account = await accountService.findAccount(number);
       if (!account) {
         throw new Error('Account not found');
       }
@@ -55,6 +56,8 @@ export function UpdateAccount() {
       await accountService.updateAccount(account.id, formData);
       navigate('/accounts');
     } catch (err) {
+      console.error(`Error in update account}:`, err);
+
       setError('Failed to update account. Please try again.');
     } finally {
       setIsLoading(false);
@@ -63,17 +66,19 @@ export function UpdateAccount() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link
-          to="/accounts"
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </Link>
-        <h1 className="text-2xl font-semibold text-gray-900">Update Account</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link
+            to="/accounts"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </Link>
+          <h1 className="text-2xl font-semibold text-gray-900">Update Account</h1>
+        </div>
       </div>
 
-      <div className="max-w-2xl bg-white shadow-sm rounded-lg border border-gray-200">
+      <div className={`${theme.surface()} ${theme.border()} rounded-lg shadow-sm`}>
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {error && (
             <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">
@@ -81,64 +86,25 @@ export function UpdateAccount() {
             </div>
           )}
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Account Number
-              </label>
-              <input
-                type="text"
-                value={number}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
-              />
-            </div>
+          <AccountForm
+            formData={formData}
+            isLoading={isLoading}
+            onChange={handleFieldChange}
+          />
 
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Account Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                id="status"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-                <option value="Suspended">Suspended</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-3 pt-4">
             <Link
               to="/accounts"
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className={theme.component('button', 'secondary')}
             >
               Cancel
             </Link>
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Updating...' : 'Update Account'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

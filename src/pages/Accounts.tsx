@@ -1,98 +1,55 @@
-import { useState, useEffect } from 'react';
-import { accountService, type Account } from '../services/account.service';
-import { AccountList } from '../components/accounts/AccountList';
+import { useEffect } from 'react';
 import { AccountsHeader } from '../components/accounts/AccountsHeader';
-
-const ITEMS_PER_PAGE = 10;
+import { AccountTable } from '../components/accounts/AccountTable';
+import { AccountPagination } from '../components/accounts/AccountPagination';
+import { useAccountPagination } from '../hooks/useAccountPagination';
+import { useAccountSort } from '../hooks/useAccountSort';
 
 export function Accounts() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [sortColumn, setSortColumn] = useState<keyof Account>('number');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [isLoading, setIsLoading] = useState(true);
-  const [nextToken, setNextToken] = useState<string | null>(null);
-  const [prevTokens, setPrevTokens] = useState<string[]>([]);
+  const { sortColumn, sortDirection, handleSort } = useAccountSort();
+  const {
+    accounts,
+    currentPage,
+    totalPages,
+    isLoading,
+    recordsPerPage,
+    loadAccounts,
+    handleNextPage,
+    handlePrevPage,
+    handleRecordsPerPageChange,
+  } = useAccountPagination();
 
   useEffect(() => {
     loadAccounts();
-  }, [sortColumn, sortDirection]);
-
-  const loadAccounts = async (token?: string | null) => {
-    try {
-      setIsLoading(true);
-      const { accounts: fetchedAccounts, nextToken: newNextToken } = await accountService.listAccounts({
-        limit: ITEMS_PER_PAGE,
-        nextToken: token,
-        sort: {
-          field: sortColumn,
-          direction: sortDirection,
-        },
-      });
-      
-      setAccounts(fetchedAccounts);
-      setNextToken(newNextToken);
-      
-      // Calculate total pages based on whether there's a next page
-      setTotalPages(newNextToken ? currentPage + 1 : currentPage);
-    } catch (error) {
-      console.error('Failed to load accounts:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (nextToken) {
-      setPrevTokens([...prevTokens, nextToken]);
-      setCurrentPage(currentPage + 1);
-      loadAccounts(nextToken);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      const newPrevTokens = [...prevTokens];
-      const prevToken = newPrevTokens.pop();
-      setPrevTokens(newPrevTokens);
-      setCurrentPage(currentPage - 1);
-      loadAccounts(prevToken);
-    }
-  };
-
-  const handleSort = (column: keyof Account) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-    // Reset pagination when sorting changes
-    setCurrentPage(1);
-    setNextToken(null);
-    setPrevTokens([]);
-  };
+  }, [sortColumn, sortDirection, recordsPerPage, loadAccounts]);
 
   return (
     <div className="space-y-6">
       <AccountsHeader />
-      <AccountList
-        accounts={accounts}
-        isLoading={isLoading}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        sortColumn={sortColumn}
-        sortDirection={sortDirection}
-        onSort={handleSort}
-        onPageChange={(page) => {
-          if (page > currentPage) {
-            handleNextPage();
-          } else {
-            handlePrevPage();
-          }
-        }}
-      />
+      
+      <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
+        <AccountTable
+          accounts={accounts}
+          isLoading={isLoading}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+        />
+        
+        <AccountPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          recordsPerPage={recordsPerPage}
+          onPageChange={(page) => {
+            if (page > currentPage) {
+              handleNextPage();
+            } else {
+              handlePrevPage();
+            }
+          }}
+          onRecordsPerPageChange={handleRecordsPerPageChange}
+        />
+      </div>
     </div>
   );
 }

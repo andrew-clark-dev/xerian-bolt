@@ -7,14 +7,22 @@ const client = generateClient<Schema>();
 export type Account = Schema['Account']['type'];
 export type AccountCreate = Omit<Account, 'items' | 'transactions' | 'updatedAt' | 'createdBy'>;
 
-class AccountService {
+interface ListAccountsOptions {
+  limit?: number;
+  nextToken?: string | null;
+  sort?: {
+    field: keyof Account;
+    direction: 'asc' | 'desc';
+  };
+}
 
+class AccountService {
   private serviceError(error: unknown, context: string): Error {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error(`Error in ${context}:`, error);
     return new Error(`${context}: ${message}`);
   }
-  
+
   async findAccount(number: string): Promise<Account | null> {
     try {
       const { data: account, errors } = await client.models.Account.get({ number: number });
@@ -29,30 +37,14 @@ class AccountService {
     }
   }
 
-  async getAccount(accountId: string): Promise<Account> {
-    const account = await this.findAccount(accountId);
+  async getAccount(number: string): Promise<Account> {
+    const account = await this.findAccount(number);
     if (!account) {
       throw new Error('Account not found');
     }
     return account;
   }
 
-  async findAccountByNumber(accountNumber: string): Promise<Account | null> {
-    try {
-      const { data: accounts, errors } = await client.models.Account.list({
-        filter: { number: { eq: accountNumber } },
-        limit: 1,
-      });
-
-      if (errors) {
-        throw this.serviceError(errors, 'findAccountByNumber');
-      }
-
-      return accounts[0] || null;
-    } catch (error) {
-      throw this.serviceError(error, 'findAccountByNumber');
-    }
-  }
 
   async createAccount(account: AccountCreate): Promise<Account> {
     try {
@@ -95,6 +87,26 @@ class AccountService {
     }
   }
 
+  async listAccounts(options: ListAccountsOptions = {}): Promise<{ accounts: Account[]; nextToken: string | null }> {
+    try {
+      const {
+        data: accounts,
+        nextToken,
+        errors
+      } = await client.models.Account.list({
+        limit: options.limit || 10,
+        nextToken: options.nextToken,
+      });
+
+      if (errors) {
+        throw this.serviceError(errors, 'listAccounts');
+      }
+
+      return { accounts: accounts as Account[], nextToken: nextToken ?? null };
+    } catch (error) {
+      throw this.serviceError(error, 'listAccounts');
+    }
+  }
 }
 
 export const accountService = new AccountService();
