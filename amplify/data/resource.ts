@@ -3,20 +3,29 @@ import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 const schema = a.schema({
 
   // Models
-  Counter:
-    a.model({
-      type: a.enum(["ModelTotal", "NumberKey"]),
+  Counter: a
+    .model({
       name: a.string().required(),
       count: a.integer().default(0),
-      updatedAt: a.datetime(),
-      lastSync: a.datetime(),
-      refId: a.id(), // Optional,   
     })
-      .identifier(['name']),
+    .identifier(['name']),
+
+  // Increment Counter identified by name by 1
+  incCounter: a
+    .mutation()
+    .arguments({
+      name: a.string()
+    })
+    .returns(a.ref('Counter'))
+    .handler(a.handler.custom({
+      dataSource: a.ref('Counter'),
+      entry: './counter/increment-counter.js'
+    })),
+
 
   Action: a
     .model({
-      descriptiopn: a.string().required(),
+      description: a.string().required(),
       actor: a.string(),
       modelName: a.string(),
       refId: a.id(), // Loose coupling for now
@@ -43,6 +52,7 @@ const schema = a.schema({
 
   User: a
     .model({
+      cognitoId: a.string(),
       username: a.string().required(),
       email: a.string().required(),
       phoneNumber: a.string(),
@@ -61,7 +71,7 @@ const schema = a.schema({
       lastLoginAt: a.datetime(),
       deletedAt: a.datetime(),
     })
-    .secondaryIndexes((index) => [index("username"), index("email")])
+    .secondaryIndexes((index) => [index("username"), index("email"), index("cognitoId")])
     .authorization(allow => [allow.owner(), allow.group('ADMIN'), allow.authenticated().to(['read'])]),
 
   Employee: a

@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { X, Eye, EyeOff } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { theme } from '../../theme';
-import { TaskConfig, ModelType } from '../../services/tasks/types';
+import { X, Play } from 'lucide-react';
+import { Button } from '../../ui/Button';
+import { Input } from '../../ui/Input';
+import { theme } from '../../../theme';
+import { TaskConfig } from '../../../services/tasks/types';
+import { ApiKeyField } from './ApiKeyField';
+import { taskTypes } from './TaskTypes';
+import { scheduleTypes } from './ScheduleTypes';
 
 interface TaskDialogProps {
   isOpen: boolean;
@@ -12,35 +15,14 @@ interface TaskDialogProps {
   apiKey?: string;
 }
 
-const scheduleTypes = [
-  { value: 'now', label: 'Run Now' },
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' },
-];
-
-const taskTypes = [
-  {
-    name: 'Import Accounts',
-    modelType: 'Account' as ModelType,
-    requiresApiKey: true,
-  },
-  {
-    name: 'Initialize Model Counts',
-    modelType: 'Counter' as ModelType,
-    requiresApiKey: false,
-  }
-];
-
 export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProps) {
   const [config, setConfig] = useState<TaskConfig>({
     name: taskTypes[0].name,
     modelType: taskTypes[0].modelType,
     schedule: 'now',
     retentionDays: 30,
-    notifyOnComplete: true,
+    notifyOnComplete: false,
   });
-  const [showApiKey, setShowApiKey] = useState(false);
 
   if (!isOpen) return null;
 
@@ -95,33 +77,7 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
             </select>
           </div>
 
-          {requiresApiKey && (
-            <div>
-              <label className={`block text-sm font-medium ${theme.text()} mb-1`}>
-                API Key
-              </label>
-              <div className="relative">
-                <Input
-                  type={showApiKey ? "text" : "password"}
-                  value={apiKey || ''}
-                  readOnly
-                  className="w-full pr-10"
-                  placeholder="No API key configured"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                >
-                  {showApiKey ? (
-                    <EyeOff className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  ) : (
-                    <Eye className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
+          {requiresApiKey && <ApiKeyField value={apiKey || ''} />}
 
           {requiresApiKey && (
             <div>
@@ -176,19 +132,6 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
             />
           </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="notify"
-              checked={config.notifyOnComplete}
-              onChange={(e) => setConfig({ ...config, notifyOnComplete: e.target.checked })}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="notify" className={`ml-2 block text-sm ${theme.text()}`}>
-              Notify when complete
-            </label>
-          </div>
-
           {showApiKeyWarning && (
             <div className={`p-4 ${theme.status('error')} rounded-lg`}>
               <p className="text-sm font-medium">API Key Required</p>
@@ -205,7 +148,9 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
             <Button
               type="submit"
               disabled={requiresApiKey && !apiKey}
+              className="inline-flex items-center gap-2"
             >
+              <Play className="w-5 h-5" />
               Start Task
             </Button>
           </div>

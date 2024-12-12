@@ -64,15 +64,6 @@
         "Counter": {
           "name": "Counter",
           "fields": {
-            "type": {
-              "name": "type",
-              "isArray": false,
-              "type": {
-                "enum": "CounterType"
-              },
-              "isRequired": false,
-              "attributes": []
-            },
             "name": {
               "name": "name",
               "isArray": false,
@@ -87,29 +78,16 @@
               "isRequired": false,
               "attributes": []
             },
-            "updatedAt": {
-              "name": "updatedAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": []
-            },
-            "lastSync": {
-              "name": "lastSync",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": []
-            },
-            "refId": {
-              "name": "refId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false,
-              "attributes": []
-            },
             "createdAt": {
               "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
               "isArray": false,
               "type": "AWSDateTime",
               "isRequired": false,
@@ -165,8 +143,8 @@
               "isRequired": true,
               "attributes": []
             },
-            "descriptiopn": {
-              "name": "descriptiopn",
+            "description": {
+              "name": "description",
               "isArray": false,
               "type": "String",
               "isRequired": true,
@@ -419,6 +397,13 @@
               "isRequired": true,
               "attributes": []
             },
+            "cognitoId": {
+              "name": "cognitoId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
             "username": {
               "name": "username",
               "isArray": false,
@@ -605,6 +590,16 @@
             {
               "type": "model",
               "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "usersByCognitoId",
+                "queryField": "listUserByCognitoId",
+                "fields": [
+                  "cognitoId"
+                ]
+              }
             },
             {
               "type": "key",
@@ -1704,13 +1699,6 @@
         }
       },
       "enums": {
-        "CounterType": {
-          "name": "CounterType",
-          "values": [
-            "ModelTotal",
-            "NumberKey"
-          ]
-        },
         "ActionType": {
           "name": "ActionType",
           "values": [
@@ -1825,7 +1813,25 @@
           ]
         }
       },
-      "nonModels": {}
+      "nonModels": {},
+      "mutations": {
+        "incCounter": {
+          "name": "incCounter",
+          "isArray": false,
+          "type": {
+            "model": "Counter"
+          },
+          "isRequired": false,
+          "arguments": {
+            "name": {
+              "name": "name",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            }
+          }
+        }
+      }
     }
   },
   "storage": {

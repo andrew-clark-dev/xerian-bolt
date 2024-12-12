@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { Wrench, Play } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { TaskDialog } from '../components/maintenance/TaskDialog';
+import { TaskDialog } from '../components/maintenance/task-dialog/TaskDialog';
 import { TaskProgress } from '../components/maintenance/TaskProgress';
 import { TaskOutput } from '../components/maintenance/TaskOutput';
 import { taskManager } from '../services/tasks/TaskManager';
 import { settingsService } from '../services/settings.service';
 import { theme } from '../theme';
-import type { TaskProgress as TaskProgressType } from '../services/tasks/types';
+import type { TaskConfig, TaskProgress as TaskProgressType } from '../services/tasks/types';
 
 export function Maintenance() {
   const [showTaskDialog, setShowTaskDialog] = useState(false);
@@ -40,10 +40,6 @@ export function Maintenance() {
   }, []);
 
   const handleStartTask = async (config: TaskConfig) => {
-    if (!apiKey) {
-      setTaskMessages(prev => [...prev, 'Error: API key not configured']);
-      return;
-    }
 
     await taskManager.startTask(config, apiKey);
     setShowTaskDialog(false);
@@ -73,7 +69,7 @@ export function Maintenance() {
         </div>
         <Button onClick={() => setShowTaskDialog(true)}>
           <Play className="w-4 h-4 mr-2" />
-          Start Import Task
+          Start Task
         </Button>
       </div>
 

@@ -1,11 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { TaskProgress, TaskResult, TaskConfig } from './types';
 import { ImportAccountsTask } from './ImportAccountsTask';
+import { InitializeModelCountsTask } from './InitializeModelCountsTask';
 
 export class TaskManager {
   private tasks: Map<string, TaskProgress> = new Map();
   private listeners: Set<(tasks: TaskProgress[]) => void> = new Set();
-  private activeTask: ImportAccountsTask | null = null;
+  private activeTask: ImportAccountsTask | InitializeModelCountsTask | null = null;
 
   subscribe(callback: (tasks: TaskProgress[]) => void) {
     this.listeners.add(callback);
@@ -19,10 +20,6 @@ export class TaskManager {
   }
 
   async startTask(config: TaskConfig, apiKey?: string): Promise<string> {
-    if (!apiKey) {
-      throw new Error('API key is required for import tasks');
-    }
-
     const taskId = uuidv4();
     const task: TaskProgress = {
       id: taskId,
@@ -30,20 +27,32 @@ export class TaskManager {
       modelType: config.modelType,
       progress: 0,
       status: 'running',
-      message: `Initializing ${config.modelType} import...`,
+      message: `Initializing ${config.name}...`,
       startedAt: new Date(),
     };
 
     this.tasks.set(taskId, task);
     this.notify();
 
-    this.activeTask = new ImportAccountsTask({
-      apiKey,
-      upToDate: config.upToDate,
-      onProgress: (progress, message) => {
-        this.updateTaskProgress(taskId, progress, message);
-      },
-    });
+    if (config.name === 'Initialize Model Counts') {
+      this.activeTask = new InitializeModelCountsTask({
+        onProgress: (progress, message) => {
+          this.updateTaskProgress(taskId, progress, message);
+        },
+      });
+    } else {
+      if (!apiKey) {
+        throw new Error('API key is required for import tasks');
+      }
+
+      this.activeTask = new ImportAccountsTask({
+        apiKey,
+        upToDate: config.upToDate,
+        onProgress: (progress, message) => {
+          this.updateTaskProgress(taskId, progress, message);
+        },
+      });
+    }
 
     try {
       const result = await this.activeTask.execute();
@@ -108,7 +117,7 @@ export class TaskManager {
     this.tasks.set(taskId, {
       ...task,
       status: 'failed',
-      message: `Failed to import ${task.modelType}: ${error.message}`,
+      message: `Failed to execute task: ${error.message}`,
       completedAt: new Date(),
     });
 

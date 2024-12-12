@@ -6,7 +6,7 @@ import { formatBalance } from './AccountColumns';
 interface AccountFormProps {
   formData: Partial<Account>;
   isLoading: boolean;
-  onChange: (field: keyof Account, value: any) => void;
+  onChange: (field: keyof Account, value: string | number | boolean | null) => void;
 }
 
 export function AccountForm({ formData, isLoading, onChange }: AccountFormProps) {
