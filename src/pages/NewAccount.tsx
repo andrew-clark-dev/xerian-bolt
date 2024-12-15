@@ -3,11 +3,8 @@ import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { accountService } from '../services/account.service';
 import { counterService } from '../services/counter.service';
-import { useAuth } from '../context/AuthContext';
 
 export function NewAccount() {
-
-  const { user } = useAuth();
 
   const [formData, setFormData] = useState<{
     number: string;
