@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 export function Header({ onSignOut }: HeaderProps) {
-  const { user } = useAuthenticator();
+  const { username } = useAuthenticator();
 
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
@@ -17,7 +17,7 @@ export function Header({ onSignOut }: HeaderProps) {
 
         <div className="flex items-center gap-4">
           <HeaderNotifications />
-          <HeaderProfile username={user?.username} onSignOut={onSignOut} />
+          <HeaderProfile username={username} onSignOut={onSignOut} />
         </div>
       </div>
     </header>
