@@ -21,7 +21,7 @@ export function Maintenance() {
     settingsService.getSettings().then(settings => {
       setApiKey(settings.apiKey);
     });
-    const subscribe = taskManager.subscribe((tasks) => {
+    const unsubscribe = taskManager.subscribe((tasks) => {
       setActiveTasks(tasks);
 
       // Add new messages for task status changes
@@ -37,7 +37,7 @@ export function Maintenance() {
     });
 
     return () => {
-      subscribe();
+      unsubscribe();
     };
   }, []);
 

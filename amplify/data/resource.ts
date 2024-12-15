@@ -29,7 +29,7 @@ const schema = a.schema({
       actor: a.string(),
       modelName: a.string(),
       refId: a.id(), // Loose coupling for now
-      type: a.enum(["Create", "Read", "Update", "Delete", "Search", "Import", "Export", "Increment", "Decrement"]),
+      type: a.enum(["Create", "Read", "Update", "Delete", "Search", "Import", "Export", "Increment", "Decrement", "Auth"]),
       userId: a.id(),
       createdBy: a.belongsTo('User', 'userId'),
       before: a.json(),
