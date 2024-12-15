@@ -34,7 +34,7 @@ export class InitializeModelCountsTask {
                     );
 
                     // Initialize counter for the model
-                    await counterService.initCounterTotal(modelName);
+                    await counterService.initCounters(modelName);
 
                     processed++;
                 } catch (error) {

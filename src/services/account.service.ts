@@ -5,7 +5,10 @@ import type { Schema } from '../../amplify/data/resource';
 const client = generateClient<Schema>();
 
 export type Account = Schema['Account']['type'];
-export type AccountCreate = Omit<Account, 'items' | 'transactions' | 'updatedAt' | 'createdBy'>;
+export type AccountCreate = Omit<Account, 'id' | 'items' | 'transactions' | 'updatedAt' | 'createdBy'>;
+export type AccountStatus = Schema['Account']['type']['status'];
+
+
 
 interface ListAccountsOptions {
   limit?: number;

@@ -1,22 +1,30 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { accountService } from '../services/account.service';
+import { counterService } from '../services/counter.service';
+import { useAuth } from '../context/AuthContext';
 
 export function NewAccount() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+
+  const { user } = useAuth();
+
+  const [formData, setFormData] = useState<{
+    number: string;
+    name: string;
+    status: 'Active' | 'Inactive' | 'Suspended';
+  }>({
     number: '',
     name: '',
-    status: 'Active' as const,
+    status: 'Active',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   // Get next account number
   useEffect(() => {
-    accountService.getNextAccountNumber().then(number => {
-      setFormData(prev => ({ ...prev, number }));
+    counterService.nextCounter('Account').then(count => {
+      setFormData(prev => ({ ...prev, number: count.toString().padStart(6, '0') }));
     });
   }, []);
 
@@ -26,9 +34,16 @@ export function NewAccount() {
     setIsLoading(true);
 
     try {
-      await accountService.createAccount(formData);
-      navigate('/accounts');
-    } catch (err) {
+      await accountService.createAccount({
+        ...formData,
+        userId: user!.id,
+        lastActivityAt: new Date().toISOString(),
+        balance: 0,
+        noSales: 0,
+        noItems: 0,
+      });
+    } catch (error) {
+      console.error('Failed to create account:', error);
       setError('Failed to create account. Please try again.');
     } finally {
       setIsLoading(false);
@@ -89,7 +104,7 @@ export function NewAccount() {
               <select
                 id="status"
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as 'Active' | 'Inactive' | 'Suspended' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="Active">Active</option>
