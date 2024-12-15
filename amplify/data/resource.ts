@@ -1,4 +1,5 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
+import { postConfirmation } from '../auth/post-confirmation/resource';
 
 const schema = a.schema({
 
@@ -48,7 +49,14 @@ const schema = a.schema({
     })
     .authorization(allow => [allow.owner(), allow.group('ADMIN'), allow.authenticated().to(['read'])]),
 
-  // UserRole: a.enum(["Admin", "Manager", "Employee", "Service"]),
+  UserProfile: a
+    .model({
+      email: a.string(),
+      profileOwner: a.string(),
+    })
+    .authorization((allow) => [
+      allow.ownerDefinedIn("profileOwner"),
+    ]),
 
   User: a
     .model({
@@ -200,7 +208,10 @@ const schema = a.schema({
       index("paymentType"),
     ]),
 
-}).authorization(allow => [allow.authenticated()]);
+}).authorization(allow => [
+  allow.authenticated(),
+  allow.resource(postConfirmation)
+]);
 
 // Used for code completion / highlighting when making requests from frontend
 export type Schema = ClientSchema<typeof schema>;
