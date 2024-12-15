@@ -75,7 +75,7 @@
               "name": "count",
               "isArray": false,
               "type": "Int",
-              "isRequired": false,
+              "isRequired": true,
               "attributes": []
             },
             "createdAt": {

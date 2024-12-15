@@ -10,10 +10,10 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false;
-    
+
     const saved = localStorage.getItem('darkMode');
     if (saved) return JSON.parse(saved);
-    
+
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
@@ -47,6 +47,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {

@@ -6,7 +6,7 @@ const schema = a.schema({
   Counter: a
     .model({
       name: a.string().required(),
-      count: a.integer().default(0),
+      count: a.integer().required(),
     })
     .identifier(['name']),
 
