@@ -1710,7 +1710,8 @@
             "Import",
             "Export",
             "Increment",
-            "Decrement"
+            "Decrement",
+            "Auth"
           ]
         },
         "UserStatus": {
