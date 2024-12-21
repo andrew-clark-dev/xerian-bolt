@@ -7,7 +7,7 @@ const schema = a.schema({
   Counter: a
     .model({
       name: a.string().required(),
-      count: a.integer().required(),
+      val: a.integer().required(),
     })
     .identifier(['name']),
 
@@ -32,7 +32,7 @@ const schema = a.schema({
       refId: a.id(), // Loose coupling for now
       type: a.enum(["Create", "Read", "Update", "Delete", "Search", "Import", "Export", "Increment", "Decrement", "Auth"]),
       userId: a.id(),
-      createdBy: a.belongsTo('User', 'userId'),
+      createdBy: a.belongsTo('UserProfile', 'userId'),
       before: a.json(),
       after: a.json(),
     })
@@ -44,7 +44,7 @@ const schema = a.schema({
       refId: a.id().required(), // Lose coupling for now
       createdAt: a.datetime(),
       userId: a.id(),
-      createdBy: a.belongsTo('User', 'userId'),
+      createdBy: a.belongsTo('UserProfile', 'userId'),
       updatedAt: a.datetime(),
     })
     .authorization(allow => [allow.owner(), allow.group('ADMIN'), allow.authenticated().to(['read'])]),
@@ -53,39 +53,29 @@ const schema = a.schema({
     .model({
       email: a.string(),
       profileOwner: a.string(),
+      nickName: a.string(),
+
+      phoneNumber: a.string(),
+      status: a.enum(["Active", "Inactive", "Suspended", "Pending"]),
+      role: a.enum(["Admin", "Manager", "Employee", "Service", "Guest"]),
+      photo: a.url(),
+
+      comments: a.hasMany('Comment', 'userId'),
+      actions: a.hasMany('Action', 'userId'),
+
+      settings: a.json().required(),
+      deletedAt: a.datetime(),
+
     })
     .authorization((allow) => [
       allow.ownerDefinedIn("profileOwner"),
+      allow.group('ADMIN')
     ]),
-
-  User: a
-    .model({
-      cognitoId: a.string(),
-      username: a.string().required(),
-      email: a.string().required(),
-      phoneNumber: a.string(),
-      status: a.enum(["Active", "Inactive", "Suspended", "Pending"]),
-      role: a.enum(["Admin", "Manager", "Employee", "Service"]),
-      photo: a.url(),
-      // employeeId: a.id(),
-      // employee: a.belongsTo('Employee', 'employeeId'),
-      comments: a.hasMany('Comment', 'userId'),
-      actions: a.hasMany('Action', 'userId'),
-      accounts: a.hasMany('Account', 'userId'),
-      items: a.hasMany('Item', 'userId'),
-      categories: a.hasMany('ItemCategory', 'userId'),
-      transactions: a.hasMany('Transaction', 'userId'),
-      settings: a.json().required(),
-      lastLoginAt: a.datetime(),
-      deletedAt: a.datetime(),
-    })
-    .secondaryIndexes((index) => [index("username"), index("email"), index("cognitoId")])
-    .authorization(allow => [allow.owner(), allow.group('ADMIN'), allow.authenticated().to(['read'])]),
 
   Employee: a
     .model({
       name: a.string().required(),
-      // user: a.hasOne('User', 'employeeId'),
+      user: a.id(), // profile id can be null
       addressLine1: a.string(),
       addressLine2: a.string(),
       city: a.string(),
@@ -121,7 +111,6 @@ const schema = a.schema({
       noSales: a.integer().required().default(0),
       noItems: a.integer().required().default(0),
       userId: a.id().required(),
-      createdBy: a.belongsTo('User', 'userId'),
       lastActivityAt: a.datetime().required(),
       lastItemAt: a.datetime(),
       lastSettlementAt: a.datetime(),
@@ -159,8 +148,6 @@ const schema = a.schema({
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
       lastViewedAt: a.datetime(),
-      userId: a.id(),
-      createdBy: a.belongsTo('User', 'userId'),
       createdAt: a.datetime(),
       updatedAt: a.datetime(),
       deletedAt: a.datetime(),
@@ -177,8 +164,6 @@ const schema = a.schema({
       kind: a.string().required(),
       name: a.string().required(),
       matchNames: a.string().required(),
-      userId: a.id(),
-      createdBy: a.belongsTo('User', 'userId'),
       createdAt: a.datetime(),
       updatedAt: a.datetime(),
       deletedAt: a.datetime(),
@@ -200,8 +185,6 @@ const schema = a.schema({
       linkedTransaction: a.id(),  // for refund link to sale, or for a reversal link to original
       accountNumber: a.string(),
       account: a.belongsTo("Account", "accountNumber"),
-      userId: a.id(),
-      createdBy: a.belongsTo('User', 'userId'),
     })
     .secondaryIndexes((index) => [
       index("type"),
@@ -209,7 +192,7 @@ const schema = a.schema({
     ]),
 
 }).authorization(allow => [
-  allow.authenticated(),
+  allow.group('EMPLOYEE'), // default to employee
   allow.resource(postConfirmation)
 ]);
 

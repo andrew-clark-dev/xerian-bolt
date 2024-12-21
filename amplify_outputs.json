@@ -71,8 +71,8 @@
               "isRequired": true,
               "attributes": []
             },
-            "count": {
-              "name": "count",
+            "val": {
+              "name": "val",
               "isArray": false,
               "type": "Int",
               "isRequired": true,
@@ -115,7 +115,12 @@
               "properties": {
                 "rules": [
                   {
-                    "allow": "private",
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "EMPLOYEE"
+                    ],
                     "operations": [
                       "create",
                       "update",
@@ -191,7 +196,7 @@
               "name": "createdBy",
               "isArray": false,
               "type": {
-                "model": "User"
+                "model": "UserProfile"
               },
               "isRequired": false,
               "attributes": [],
@@ -255,7 +260,12 @@
               "properties": {
                 "rules": [
                   {
-                    "allow": "private",
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "EMPLOYEE"
+                    ],
                     "operations": [
                       "create",
                       "update",
@@ -315,7 +325,7 @@
               "name": "createdBy",
               "isArray": false,
               "type": {
-                "model": "User"
+                "model": "UserProfile"
               },
               "isRequired": false,
               "attributes": [],
@@ -411,85 +421,11 @@
               "isRequired": false,
               "attributes": []
             },
-            "createdAt": {
-              "name": "createdAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": [],
-              "isReadOnly": true
-            },
-            "updatedAt": {
-              "name": "updatedAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": [],
-              "isReadOnly": true
-            }
-          },
-          "syncable": true,
-          "pluralName": "UserProfiles",
-          "attributes": [
-            {
-              "type": "model",
-              "properties": {}
-            },
-            {
-              "type": "auth",
-              "properties": {
-                "rules": [
-                  {
-                    "provider": "userPools",
-                    "ownerField": "profileOwner",
-                    "allow": "owner",
-                    "identityClaim": "cognito:username",
-                    "operations": [
-                      "create",
-                      "update",
-                      "delete",
-                      "read"
-                    ]
-                  }
-                ]
-              }
-            }
-          ],
-          "primaryKeyInfo": {
-            "isCustomPrimaryKey": false,
-            "primaryKeyFieldName": "id",
-            "sortKeyFieldNames": []
-          }
-        },
-        "User": {
-          "name": "User",
-          "fields": {
-            "id": {
-              "name": "id",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
-            "cognitoId": {
-              "name": "cognitoId",
+            "nickName": {
+              "name": "nickName",
               "isArray": false,
               "type": "String",
               "isRequired": false,
-              "attributes": []
-            },
-            "username": {
-              "name": "username",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            },
-            "email": {
-              "name": "email",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
               "attributes": []
             },
             "phoneNumber": {
@@ -503,7 +439,7 @@
               "name": "status",
               "isArray": false,
               "type": {
-                "enum": "UserStatus"
+                "enum": "UserProfileStatus"
               },
               "isRequired": false,
               "attributes": []
@@ -512,7 +448,7 @@
               "name": "role",
               "isArray": false,
               "type": {
-                "enum": "UserRole"
+                "enum": "UserProfileRole"
               },
               "isRequired": false,
               "attributes": []
@@ -556,82 +492,11 @@
                 ]
               }
             },
-            "accounts": {
-              "name": "accounts",
-              "isArray": true,
-              "type": {
-                "model": "Account"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true,
-              "association": {
-                "connectionType": "HAS_MANY",
-                "associatedWith": [
-                  "userId"
-                ]
-              }
-            },
-            "items": {
-              "name": "items",
-              "isArray": true,
-              "type": {
-                "model": "Item"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true,
-              "association": {
-                "connectionType": "HAS_MANY",
-                "associatedWith": [
-                  "userId"
-                ]
-              }
-            },
-            "categories": {
-              "name": "categories",
-              "isArray": true,
-              "type": {
-                "model": "ItemCategory"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true,
-              "association": {
-                "connectionType": "HAS_MANY",
-                "associatedWith": [
-                  "userId"
-                ]
-              }
-            },
-            "transactions": {
-              "name": "transactions",
-              "isArray": true,
-              "type": {
-                "model": "Transaction"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true,
-              "association": {
-                "connectionType": "HAS_MANY",
-                "associatedWith": [
-                  "userId"
-                ]
-              }
-            },
             "settings": {
               "name": "settings",
               "isArray": false,
               "type": "AWSJSON",
               "isRequired": true,
-              "attributes": []
-            },
-            "lastLoginAt": {
-              "name": "lastLoginAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
               "attributes": []
             },
             "deletedAt": {
@@ -659,41 +524,11 @@
             }
           },
           "syncable": true,
-          "pluralName": "Users",
+          "pluralName": "UserProfiles",
           "attributes": [
             {
               "type": "model",
               "properties": {}
-            },
-            {
-              "type": "key",
-              "properties": {
-                "name": "usersByCognitoId",
-                "queryField": "listUserByCognitoId",
-                "fields": [
-                  "cognitoId"
-                ]
-              }
-            },
-            {
-              "type": "key",
-              "properties": {
-                "name": "usersByUsername",
-                "queryField": "listUserByUsername",
-                "fields": [
-                  "username"
-                ]
-              }
-            },
-            {
-              "type": "key",
-              "properties": {
-                "name": "usersByEmail",
-                "queryField": "listUserByEmail",
-                "fields": [
-                  "email"
-                ]
-              }
             },
             {
               "type": "auth",
@@ -701,7 +536,7 @@
                 "rules": [
                   {
                     "provider": "userPools",
-                    "ownerField": "owner",
+                    "ownerField": "profileOwner",
                     "allow": "owner",
                     "identityClaim": "cognito:username",
                     "operations": [
@@ -722,12 +557,6 @@
                       "create",
                       "update",
                       "delete",
-                      "read"
-                    ]
-                  },
-                  {
-                    "allow": "private",
-                    "operations": [
                       "read"
                     ]
                   }
@@ -756,6 +585,13 @@
               "isArray": false,
               "type": "String",
               "isRequired": true,
+              "attributes": []
+            },
+            "user": {
+              "name": "user",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
               "attributes": []
             },
             "addressLine1": {
@@ -845,7 +681,12 @@
               "properties": {
                 "rules": [
                   {
-                    "allow": "private",
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "EMPLOYEE"
+                    ],
                     "operations": [
                       "create",
                       "update",
@@ -1044,21 +885,6 @@
               "isRequired": true,
               "attributes": []
             },
-            "createdBy": {
-              "name": "createdBy",
-              "isArray": false,
-              "type": {
-                "model": "User"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "userId"
-                ]
-              }
-            },
             "lastActivityAt": {
               "name": "lastActivityAt",
               "isArray": false,
@@ -1153,7 +979,12 @@
               "properties": {
                 "rules": [
                   {
-                    "allow": "private",
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "EMPLOYEE"
+                    ],
                     "operations": [
                       "create",
                       "update",
@@ -1343,28 +1174,6 @@
               "isRequired": false,
               "attributes": []
             },
-            "userId": {
-              "name": "userId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false,
-              "attributes": []
-            },
-            "createdBy": {
-              "name": "createdBy",
-              "isArray": false,
-              "type": {
-                "model": "User"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "userId"
-                ]
-              }
-            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -1432,7 +1241,12 @@
               "properties": {
                 "rules": [
                   {
-                    "allow": "private",
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "EMPLOYEE"
+                    ],
                     "operations": [
                       "create",
                       "update",
@@ -1480,28 +1294,6 @@
               "type": "String",
               "isRequired": true,
               "attributes": []
-            },
-            "userId": {
-              "name": "userId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false,
-              "attributes": []
-            },
-            "createdBy": {
-              "name": "createdBy",
-              "isArray": false,
-              "type": {
-                "model": "User"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "userId"
-                ]
-              }
             },
             "createdAt": {
               "name": "createdAt",
@@ -1576,7 +1368,12 @@
               "properties": {
                 "rules": [
                   {
-                    "allow": "private",
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "EMPLOYEE"
+                    ],
                     "operations": [
                       "create",
                       "update",
@@ -1682,28 +1479,6 @@
                 ]
               }
             },
-            "userId": {
-              "name": "userId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false,
-              "attributes": []
-            },
-            "createdBy": {
-              "name": "createdBy",
-              "isArray": false,
-              "type": {
-                "model": "User"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "userId"
-                ]
-              }
-            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -1753,7 +1528,12 @@
               "properties": {
                 "rules": [
                   {
-                    "allow": "private",
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "EMPLOYEE"
+                    ],
                     "operations": [
                       "create",
                       "update",
@@ -1788,8 +1568,8 @@
             "Auth"
           ]
         },
-        "UserStatus": {
-          "name": "UserStatus",
+        "UserProfileStatus": {
+          "name": "UserProfileStatus",
           "values": [
             "Active",
             "Inactive",
@@ -1797,13 +1577,14 @@
             "Pending"
           ]
         },
-        "UserRole": {
-          "name": "UserRole",
+        "UserProfileRole": {
+          "name": "UserProfileRole",
           "values": [
             "Admin",
             "Manager",
             "Employee",
-            "Service"
+            "Service",
+            "Guest"
           ]
         },
         "EmployeeStatus": {

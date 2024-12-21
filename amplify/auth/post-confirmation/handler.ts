@@ -14,10 +14,29 @@ Amplify.configure(resourceConfig, libraryOptions);
 const client = generateClient<Schema>();
 
 export const handler: PostConfirmationTriggerHandler = async (event) => {
-    await client.models.UserProfile.create({
-        email: event.request.userAttributes.email,
-        profileOwner: `${event.request.userAttributes.sub}::${event.userName}`,
-    });
+    console.log(`PostConfirmationTriggerHandler event:`, event);
+    try {
+        const { errors, data: newUserProfile } = await client.models.UserProfile.create({
+            email: event.request.userAttributes.email,
+            profileOwner: `${event.request.userAttributes.sub}::${event.userName}`,
+            status: "Pending",
+            role: "Guest",
+            nickName: event.request.userAttributes.nickname,
+            settings: JSON.stringify({
+                apiKey: undefined,
+                notifications: true,
+                theme: 'light',
+                hasLogin: false,
+            }), // Initial settings
+        });
+        if (errors) {
+            console.error(`Errors in creating profile:`, errors);
+        } else {
+            console.log(`Created profile:`, newUserProfile);
+        }
+    } catch (error) {
+        console.error(`Error creating profile:`, error);
+    }
 
     return event;
 };

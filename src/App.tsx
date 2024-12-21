@@ -17,6 +17,7 @@ export default function App() {
   return (
     <Authenticator
       initialState="signIn"
+      signUpAttributes={['nickname']}
     >
       {({ signOut }) => (
         <BrowserRouter>

@@ -12,14 +12,13 @@ export interface UserSettings {
   notifications: boolean;
   theme: 'light' | 'dark';
   hasLogin: false;
-
 }
 
 class SettingsService {
 
   async getSettings(userId?: string): Promise<UserSettings> {
     const user = await userService.getUser(userId);
-    return typeof user.settings === 'string' ? JSON.parse(user.settings) as UserSettings : initialSettings;
+    return JSON.parse(user.settings) as UserSettings;
   }
 
   async updateSettings(userSettings: UserSettings, userId?: string): Promise<void> {
