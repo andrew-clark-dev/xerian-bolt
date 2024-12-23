@@ -13,8 +13,8 @@ class CounterService {
     return new Error(`${context}: ${message}`);
   }
 
-  async next(modelName: string): Promise<number> {
-    return (await this.nextCounter(modelName)).val;
+  async next(modelName: string): Promise<string> {
+    return (await this.nextCounter(modelName)).val.toString().padStart(7, '0');
   }
 
 

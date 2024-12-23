@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { accountService } from '../services/account.service';
 import { counterService } from '../services/counter.service';
+import { profileService } from '../services/profile.service';
 
 export function NewAccount() {
 
@@ -20,8 +21,8 @@ export function NewAccount() {
 
   // Get next account number
   useEffect(() => {
-    counterService.nextCounter('Account').then(count => {
-      setFormData(prev => ({ ...prev, number: count.toString().padStart(6, '0') }));
+    counterService.next('Account').then(count => {
+      setFormData(prev => ({ ...prev, number: count }));
     });
   }, []);
 
@@ -31,13 +32,10 @@ export function NewAccount() {
     setIsLoading(true);
 
     try {
+      const currentUserProfile = await profileService.getCurrentUserProfile();
       await accountService.createAccount({
         ...formData,
-        userId: user!.id,
-        lastActivityAt: new Date().toISOString(),
-        balance: 0,
-        noSales: 0,
-        noItems: 0,
+        lastActivityBy: currentUserProfile.id,
       });
     } catch (error) {
       console.error('Failed to create account:', error);

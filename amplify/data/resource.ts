@@ -93,8 +93,10 @@ const schema = a.schema({
 
   Account: a
     .model({
-      id: a.id().required(),
+      id: a.id(),
       number: a.string().required(),
+      userId: a.id(),
+      lastActivityBy: a.id().required(),
       firstName: a.string(),
       lastName: a.string(),
       email: a.string(),
@@ -111,10 +113,10 @@ const schema = a.schema({
       defaultSplit: a.integer(),
       items: a.hasMany("Item", "accountNumber"), // setup relationships between main types
       transactions: a.hasMany("Transaction", "accountNumber"), // setup relationships between types
-      balance: a.integer().required(),
-      noSales: a.integer().required().default(0),
-      noItems: a.integer().required().default(0),
-      lastActivityAt: a.datetime().required(),
+      balance: a.integer().default(0),
+      noSales: a.integer().default(0),
+      noItems: a.integer().default(0),
+      lastActivityAt: a.datetime(),
       lastItemAt: a.datetime(),
       lastSettlementAt: a.datetime(),
       tags: a.string().array(),
@@ -130,8 +132,9 @@ const schema = a.schema({
 
   Item: a
     .model({
-      id: a.id().required(),
+      id: a.id(),
       sku: a.string().required(),
+      lastActivityBy: a.id().required(),
       title: a.string(),
       account: a.belongsTo("Account", "accountNumber"),
       accountNumber: a.string(),
@@ -164,6 +167,7 @@ const schema = a.schema({
   ItemCategory: a
     .model({
       id: a.id().required(),
+      lastActivityBy: a.id().required(),
       kind: a.string().required(),
       name: a.string().required(),
       matchNames: a.string().required(),
@@ -180,6 +184,7 @@ const schema = a.schema({
 
   Transaction: a
     .model({
+      lastActivityBy: a.id().required(),
       type: a.enum(["Sale", "Refund", "Payout", "Reversal"]),
       paymentType: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
       amount: a.integer().required(),

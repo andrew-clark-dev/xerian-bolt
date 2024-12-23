@@ -10,6 +10,7 @@ export const handler: DynamoDBStreamHandler = async (event) => {
     for (const record of event.Records) {
         logger.info(`Processing record: ${record.eventID}`);
         logger.info(`Event Type: ${record.eventName}`);
+        logger.info(`Event: ${JSON.stringify(record)}`);
 
         if (record.eventName === "INSERT") {
             // business logic to process new records

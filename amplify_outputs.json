@@ -738,13 +738,27 @@
               "name": "id",
               "isArray": false,
               "type": "ID",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "number": {
               "name": "number",
               "isArray": false,
               "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "userId": {
+              "name": "userId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": false,
+              "attributes": []
+            },
+            "lastActivityBy": {
+              "name": "lastActivityBy",
+              "isArray": false,
+              "type": "ID",
               "isRequired": true,
               "attributes": []
             },
@@ -888,28 +902,28 @@
               "name": "balance",
               "isArray": false,
               "type": "Int",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "noSales": {
               "name": "noSales",
               "isArray": false,
               "type": "Int",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "noItems": {
               "name": "noItems",
               "isArray": false,
               "type": "Int",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "lastActivityAt": {
               "name": "lastActivityAt",
               "isArray": false,
               "type": "AWSDateTime",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "lastItemAt": {
@@ -1029,13 +1043,20 @@
               "name": "id",
               "isArray": false,
               "type": "ID",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "sku": {
               "name": "sku",
               "isArray": false,
               "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "lastActivityBy": {
+              "name": "lastActivityBy",
+              "isArray": false,
+              "type": "ID",
               "isRequired": true,
               "attributes": []
             },
@@ -1294,6 +1315,13 @@
               "isRequired": true,
               "attributes": []
             },
+            "lastActivityBy": {
+              "name": "lastActivityBy",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
             "kind": {
               "name": "kind",
               "isArray": false,
@@ -1418,6 +1446,13 @@
           "fields": {
             "id": {
               "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "lastActivityBy": {
+              "name": "lastActivityBy",
               "isArray": false,
               "type": "ID",
               "isRequired": true,

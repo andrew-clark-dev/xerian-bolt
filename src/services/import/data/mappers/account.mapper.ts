@@ -1,8 +1,8 @@
-import { AccountCreate } from '../../../account.service';
+import { AccountDTO } from '../../../account.service';
 import type { ExternalAccount } from '../../types';
 import { isMobileNumber } from '../utils/phone.utils';
 
-export function mapExternalAccount(external: ExternalAccount): AccountCreate {
+export function mapExternalAccount(external: ExternalAccount, userId: string): AccountDTO {
 
   return {
     number: external.number,
@@ -23,6 +23,7 @@ export function mapExternalAccount(external: ExternalAccount): AccountCreate {
     noSales: external.number_of_purchases,
     noItems: external.number_of_items,
     lastActivityAt: external.last_activity,
+    lastActivityBy: userId,
     lastItemAt: external.last_item_entered,
     lastSettlementAt: external.last_settlement,
     tags: external.tags,

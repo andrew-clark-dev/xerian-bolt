@@ -1,11 +1,11 @@
-import { v4 as uuidv4 } from 'uuid'
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
+import { profileService } from './profile.service';
 
 const client = generateClient<Schema>();
 
 export type Account = Schema['Account']['type'];
-export type AccountCreate = Omit<Account, 'id' | 'items' | 'transactions' | 'updatedAt' | 'createdBy'>;
+export type AccountDTO = Partial<Omit<Account, 'id'>>;
 export type AccountStatus = Schema['Account']['type']['status'];
 
 
@@ -49,14 +49,12 @@ class AccountService {
   }
 
 
-  async createAccount(account: AccountCreate): Promise<Account> {
+  async createAccount(account: AccountDTO): Promise<Account> {
     try {
       const { data: newAccount, errors } = await client.models.Account.create({
-        ...account,
-        id: uuidv4(),
-        balance: account.balance ?? 0,
-        noSales: account.noSales ?? 0,
-        noItems: account.noItems ?? 0,
+        number: account.number!,
+        lastActivityBy: (await profileService.getCurrentUserProfile()).id,
+        status: account.status,
       });
 
       if (errors) {
