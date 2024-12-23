@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserRole, UserUpdate, userService } from '../services/user.service';
+import { UserProfileCreate, UserRole, profileService } from '../services/profile.service';
 import { SuccessMessage } from '../components/SuccessMessage';
 
 export function NewUser() {
@@ -9,13 +9,13 @@ export function NewUser() {
   const navigate = useNavigate();
   const userRoles: UserRole[] = ['Admin', 'Employee', 'Manager']; // Define the roles array
   const [formData, setFormData] = useState<{
-    username: string;
+    nickname: string;
     email: string;
     phoneNumber: string;
     status: 'Pending';
     role: UserRole;
   }>({
-    username: '',
+    nickname: '',
     email: '',
     phoneNumber: '',
     status: 'Pending',
@@ -33,21 +33,21 @@ export function NewUser() {
 
     try {
       // Check if user with email already exists
-      const existingUser = await userService.findUser(formData.email);
+      const existingUser = await profileService.findUserProfile(formData.email);
       if (existingUser) {
         setError('A user with this email already exists.');
         return;
       }
 
-      const userData: Omit<UserUpdate, 'id'> = {
-        username: formData.username,
+      const userData: UserProfileCreate = {
+        nickname: formData.nickname,
         email: formData.email,
         phoneNumber: formData.phoneNumber || undefined,
         status: formData.status,
         role: formData.role,
       };
 
-      const createdUser = await userService.createUser(userData);
+      const createdUser = await profileService.createUserProfile(userData);
       setSuccessMessage(`User created successfully with ID: ${createdUser.id}`);
 
       // Navigate after 2 seconds
@@ -91,14 +91,14 @@ export function NewUser() {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-1">
                 Username
               </label>
               <input
                 type="text"
-                id="username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                id="nickname"
+                value={formData.nickname}
+                onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />

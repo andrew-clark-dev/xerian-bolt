@@ -1,9 +1,6 @@
 import { apiClient } from '../../api/client';
-import { accountService } from '../../account.service';
-import { userService } from '../../user.service';
-import { mapExternalAccount } from '../data/mappers/account.mapper';
-import { mapExternalUser } from '../data/mappers/user.mapper';
-import type { ExternalAccountPage, ExternalUser, ImportProgress, ImportResult } from '../types';
+import { importService } from './import.service';
+import { ExternalAccountPage, ImportProgress, ImportResult } from '../types';
 
 interface FetchAccountsOptions {
   cursor?: string | null;
@@ -73,23 +70,7 @@ export class ImportAccountService {
 
       return response;
     } catch (error) {
-      console.error('Failed to fetch accounts:', error);
-      throw error;
-    }
-  }
-
-  private async getOrCreateUser(externalUser: ExternalUser): Promise<string> {
-    try {
-      const existingUser = await userService.findUserByName(externalUser.name);
-      if (existingUser) {
-        return existingUser.id;
-      }
-
-      const mappedUser = mapExternalUser(externalUser);
-      const newUser = await userService.createUser(mappedUser);
-      return newUser.id;
-    } catch (error) {
-      throw this.serviceError(error, 'get or create user');
+      throw this.serviceError(error, 'fetchAccounts');
     }
   }
 
@@ -124,27 +105,14 @@ export class ImportAccountService {
           }
 
           try {
-            const createdById = await this.getOrCreateUser(externalAccount.created_by);
-            const mappedAccount = mapExternalAccount(externalAccount, createdById);
-            const existingAccount = await accountService.findAccountByNumber(mappedAccount.number);
-
-            if (existingAccount) {
-              await accountService.updateAccount(existingAccount.id, {
-                ...mappedAccount,
-                userId: createdById,
-              });
-            } else {
-              await accountService.createAccount({
-                ...mappedAccount,
-                userId: createdById,
-              });
-            }
+            await importService.createIfNotExists({ externalId: externalAccount.id, type: 'account', userId: externalAccount.created_by.id, data: JSON.stringify(externalAccount) });
+            await importService.createIfNotExists({ externalId: externalAccount.created_by.id, type: 'user', userId: externalAccount.created_by.id, data: JSON.stringify(externalAccount.created_by) });
 
             processed++;
             yield {
               processed,
               total,
-              message: `Imported account ${mappedAccount.number} (${processed}/${total})`,
+              message: `Imported account ${externalAccount.number} (${processed}/${total})`,
             };
           } catch (error) {
             failed++;

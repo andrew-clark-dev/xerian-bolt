@@ -31,8 +31,8 @@ const schema = a.schema({
       modelName: a.string(),
       refId: a.id(), // Loose coupling for now
       type: a.enum(["Create", "Read", "Update", "Delete", "Search", "Import", "Export", "Increment", "Decrement", "Auth"]),
-      userId: a.id(),
-      createdBy: a.belongsTo('UserProfile', 'userId'),
+      username: a.string().required(),
+      createdBy: a.belongsTo('UserProfile', 'username'),
       before: a.json(),
       after: a.json(),
     })
@@ -43,30 +43,34 @@ const schema = a.schema({
       text: a.string().required(),
       refId: a.id().required(), // Lose coupling for now
       createdAt: a.datetime(),
-      userId: a.id(),
-      createdBy: a.belongsTo('UserProfile', 'userId'),
+      username: a.string(),
+      createdBy: a.belongsTo('UserProfile', 'username'),
       updatedAt: a.datetime(),
     })
     .authorization(allow => [allow.owner(), allow.group('ADMIN'), allow.authenticated().to(['read'])]),
 
   UserProfile: a
     .model({
-      email: a.string(),
+      email: a.string().required(),
       profileOwner: a.string(),
-      nickName: a.string(),
-
+      username: a.string(), // the cognito username not for display
+      nickname: a.string(), // the display name
       phoneNumber: a.string(),
       status: a.enum(["Active", "Inactive", "Suspended", "Pending"]),
       role: a.enum(["Admin", "Manager", "Employee", "Service", "Guest"]),
       photo: a.url(),
 
-      comments: a.hasMany('Comment', 'userId'),
-      actions: a.hasMany('Action', 'userId'),
+      comments: a.hasMany('Comment', 'username'),
+      actions: a.hasMany('Action', 'username'),
 
       settings: a.json().required(),
       deletedAt: a.datetime(),
 
     })
+    .secondaryIndexes((index) => [
+      index("username"),
+      index("email"),
+    ])
     .authorization((allow) => [
       allow.ownerDefinedIn("profileOwner"),
       allow.group('ADMIN')
@@ -110,7 +114,6 @@ const schema = a.schema({
       balance: a.integer().required(),
       noSales: a.integer().required().default(0),
       noItems: a.integer().required().default(0),
-      userId: a.id().required(),
       lastActivityAt: a.datetime().required(),
       lastItemAt: a.datetime(),
       lastSettlementAt: a.datetime(),
@@ -189,6 +192,19 @@ const schema = a.schema({
     .secondaryIndexes((index) => [
       index("type"),
       index("paymentType"),
+    ]),
+
+  ImportedObject: a
+    .model({
+      externalId: a.string().required(),
+      type: a.string().required(),
+      userId: a.string(),
+      data: a.json(),
+    })
+    .identifier(['externalId', 'type'])
+    .secondaryIndexes((index) => [
+      index("type"),
+      index("userId"),
     ]),
 
 }).authorization(allow => [

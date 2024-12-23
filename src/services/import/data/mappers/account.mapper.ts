@@ -1,8 +1,8 @@
 import { AccountCreate } from '../../../account.service';
-import type { ExternalAccount } from '../types';
+import type { ExternalAccount } from '../../types';
 import { isMobileNumber } from '../utils/phone.utils';
 
-export function mapExternalAccount(external: ExternalAccount, userId: string): AccountCreate {
+export function mapExternalAccount(external: ExternalAccount): AccountCreate {
 
   return {
     number: external.number,
@@ -29,8 +29,6 @@ export function mapExternalAccount(external: ExternalAccount, userId: string): A
     createdAt: external.created,
     deletedAt: external.deleted || undefined,
     comunicationPreferences: comunicationPreferences(external.phone_number, external.email),
-    userId: userId,
-    id: external.id,
   };
 }
 

@@ -1,42 +1,46 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { userService } from '../services/user.service';
+import { profileService, UserProfile, UserRole, UserStatus } from '../services/profile.service';
 import { PasswordDialog } from '../components/PasswordDialog';
-import type { Schema } from '../../amplify/data/resource';
 
-type User = Schema['User']['type'];
 
-export function UpdateUser() {
+export function UpdateUserProfile() {
   const navigate = useNavigate();
   const { email } = useParams();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    username: string;
+    email: string;
+    phoneNumber: string;
+    status: UserStatus;
+    role: UserRole;
+  }>({
     username: '',
     email: '',
     phoneNumber: '',
-    status: 'Active' as User['status'],
-    role: 'Employee' as User['role'],
+    status: 'Active',
+    role: 'Employee',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   useEffect(() => {
-    const loadUser = async () => {
+    const loadUserProfile = async () => {
       if (!email) {
         navigate('/users');
         return;
       }
 
       try {
-        const user = await userService.findUserByEmail(email);
+        const user = await profileService.findUserProfileByEmail(email);
         if (!user) {
           navigate('/users');
           return;
         }
 
         setFormData({
-          username: user.username,
+          username: user.username || '',
           email: user.email,
           phoneNumber: user.phoneNumber || '',
           status: user.status,
@@ -48,7 +52,7 @@ export function UpdateUser() {
       }
     };
 
-    loadUser();
+    loadUserProfile();
   }, [email, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,12 +63,12 @@ export function UpdateUser() {
     try {
       if (!email) return;
 
-      const user = await userService.findUserByEmail(email);
+      const user = await profileService.findUserProfileByEmail(email);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error('UserProfile not found');
       }
 
-      await userService.updateUser(user.id, {
+      await profileService.updateUserProfile(user.id, {
         username: formData.username,
         phoneNumber: formData.phoneNumber,
         role: formData.role,
@@ -108,7 +112,7 @@ export function UpdateUser() {
         >
           <ArrowLeft className="w-6 h-6" />
         </Link>
-        <h1 className="text-2xl font-semibold text-gray-900">Update User</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Update UserProfile</h1>
       </div>
 
       <div className="max-w-2xl bg-white shadow-sm rounded-lg border border-gray-200">
@@ -122,7 +126,7 @@ export function UpdateUser() {
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                Username
+                UserProfilename
               </label>
               <input
                 type="text"
@@ -178,7 +182,7 @@ export function UpdateUser() {
               <select
                 id="role"
                 value={formData.role ?? ''}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as User['role'] })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as UserProfile['role'] })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="Admin">Admin</option>
@@ -210,7 +214,7 @@ export function UpdateUser() {
               disabled={isLoading || isPending}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Updating...' : 'Update User'}
+              {isLoading ? 'Updating...' : 'Update UserProfile'}
             </button>
           </div>
         </form>

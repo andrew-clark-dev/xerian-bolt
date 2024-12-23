@@ -5,49 +5,51 @@ import { Users as UsersIcon, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
+import { UserRole, UserStatus } from '../services/profile.service';
 
 const client = generateClient<Schema>();
 const ITEMS_PER_PAGE = 10;
 
 const columns = [
-  { key: 'username' as keyof Schema['User']['type'], label: 'Username', sortable: true },
-  { key: 'email' as keyof Schema['User']['type'], label: 'Email', sortable: true },
-  { key: 'phoneNumber' as keyof Schema['User']['type'], label: 'Phone Number', sortable: true },
-  { key: 'status' as keyof Schema['User']['type'], label: 'Status', sortable: true },
-  { key: 'role' as keyof Schema['User']['type'], label: 'Role', sortable: true },
+  { key: 'nickName' as keyof Schema['UserProfile']['type'], label: 'Name', sortable: true },
+  { key: 'email' as keyof Schema['UserProfile']['type'], label: 'Email', sortable: true },
+  { key: 'phoneNumber' as keyof Schema['UserProfile']['type'], label: 'Phone Number', sortable: true },
+  { key: 'status' as keyof Schema['UserProfile']['type'], label: 'Status', sortable: true },
+  { key: 'role' as keyof Schema['UserProfile']['type'], label: 'Role', sortable: true },
 ];
 
-const getStatusColor = (status: Schema['User']['type']['status']) => {
+const getStatusColor = (status: UserStatus) => {
   const colors = {
     Active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     Inactive: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
     Suspended: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
     Pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
   };
-  return colors[status];
+  return colors[status!];
 };
 
-const getRoleColor = (role: string) => {
+const getRoleColor = (role: UserRole) => {
   const colors = {
     Admin: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
     Manager: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
     Employee: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300',
     Service: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-    None: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+    Guest: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
   };
-  return colors[role] || colors.None;
+  return colors[role!];
 };
 
 export function Users() {
   const navigate = useNavigate();
-  const [users, setUsers] = useState<Schema['User']['type'][]>([]);
+  const [users, setUsers] = useState<Schema['UserProfile']['type'][]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortColumn, setSortColumn] = useState<keyof Schema['User']['type']>('username');
+  const [sortColumn, setSortColumn] = useState<keyof Schema['UserProfile']['type']>('nickname');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isLoading, setIsLoading] = useState(true);
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [prevTokens, setPrevTokens] = useState<string[]>([]);
+
 
   useEffect(() => {
     loadUsers();
@@ -56,18 +58,15 @@ export function Users() {
   const loadUsers = async (token?: string | null) => {
     try {
       setIsLoading(true);
-      const { data: fetchedUsers, nextToken: newNextToken } = await client.models.User.list({
+      const { data: fetchedUsers, nextToken: newNextToken } = await client.models.UserProfile.list({
         limit: ITEMS_PER_PAGE,
         nextToken: token,
-        sort: {
-          field: sortColumn,
-          direction: sortDirection,
-        },
+        // Sorting is not supported, so removing the sort property
       });
 
       setUsers(fetchedUsers);
-      setNextToken(newNextToken);
-      
+      setNextToken(newNextToken ?? null);
+
       // Calculate total pages based on whether there's a next page
       setTotalPages(newNextToken ? currentPage + 1 : currentPage);
     } catch (error) {
@@ -95,7 +94,7 @@ export function Users() {
     }
   };
 
-  const handleSort = (column: keyof Schema['User']['type']) => {
+  const handleSort = (column: keyof Schema['UserProfile']['type']) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -156,7 +155,7 @@ export function Users() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                      {user.username}
+                      {user.nickname}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {user.email}
@@ -176,10 +175,10 @@ export function Users() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(
-                          user.role[0]
+                          user.role
                         )}`}
                       >
-                        {user.role[0]}
+                        {user.role}
                       </span>
                     </td>
                   </tr>

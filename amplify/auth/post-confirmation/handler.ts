@@ -19,9 +19,10 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
         const { errors, data: newUserProfile } = await client.models.UserProfile.create({
             email: event.request.userAttributes.email,
             profileOwner: `${event.request.userAttributes.sub}::${event.userName}`,
+            username: event.userName,
             status: "Pending",
             role: "Guest",
-            nickName: event.request.userAttributes.nickname,
+            nickname: event.request.userAttributes.nickname,
             settings: JSON.stringify({
                 apiKey: undefined,
                 notifications: true,

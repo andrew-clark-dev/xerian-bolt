@@ -185,11 +185,11 @@
               "isRequired": false,
               "attributes": []
             },
-            "userId": {
-              "name": "userId",
+            "username": {
+              "name": "username",
               "isArray": false,
-              "type": "ID",
-              "isRequired": false,
+              "type": "String",
+              "isRequired": true,
               "attributes": []
             },
             "createdBy": {
@@ -203,7 +203,7 @@
               "association": {
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
-                  "userId"
+                  "username"
                 ]
               }
             },
@@ -314,10 +314,10 @@
               "isRequired": false,
               "attributes": []
             },
-            "userId": {
-              "name": "userId",
+            "username": {
+              "name": "username",
               "isArray": false,
-              "type": "ID",
+              "type": "String",
               "isRequired": false,
               "attributes": []
             },
@@ -332,7 +332,7 @@
               "association": {
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
-                  "userId"
+                  "username"
                 ]
               }
             },
@@ -411,7 +411,7 @@
               "name": "email",
               "isArray": false,
               "type": "String",
-              "isRequired": false,
+              "isRequired": true,
               "attributes": []
             },
             "profileOwner": {
@@ -421,8 +421,15 @@
               "isRequired": false,
               "attributes": []
             },
-            "nickName": {
-              "name": "nickName",
+            "username": {
+              "name": "username",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "nickname": {
+              "name": "nickname",
               "isArray": false,
               "type": "String",
               "isRequired": false,
@@ -472,7 +479,7 @@
               "association": {
                 "connectionType": "HAS_MANY",
                 "associatedWith": [
-                  "userId"
+                  "username"
                 ]
               }
             },
@@ -488,7 +495,7 @@
               "association": {
                 "connectionType": "HAS_MANY",
                 "associatedWith": [
-                  "userId"
+                  "username"
                 ]
               }
             },
@@ -529,6 +536,26 @@
             {
               "type": "model",
               "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "userProfilesByEmail",
+                "queryField": "listUserProfileByEmail",
+                "fields": [
+                  "email"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "userProfilesByUsername",
+                "queryField": "listUserProfileByUsername",
+                "fields": [
+                  "username"
+                ]
+              }
             },
             {
               "type": "auth",
@@ -875,13 +902,6 @@
               "name": "noItems",
               "isArray": false,
               "type": "Int",
-              "isRequired": true,
-              "attributes": []
-            },
-            "userId": {
-              "name": "userId",
-              "isArray": false,
-              "type": "ID",
               "isRequired": true,
               "attributes": []
             },
@@ -1549,6 +1569,120 @@
             "isCustomPrimaryKey": false,
             "primaryKeyFieldName": "id",
             "sortKeyFieldNames": []
+          }
+        },
+        "ImportedObject": {
+          "name": "ImportedObject",
+          "fields": {
+            "externalId": {
+              "name": "externalId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "type": {
+              "name": "type",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "userId": {
+              "name": "userId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "data": {
+              "name": "data",
+              "isArray": false,
+              "type": "AWSJSON",
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "ImportedObjects",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "externalId",
+                  "type"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "importedObjectsByType",
+                "queryField": "listImportedObjectByType",
+                "fields": [
+                  "type"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "importedObjectsByUserId",
+                "queryField": "listImportedObjectByUserId",
+                "fields": [
+                  "userId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "EMPLOYEE"
+                    ],
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "externalId",
+            "sortKeyFieldNames": [
+              "type"
+            ]
           }
         }
       },

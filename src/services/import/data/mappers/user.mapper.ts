@@ -1,13 +1,11 @@
-import type { UserUpdate } from '../../../user.service';
-import type { ExternalUser } from '../types';
-import { initialSettings } from '../../../settings.service';
+import type { UserProfileCreate } from '../../../profile.service';
+import type { ExternalUser } from '../../types';
 
-export function mapExternalUser(external: ExternalUser): UserUpdate {
+export function mapExternalUser(external: ExternalUser): UserProfileCreate {
   return {
-    username: external.name,
-    email: `${external.name}@xerian.com`,
-    status: 'Active',
-    role: 'Employee',
-    settings: JSON.stringify(initialSettings),
+    nickname: external.name,
+    email: `${external.id}@xerian.com`,
+    status: 'Pending',
+    role: 'Employee'
   };
 }

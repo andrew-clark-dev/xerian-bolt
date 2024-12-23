@@ -5,12 +5,15 @@ export function request(ctx) {
     operation: 'UpdateItem',
     key: util.dynamodb.toMapValues({ name: ctx.args.name }),
     update: {
-      expression: 'ADD count :plusOne',
+      expression: 'ADD val :plusOne',
       expressionValues: { ':plusOne': { N: 1 } },
     }
   }
 }
 
 export function response(ctx) {
+  if (ctx.error) {
+    util.error(ctx.error.message, ctx.error.type);
+  }
   return ctx.result
 }

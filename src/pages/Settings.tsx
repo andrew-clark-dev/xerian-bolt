@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Bell, Moon, Sun, Key } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { settingsService, type UserSettings, initialSettings } from '../services/settings.service';
+import { initialSettings, profileService, UserSettings } from '../services/profile.service';
 import { ApiKeyInput } from '../components/settings/ApiKeyInput';
 
 export function Settings() {
@@ -15,7 +15,7 @@ export function Settings() {
 
   const loadSettings = async () => {
     try {
-      const userSettings = await settingsService.getSettings();
+      const userSettings = await profileService.getCurrentSettings();
       setSettings(userSettings);
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -29,7 +29,7 @@ export function Settings() {
     try {
       const newSettings = { ...settings, [key]: value };
       setSettings(newSettings);
-      await settingsService.updateSettings(newSettings);
+      await profileService.updateCurrentSettings(newSettings);
 
       if (key === 'apiKey') {
         setApiKeyStatus('success');

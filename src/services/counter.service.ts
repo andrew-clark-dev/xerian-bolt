@@ -14,7 +14,7 @@ class CounterService {
   }
 
   async next(modelName: string): Promise<number> {
-    return (await this.nextCounter(modelName)).count;
+    return (await this.nextCounter(modelName)).val;
   }
 
 
@@ -58,10 +58,9 @@ class CounterService {
     return counter;
   }
 
-  async initCounters(modelName: string): Promise<Counter> {
+  async initCounters(modelName: string) {
     this.initCounter(`${modelName}Total`);
-    return this.initCounter(modelName);
-
+    this.initCounter(modelName);
   }
 
   async initCounter(counterName: string): Promise<Counter> {
@@ -72,13 +71,13 @@ class CounterService {
       // Update existing counter
       response = await client.models.Counter.update({
         ...existingCounter,
-        count: 0,
+        val: 0,
       });
     } else {
       // Create new counter
       response = await client.models.Counter.create({
         name: counterName,
-        count: 0,
+        val: 0,
       });
     }
     return response.data!;

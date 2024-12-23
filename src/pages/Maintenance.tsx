@@ -6,7 +6,7 @@ import { TaskDialog } from '../components/maintenance/task-dialog/TaskDialog';
 import { TaskProgress } from '../components/maintenance/TaskProgress';
 import { TaskOutput } from '../components/maintenance/TaskOutput';
 import { taskManager } from '../services/tasks/TaskManager';
-import { settingsService } from '../services/settings.service';
+import { profileService } from '../services/profile.service';
 import { theme } from '../theme';
 import type { TaskConfig, TaskProgress as TaskProgressType } from '../services/tasks/types';
 
@@ -18,7 +18,7 @@ export function Maintenance() {
 
   useEffect(() => {
     // Load API key from settings
-    settingsService.getSettings().then(settings => {
+    profileService.getCurrentSettings().then(settings => {
       setApiKey(settings.apiKey);
     });
     const unsubscribe = taskManager.subscribe((tasks) => {

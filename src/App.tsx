@@ -9,7 +9,7 @@ import { NewAccount } from './pages/NewAccount';
 import { UpdateAccount } from './pages/UpdateAccount';
 import { Users } from './pages/Users';
 import { NewUser } from './pages/NewUser';
-import { UpdateUser } from './pages/UpdateUser';
+import { UpdateUserProfile } from './pages/UpdateUser';
 import { Maintenance } from './pages/Maintenance';
 import '@aws-amplify/ui-react/styles.css';
 
@@ -29,7 +29,7 @@ export default function App() {
               <Route path="accounts/:number" element={<UpdateAccount />} />
               <Route path="users" element={<Users />} />
               <Route path="users/new" element={<NewUser />} />
-              <Route path="users/:email" element={<UpdateUser />} />
+              <Route path="users/:email" element={<UpdateUserProfile />} />
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
               <Route path="maintenance" element={<Maintenance />} />
