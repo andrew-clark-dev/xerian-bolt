@@ -208,7 +208,7 @@ const schema = a.schema({
     ]),
 
 }).authorization(allow => [
-  allow.group('EMPLOYEE'), // default to employee
+  allow.group('Employee'), // default to employee
   allow.resource(postConfirmation)
 ]);
 
