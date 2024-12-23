@@ -119,7 +119,7 @@
                     "provider": "userPools",
                     "allow": "groups",
                     "groups": [
-                      "EMPLOYEE"
+                      "Employee"
                     ],
                     "operations": [
                       "create",
@@ -264,7 +264,7 @@
                     "provider": "userPools",
                     "allow": "groups",
                     "groups": [
-                      "EMPLOYEE"
+                      "Employee"
                     ],
                     "operations": [
                       "create",
@@ -712,7 +712,7 @@
                     "provider": "userPools",
                     "allow": "groups",
                     "groups": [
-                      "EMPLOYEE"
+                      "Employee"
                     ],
                     "operations": [
                       "create",
@@ -1003,7 +1003,7 @@
                     "provider": "userPools",
                     "allow": "groups",
                     "groups": [
-                      "EMPLOYEE"
+                      "Employee"
                     ],
                     "operations": [
                       "create",
@@ -1265,7 +1265,7 @@
                     "provider": "userPools",
                     "allow": "groups",
                     "groups": [
-                      "EMPLOYEE"
+                      "Employee"
                     ],
                     "operations": [
                       "create",
@@ -1392,7 +1392,7 @@
                     "provider": "userPools",
                     "allow": "groups",
                     "groups": [
-                      "EMPLOYEE"
+                      "Employee"
                     ],
                     "operations": [
                       "create",
@@ -1552,7 +1552,7 @@
                     "provider": "userPools",
                     "allow": "groups",
                     "groups": [
-                      "EMPLOYEE"
+                      "Employee"
                     ],
                     "operations": [
                       "create",
@@ -1664,7 +1664,7 @@
                     "provider": "userPools",
                     "allow": "groups",
                     "groups": [
-                      "EMPLOYEE"
+                      "Employee"
                     ],
                     "operations": [
                       "create",
