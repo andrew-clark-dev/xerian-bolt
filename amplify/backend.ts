@@ -31,6 +31,9 @@ cfnUserPool.policies = {
   },
 };
 
+const counterTable = backend.data.resources.tables["Counter"];
+counterTable.grantFullAccess(backend.createActionFunction.resources.lambda);
+
 const accountTable = backend.data.resources.tables["Account"];
 const policy = new Policy(
   Stack.of(accountTable),
@@ -52,6 +55,7 @@ const policy = new Policy(
 );
 
 backend.createActionFunction.resources.lambda.role?.attachInlinePolicy(policy);
+backend.createActionFunction.addEnvironment("COUNTER_TABLE_NAME", counterTable.tableName);
 
 const mapping = new EventSourceMapping(
   Stack.of(accountTable),
