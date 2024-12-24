@@ -1,5 +1,6 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 import { postConfirmation } from '../auth/post-confirmation/resource';
+import { createActionFunction } from '../function/create-action/resource';
 
 const schema = a.schema({
 
@@ -31,8 +32,8 @@ const schema = a.schema({
       modelName: a.string(),
       refId: a.id(), // Loose coupling for now
       type: a.enum(["Create", "Read", "Update", "Delete", "Search", "Import", "Export", "Increment", "Decrement", "Auth"]),
-      username: a.string().required(),
-      createdBy: a.belongsTo('UserProfile', 'username'),
+      userId: a.id(),
+      createdBy: a.belongsTo('UserProfile', 'userId'),
       before: a.json(),
       after: a.json(),
     })
@@ -43,8 +44,8 @@ const schema = a.schema({
       text: a.string().required(),
       refId: a.id().required(), // Lose coupling for now
       createdAt: a.datetime(),
-      username: a.string(),
-      createdBy: a.belongsTo('UserProfile', 'username'),
+      userId: a.id(),
+      createdBy: a.belongsTo('UserProfile', 'userId'),
       updatedAt: a.datetime(),
     })
     .authorization(allow => [allow.owner(), allow.group('ADMIN'), allow.authenticated().to(['read'])]),
@@ -60,8 +61,8 @@ const schema = a.schema({
       role: a.enum(["Admin", "Manager", "Employee", "Service", "Guest"]),
       photo: a.url(),
 
-      comments: a.hasMany('Comment', 'username'),
-      actions: a.hasMany('Action', 'username'),
+      comments: a.hasMany('Comment', 'userId'),
+      actions: a.hasMany('Action', 'userId'),
 
       settings: a.json().required(),
       deletedAt: a.datetime(),
@@ -214,7 +215,8 @@ const schema = a.schema({
 
 }).authorization(allow => [
   allow.group('Employee'), // default to employee
-  allow.resource(postConfirmation)
+  allow.resource(postConfirmation),
+  allow.resource(createActionFunction),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

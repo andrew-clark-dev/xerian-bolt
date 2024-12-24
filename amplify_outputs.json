@@ -185,11 +185,11 @@
               "isRequired": false,
               "attributes": []
             },
-            "username": {
-              "name": "username",
+            "userId": {
+              "name": "userId",
               "isArray": false,
-              "type": "String",
-              "isRequired": true,
+              "type": "ID",
+              "isRequired": false,
               "attributes": []
             },
             "createdBy": {
@@ -203,7 +203,7 @@
               "association": {
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
-                  "username"
+                  "userId"
                 ]
               }
             },
@@ -314,10 +314,10 @@
               "isRequired": false,
               "attributes": []
             },
-            "username": {
-              "name": "username",
+            "userId": {
+              "name": "userId",
               "isArray": false,
-              "type": "String",
+              "type": "ID",
               "isRequired": false,
               "attributes": []
             },
@@ -332,7 +332,7 @@
               "association": {
                 "connectionType": "BELONGS_TO",
                 "targetNames": [
-                  "username"
+                  "userId"
                 ]
               }
             },
@@ -479,7 +479,7 @@
               "association": {
                 "connectionType": "HAS_MANY",
                 "associatedWith": [
-                  "username"
+                  "userId"
                 ]
               }
             },
@@ -495,7 +495,7 @@
               "association": {
                 "connectionType": "HAS_MANY",
                 "associatedWith": [
-                  "username"
+                  "userId"
                 ]
               }
             },
