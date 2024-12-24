@@ -22,6 +22,7 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
     schedule: 'now',
     retentionDays: 30,
     notifyOnComplete: false,
+    upToDate: new Date(), // Default to today
   });
 
   if (!isOpen) return null;
@@ -90,7 +91,7 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
                 value={config.upToDate?.toISOString().slice(0, 16) || ''}
                 onChange={(e) => setConfig({
                   ...config,
-                  upToDate: e.target.value ? new Date(e.target.value) : undefined
+                  upToDate: e.target.value ? new Date(e.target.value) : new Date()
                 })}
                 className="w-full"
                 required
