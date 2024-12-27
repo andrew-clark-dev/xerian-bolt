@@ -1852,6 +1852,20 @@
               "isRequired": false
             }
           }
+        },
+        "truncateTable": {
+          "name": "truncateTable",
+          "isArray": false,
+          "type": "String",
+          "isRequired": false,
+          "arguments": {
+            "tablename": {
+              "name": "tablename",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            }
+          }
         }
       }
     }

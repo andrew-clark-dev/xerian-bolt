@@ -1,6 +1,7 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
+import { truncateTableFunction } from '../function/truncate-table/resource';
 
 const schema = a.schema({
 
@@ -213,10 +214,21 @@ const schema = a.schema({
       index("userId"),
     ]),
 
+  truncateTable: a
+    .mutation()
+    // arguments that this query accepts
+    .arguments({
+      tablename: a.string()
+    })
+    // return type of the query
+    .returns(a.string())
+    .handler(a.handler.function(truncateTableFunction)),
+
 }).authorization(allow => [
   allow.group('Employee'), // default to employee
   allow.resource(postConfirmation),
   allow.resource(createActionFunction),
+  allow.resource(truncateTableFunction),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

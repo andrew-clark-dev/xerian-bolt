@@ -48,7 +48,7 @@ export class TaskManager {
 
       this.activeTask = new ImportItemsTask({
         apiKey,
-        upToDate: config.upToDate,
+        dateRange: config.dateRange,
         onProgress: (progress, message) => {
           this.updateTaskProgress(taskId, progress, message);
         },
@@ -60,7 +60,7 @@ export class TaskManager {
 
       this.activeTask = new ImportAccountsTask({
         apiKey,
-        upToDate: config.upToDate,
+        dateRange: config.dateRange,
         onProgress: (progress, message) => {
           this.updateTaskProgress(taskId, progress, message);
         },

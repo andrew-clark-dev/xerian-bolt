@@ -5,6 +5,7 @@ import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { storage } from './storage/resource';
 import { createActionFunction } from './function/create-action/resource';
+import { truncateTableFunction } from './function/truncate-table/resource';
 import { Stack } from 'aws-cdk-lib';
 
 /**
@@ -15,6 +16,7 @@ const backend = defineBackend({
   data,
   storage,
   createActionFunction,
+  truncateTableFunction,
 });
 
 // extract L1 CfnUserPool resources
@@ -30,6 +32,8 @@ cfnUserPool.policies = {
     temporaryPasswordValidityDays: 20,
   },
 };
+
+const { tables } = backend.data.resources
 
 const counterTable = backend.data.resources.tables["Counter"];
 counterTable.grantFullAccess(backend.createActionFunction.resources.lambda);
@@ -68,3 +72,10 @@ const mapping = new EventSourceMapping(
 );
 
 mapping.node.addDependency(policy);
+
+
+// Extend ENV for truncateTable
+for (const key in tables) {
+  const t = tables[key];
+  backend.truncateTableFunction.addEnvironment(`${key.toUpperCase()}_TABLE`, t.tableName)
+}
