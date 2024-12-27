@@ -59,3 +59,42 @@ export interface ExternalAccountPage {
   data: ExternalAccount[];
   next_cursor: string | null;
 }
+
+export interface ExternalItem {
+  account: string;
+  brand: string;
+  category: string;
+  color: string;
+  created: string;
+  created_by: ExternalUser;
+  days_on_shelf: number;
+  deleted: string | null;
+  description: string;
+  details: boolean;
+  expires: string;
+  id: string;
+  images: string[];
+  inventory_type: string;
+  last_sold: string;
+  last_viewed: string;
+  printed: string;
+  schedule_start: string;
+  size: string;
+  sku: string;
+  split: number;
+  split_price: number;
+  status: Map<string, number>;
+  surcharges: string[];
+  tag_price: string;
+  recurring_fees: string[];
+  state: string;
+  tags: string[];
+  terms: string;
+  title: string;
+}
+
+export interface ExternalItemPage {
+  count: number;
+  data: ExternalAccount[];
+  next_cursor: string | null;
+}

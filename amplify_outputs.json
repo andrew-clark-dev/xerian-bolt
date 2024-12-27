@@ -1665,8 +1665,7 @@
               "type": "key",
               "properties": {
                 "fields": [
-                  "externalId",
-                  "type"
+                  "externalId"
                 ]
               }
             },
@@ -1715,9 +1714,7 @@
           "primaryKeyInfo": {
             "isCustomPrimaryKey": true,
             "primaryKeyFieldName": "externalId",
-            "sortKeyFieldNames": [
-              "type"
-            ]
+            "sortKeyFieldNames": []
           }
         }
       },

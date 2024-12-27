@@ -207,7 +207,7 @@ const schema = a.schema({
       userId: a.string(),
       data: a.json(),
     })
-    .identifier(['externalId', 'type'])
+    .identifier(['externalId'])
     .secondaryIndexes((index) => [
       index("type"),
       index("userId"),
