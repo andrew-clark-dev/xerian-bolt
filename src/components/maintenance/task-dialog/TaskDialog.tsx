@@ -5,8 +5,10 @@ import { Input } from '../../ui/Input';
 import { theme } from '../../../theme';
 import { TaskConfig } from '../../../services/tasks/types';
 import { ApiKeyField } from './ApiKeyField';
+import { DateRangeFields } from './DateRangeFields';
 import { taskTypes } from './TaskTypes';
 import { scheduleTypes } from './ScheduleTypes';
+import { DateRange } from '../../../services/import/types';
 
 interface TaskDialogProps {
   isOpen: boolean;
@@ -22,7 +24,10 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
     schedule: 'now',
     retentionDays: 30,
     notifyOnComplete: false,
-    upToDate: new Date(), // Default to today
+    dateRange: {
+      from: new Date(),
+      to: new Date(),
+    },
   });
 
   if (!isOpen) return null;
@@ -30,6 +35,7 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
   const selectedTask = taskTypes.find(t => t.name === config.name);
   const requiresApiKey = selectedTask?.requiresApiKey ?? false;
   const showApiKeyWarning = requiresApiKey && !apiKey;
+  const isImportTask = config.name.startsWith('Import');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,21 +86,14 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
 
           {requiresApiKey && <ApiKeyField value={apiKey || ''} />}
 
-          {requiresApiKey && (
+          {isImportTask && (
             <div>
-              <label htmlFor="upToDate" className={`block text-sm font-medium ${theme.text()} mb-1`}>
-                Import Up To Date
+              <label className={`block text-sm font-medium ${theme.text()} mb-1`}>
+                Date Range
               </label>
-              <Input
-                type="datetime-local"
-                id="upToDate"
-                value={config.upToDate?.toISOString().slice(0, 16) || ''}
-                onChange={(e) => setConfig({
-                  ...config,
-                  upToDate: e.target.value ? new Date(e.target.value) : new Date()
-                })}
-                className="w-full"
-                required
+              <DateRangeFields
+                value={config.dateRange as DateRange}
+                onChange={(dateRange) => setConfig({ ...config, dateRange })}
               />
             </div>
           )}
@@ -137,7 +136,7 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
             <div className={`p-4 ${theme.status('error')} rounded-lg`}>
               <p className="text-sm font-medium">API Key Required</p>
               <p className="text-sm mt-1">
-                Please set up your API key in Settings before importing accounts.
+                Please set up your API key in Settings before importing data.
               </p>
             </div>
           )}

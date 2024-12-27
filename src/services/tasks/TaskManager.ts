@@ -1,12 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import { TaskProgress, TaskResult, TaskConfig } from './types';
 import { ImportAccountsTask } from './ImportAccountsTask';
+import { ImportItemsTask } from './ImportItemsTask';
 import { InitializeModelCountsTask } from './InitializeModelCountsTask';
 
 export class TaskManager {
   private tasks: Map<string, TaskProgress> = new Map();
   private listeners: Set<(tasks: TaskProgress[]) => void> = new Set();
-  private activeTask: ImportAccountsTask | InitializeModelCountsTask | null = null;
+  private activeTask: ImportAccountsTask | ImportItemsTask | InitializeModelCountsTask | null = null;
 
   subscribe(callback: (tasks: TaskProgress[]) => void) {
     this.listeners.add(callback);
@@ -36,6 +37,18 @@ export class TaskManager {
 
     if (config.name === 'Initialize Model Counts') {
       this.activeTask = new InitializeModelCountsTask({
+        onProgress: (progress, message) => {
+          this.updateTaskProgress(taskId, progress, message);
+        },
+      });
+    } else if (config.name === 'Import Items') {
+      if (!apiKey) {
+        throw new Error('API key is required for import tasks');
+      }
+
+      this.activeTask = new ImportItemsTask({
+        apiKey,
+        upToDate: config.upToDate,
         onProgress: (progress, message) => {
           this.updateTaskProgress(taskId, progress, message);
         },

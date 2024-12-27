@@ -1,37 +1,16 @@
 import { apiClient } from '../../api/client';
 import { importService } from './import.service';
-import { ExternalAccountPage, ImportProgress, ImportResult } from '../types';
+import { BaseImportService, FetchOptions } from './base.import.service';
+import { ExternalAccountPage, ImportProgress, ImportResult, DateRange } from '../types';
 
-interface FetchAccountsOptions {
-  cursor?: string | null;
-  to?: Date | null;
-  apiKey: string;
-}
-
-export class ImportAccountService {
-
-  private serviceError(error: unknown, context: string): Error {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`Error in ${context}:`, error);
-    return new Error(`${context}: ${message}`);
-  }
-
-
-  private abortController: AbortController | null = null;
-
+export class ImportAccountService extends BaseImportService {
   private async fetchAccounts({
     cursor = null,
-    to = null,
+    dateRange = null,
     apiKey,
-  }: FetchAccountsOptions): Promise<ExternalAccountPage> {
+  }: FetchOptions): Promise<ExternalAccountPage> {
     try {
-      const params: {
-        sort_by: string;
-        include: string[];
-        expand: string[];
-        cursor?: string;
-        'created:lte'?: string;
-      } = {
+      const params: Record<string, string | string[]> = {
         sort_by: 'created',
         include: [
           'default_split',
@@ -48,33 +27,21 @@ export class ImportAccountService {
           'tags',
         ],
         expand: ['created_by', 'locations', 'recurring_fees'],
+        ...this.getDateRangeParams(dateRange),
       };
 
       if (cursor) {
-        params['cursor'] = cursor;
-      }
-
-      if (to) {
-        params['created:lte'] = to.toISOString();
+        params.cursor = cursor;
       }
 
       apiClient.setAuthToken(apiKey);
-
-      console.log('Fetching accounts with params:', params.toString());
-
-      const response = await apiClient.get<ExternalAccountPage>(
-        `/v1/accounts`, { params: params }
-      );
-
-      console.log('Received response:', response);
-
-      return response;
+      return await apiClient.get<ExternalAccountPage>('/v1/accounts', { params });
     } catch (error) {
       throw this.serviceError(error, 'fetchAccounts');
     }
   }
 
-  async *importAccounts(apiKey: string, upTo: Date): AsyncGenerator<ImportProgress, ImportResult> {
+  async *importAccounts(apiKey: string, dateRange: DateRange): AsyncGenerator<ImportProgress, ImportResult> {
     this.abortController = new AbortController();
     const { signal } = this.abortController;
 
@@ -85,7 +52,7 @@ export class ImportAccountService {
     let total = 0;
 
     try {
-      const firstPage = await this.fetchAccounts({ apiKey, to: upTo });
+      const firstPage = await this.fetchAccounts({ apiKey, dateRange });
       total = firstPage.count;
 
       do {
@@ -95,7 +62,7 @@ export class ImportAccountService {
 
         const page = await this.fetchAccounts({
           cursor,
-          to: upTo,
+          dateRange,
           apiKey,
         });
 
@@ -105,9 +72,19 @@ export class ImportAccountService {
           }
 
           try {
-            console.log('Importing account:', externalAccount);
-            await importService.create({ externalId: externalAccount.id, type: 'account', userId: externalAccount.created_by.id, data: JSON.stringify(externalAccount) });
-            await importService.createIfNotExists({ externalId: externalAccount.created_by.id, type: 'user', userId: externalAccount.created_by.id, data: JSON.stringify(externalAccount.created_by) });
+            await importService.create({ 
+              externalId: externalAccount.id, 
+              type: 'account', 
+              userId: externalAccount.created_by.id, 
+              data: JSON.stringify(externalAccount) 
+            });
+            
+            await importService.createIfNotExists({ 
+              externalId: externalAccount.created_by.id, 
+              type: 'user', 
+              userId: externalAccount.created_by.id, 
+              data: JSON.stringify(externalAccount.created_by) 
+            });
 
             processed++;
             yield {
@@ -140,12 +117,6 @@ export class ImportAccountService {
         failed,
         errors: [...errors, error instanceof Error ? error : new Error('Unknown error')],
       };
-    }
-  }
-
-  abort(): void {
-    if (this.abortController) {
-      this.abortController.abort();
     }
   }
 }

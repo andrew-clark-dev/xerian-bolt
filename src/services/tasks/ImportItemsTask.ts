@@ -1,19 +1,19 @@
-import { ImportAccountService } from '../import/services/import.account.service';
+import { ImportItemService } from '../import/services/import.item.service';
 import { TaskResult } from './types';
 import { DateRange } from '../import/types';
 
-interface ImportAccountsConfig {
+interface ImportItemsConfig {
   apiKey: string;
   dateRange?: DateRange;
   onProgress: (progress: number, message: string) => void;
 }
 
-export class ImportAccountsTask {
-  private importService: ImportAccountService;
-  private config: ImportAccountsConfig;
+export class ImportItemsTask {
+  private importService: ImportItemService;
+  private config: ImportItemsConfig;
 
-  constructor(config: ImportAccountsConfig) {
-    this.importService = new ImportAccountService();
+  constructor(config: ImportItemsConfig) {
+    this.importService = new ImportItemService();
     this.config = config;
   }
 
@@ -24,14 +24,14 @@ export class ImportAccountsTask {
         to: new Date(),   // Current time
       };
       
-      for await (const progress of this.importService.importAccounts(this.config.apiKey, dateRange)) {
+      for await (const progress of this.importService.importItems(this.config.apiKey, dateRange)) {
         const percentComplete = (progress.processed / progress.total) * 100;
         this.config.onProgress(percentComplete, progress.message);
       }
 
       return {
         success: true,
-        message: 'Successfully imported all accounts',
+        message: 'Successfully imported all items',
         processed: 0,
         failed: 0,
         errors: [],

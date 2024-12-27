@@ -95,6 +95,12 @@ export interface ExternalItem {
 
 export interface ExternalItemPage {
   count: number;
-  data: ExternalAccount[];
+  data: ExternalItem[];
   next_cursor: string | null;
+}
+
+// Add date range type
+export interface DateRange {
+  from: Date;
+  to: Date;
 }

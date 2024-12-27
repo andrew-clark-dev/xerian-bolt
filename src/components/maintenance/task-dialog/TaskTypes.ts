@@ -13,6 +13,11 @@ export const taskTypes: TaskType[] = [
         requiresApiKey: true,
     },
     {
+        name: 'Import Items',
+        modelType: 'Item',
+        requiresApiKey: true,
+    },
+    {
         name: 'Initialize Model Counts',
         modelType: 'Counter',
         requiresApiKey: false,

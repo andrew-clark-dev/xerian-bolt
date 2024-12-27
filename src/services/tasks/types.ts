@@ -1,4 +1,5 @@
 import type { Schema } from '../../../amplify/data/resource';
+import type { DateRange } from '../import/types';
 
 export type ModelType = keyof Schema;
 
@@ -27,5 +28,5 @@ export interface TaskConfig {
   schedule: 'now' | 'daily' | 'weekly' | 'monthly';
   retentionDays: number;
   notifyOnComplete: boolean;
-  upToDate?: Date;
+  dateRange?: DateRange;
 }
