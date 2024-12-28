@@ -1,22 +1,33 @@
+import { AttributeMap } from "aws-sdk/clients/dynamodb";
 import { type Schema } from "../../data/resource";
 import * as AWS from 'aws-sdk';
 
 const docClient = new AWS.DynamoDB.DocumentClient();
+const dynamodb = new AWS.DynamoDB();
 
 export const handler: Schema["truncateTable"]["functionHandler"] = async (event) => {
+    console.info(`Truncate table event: ${JSON.stringify(event)}`);
+
     const tableName = process.env[event.arguments.tablename!]!;
 
-    try {
 
+    console.info(`Table to truncate: ${tableName}`);
+
+    try {
+        const response = await dynamodb.describeTable({ TableName: tableName }).promise();
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+        const keyString = response.Table?.KeySchema?.find((key) => key.KeyType === 'HASH')!.AttributeName!;
+        console.info(`Key: ${keyString}`);
         const scanParams: AWS.DynamoDB.DocumentClient.ScanInput = {
             TableName: tableName,
-            ExclusiveStartKey: undefined,
         };
         let itemsToDelete: AWS.DynamoDB.DocumentClient.ItemList = [];
 
         // Scan the table and handle pagination
         do {
             const scanResult = await docClient.scan(scanParams).promise();
+            console.info(`Deleting ${scanResult.Count || "No"} records from ${tableName}`);
+
             if (scanResult.Items) {
                 itemsToDelete = itemsToDelete.concat(scanResult.Items);
             }
@@ -25,23 +36,19 @@ export const handler: Schema["truncateTable"]["functionHandler"] = async (event)
             scanParams.ExclusiveStartKey = scanResult.LastEvaluatedKey;
         } while (scanParams.ExclusiveStartKey);
 
-        // Batch delete items
-        const deleteRequests = itemsToDelete.map(item => ({
-            DeleteRequest: {
-                Key: { id: item.id }
-            }
-        }));
+        const itemChunks = chunkArray(itemsToDelete, 25);
 
-        const batchWriteParams = {
-            RequestItems: {
-                [tableName]: deleteRequests
-            }
-        };
+        // For every chunk of 25 movies, make one BatchWrite request.
+        for (const chunk of itemChunks) {
+            const deleteRequests = chunk.map((item: AttributeMap) => ({
+                DeleteRequest: {
+                    Key: { [keyString]: item[keyString] },
+                },
+            }));
 
-        // DynamoDB batchWrite can handle a maximum of 25 items at a time
-        while (batchWriteParams.RequestItems[tableName].length > 0) {
-            const batch = batchWriteParams.RequestItems[tableName].splice(0, 25);
-            await docClient.batchWrite({ RequestItems: { [tableName]: batch } }).promise();
+            console.info(`Delete Requests: ${JSON.stringify(deleteRequests)}`);
+
+            await docClient.batchWrite({ RequestItems: { [tableName]: deleteRequests } }).promise();
         }
 
         return `Table ${tableName} truncated successfully`;
@@ -51,3 +58,14 @@ export const handler: Schema["truncateTable"]["functionHandler"] = async (event)
     }
 
 };
+/**
+ *
+ * @param {Array} arr
+ * @param {number} stride
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function* chunkArray(arr: any, stride = 1) {
+    for (let i = 0; i < arr.length; i += stride) {
+        yield arr.slice(i, Math.min(i + stride, arr.length));
+    }
+}

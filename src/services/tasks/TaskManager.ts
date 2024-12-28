@@ -3,11 +3,12 @@ import { TaskProgress, TaskResult, TaskConfig } from './types';
 import { ImportAccountsTask } from './ImportAccountsTask';
 import { ImportItemsTask } from './ImportItemsTask';
 import { InitializeModelCountsTask } from './InitializeModelCountsTask';
+import { TruncateTableTask } from './TruncateTableTask';
 
 export class TaskManager {
   private tasks: Map<string, TaskProgress> = new Map();
   private listeners: Set<(tasks: TaskProgress[]) => void> = new Set();
-  private activeTask: ImportAccountsTask | ImportItemsTask | InitializeModelCountsTask | null = null;
+  private activeTask: ImportAccountsTask | ImportItemsTask | InitializeModelCountsTask | TruncateTableTask | null = null;
 
   subscribe(callback: (tasks: TaskProgress[]) => void) {
     this.listeners.add(callback);
@@ -35,7 +36,14 @@ export class TaskManager {
     this.tasks.set(taskId, task);
     this.notify();
 
-    if (config.name === 'Initialize Model Counts') {
+    if (config.name === 'Truncate Table') {
+      this.activeTask = new TruncateTableTask({
+        tableName: config.modelType,
+        onProgress: (progress, message) => {
+          this.updateTaskProgress(taskId, progress, message);
+        },
+      });
+    } else if (config.name === 'Initialize Model Counts') {
       this.activeTask = new InitializeModelCountsTask({
         onProgress: (progress, message) => {
           this.updateTaskProgress(taskId, progress, message);

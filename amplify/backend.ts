@@ -78,4 +78,5 @@ mapping.node.addDependency(policy);
 for (const key in tables) {
   const t = tables[key];
   backend.truncateTableFunction.addEnvironment(`${key.toUpperCase()}_TABLE`, t.tableName)
+  t.grantFullAccess(backend.truncateTableFunction.resources.lambda);
 }

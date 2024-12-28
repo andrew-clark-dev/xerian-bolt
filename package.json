@@ -12,6 +12,8 @@
   "dependencies": {
     "@aws-amplify/backend-function": "^1.9.0",
     "@aws-amplify/ui-react": "^6.1.6",
+    "@aws-doc-sdk-examples/lib": "^1.0.1",
+    "@aws-sdk/client-dynamodb": "^3.716.0",
     "aws-amplify": "^6.9.0",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.6.7",

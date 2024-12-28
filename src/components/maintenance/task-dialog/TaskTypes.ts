@@ -21,5 +21,10 @@ export const taskTypes: TaskType[] = [
         name: 'Initialize Model Counts',
         modelType: 'Counter',
         requiresApiKey: false,
+    },
+    {
+        name: 'Truncate Table',
+        modelType: 'Account',
+        requiresApiKey: false,
     }
 ];

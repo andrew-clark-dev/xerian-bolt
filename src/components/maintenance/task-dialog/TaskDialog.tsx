@@ -9,6 +9,10 @@ import { DateRangeFields } from './DateRangeFields';
 import { taskTypes } from './TaskTypes';
 import { scheduleTypes } from './ScheduleTypes';
 import { DateRange } from '../../../services/import/types';
+import type { Schema } from '../../../../amplify/data/resource';
+import { generateClient } from 'aws-amplify/data';
+
+const client = generateClient<Schema>();
 
 interface TaskDialogProps {
   isOpen: boolean;
@@ -36,6 +40,7 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
   const requiresApiKey = selectedTask?.requiresApiKey ?? false;
   const showApiKeyWarning = requiresApiKey && !apiKey;
   const isImportTask = config.name.startsWith('Import');
+  const isTruncateTask = config.name === 'Truncate Table';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +88,26 @@ export function TaskDialog({ isOpen, onClose, onSubmit, apiKey }: TaskDialogProp
               ))}
             </select>
           </div>
+
+          {isTruncateTask && (
+            <div>
+              <label className={`block text-sm font-medium ${theme.text()} mb-1`}>
+                Table Name
+              </label>
+              <select
+                value={config.modelType}
+                onChange={(e) => setConfig({ ...config, modelType: e.target.value as keyof Schema })}
+                className={`w-full px-3 py-2 ${theme.border()} border rounded-lg ${theme.surface('secondary')} ${theme.text()}`}
+                required
+              >
+                {Object.keys(client.models).map((model) => (
+                  <option key={model} value={model}>
+                    {model}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {requiresApiKey && <ApiKeyField value={apiKey || ''} />}
 

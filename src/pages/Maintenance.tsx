@@ -42,7 +42,6 @@ export function Maintenance() {
   }, []);
 
   const handleStartTask = async (config: TaskConfig) => {
-
     await taskManager.startTask(config, apiKey);
     setShowTaskDialog(false);
   };
