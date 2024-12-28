@@ -2,6 +2,7 @@ import { apiClient } from '../../api/client';
 import { importService } from './import.service';
 import { BaseImportService, FetchOptions } from './base.import.service';
 import { ExternalItemPage, ImportProgress, ImportResult, DateRange } from '../types';
+import { AxiosError } from 'axios';
 
 export class ImportItemService extends BaseImportService {
   private async fetchItems({
@@ -35,7 +36,18 @@ export class ImportItemService extends BaseImportService {
 
       apiClient.setAuthToken(apiKey);
       return await apiClient.get<ExternalItemPage>('/v1/items', { params });
+
     } catch (error) {
+      if (error instanceof AxiosError) {
+        console.log(error.response);
+        //        if (error.status === 429) {
+        // Too many requests, wait and try again
+        console.log("Too many requests, wait and try again");
+
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        return this.fetchItems({ cursor, dateRange, apiKey });
+        //      }
+      }
       throw this.serviceError(error, 'fetchItems');
     }
   }
@@ -50,15 +62,26 @@ export class ImportItemService extends BaseImportService {
     let cursor: string | null = null;
     let total = 0;
 
+    // Create a Set to track inserted users
+    const insertedUsers = new Set<string>();
+
+
     try {
+      const startTime = performance.now();
+
       const firstPage = await this.fetchItems({ apiKey, dateRange });
       total = firstPage.count;
+      yield {
+        processed,
+        total,
+        message: `Found ${total} items to import`,
+      };
+
 
       do {
         if (signal.aborted) {
           throw new Error('Import cancelled');
         }
-
         const page = await this.fetchItems({
           cursor,
           dateRange,
@@ -71,20 +94,22 @@ export class ImportItemService extends BaseImportService {
           }
 
           try {
-            await importService.createIfNotExists({
+            importService.create({
               externalId: externalItem.id,
               type: 'item',
               userId: externalItem.created_by.id,
               data: JSON.stringify(externalItem)
             });
 
-            await importService.createIfNotExists({
-              externalId: externalItem.created_by.id,
-              type: 'user',
-              userId: externalItem.created_by.id,
-              data: JSON.stringify(externalItem.created_by)
-            });
-
+            if (!insertedUsers.has(externalItem.created_by.id)) {
+              importService.createIfNotExists({
+                externalId: externalItem.created_by.id,
+                type: 'user',
+                userId: externalItem.created_by.id,
+                data: JSON.stringify(externalItem.created_by)
+              });
+              insertedUsers.add(externalItem.created_by.id);
+            }
             processed++;
             yield {
               processed,
@@ -101,9 +126,22 @@ export class ImportItemService extends BaseImportService {
         cursor = page.next_cursor;
       } while (cursor);
 
+      const endTime = performance.now();
+      const elapsedTime = (endTime - startTime) / 1000;
+      console.log(`Elapsed time: ${elapsedTime} ms`);
+      let message = `Import completed successfully, imported ${processed} items in ${elapsedTime} seconds`;
+
+      if (signal.aborted) {
+        message = `Import cancelled by user, imported ${processed} items in ${elapsedTime} seconds`;
+      }
+
+      if (failed > 0) {
+        message = `Import encountered errors, imported ${processed} items in ${elapsedTime} seconds`;
+      }
+
       return {
         success: failed === 0 && !signal.aborted,
-        message: failed === 0 && !signal.aborted ? 'Import completed successfully' : 'Import encountered errors',
+        message: message,
         processed,
         failed,
         errors,

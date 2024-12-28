@@ -27,8 +27,15 @@ export class ImportAccountService extends BaseImportService {
           'tags',
         ],
         expand: ['created_by', 'locations', 'recurring_fees'],
-        ...this.getDateRangeParams(dateRange),
       };
+
+      const dateRangeParams = this.getDateRangeParams(dateRange);
+      if (dateRangeParams['created:gte']) {
+        params['created:gte'] = dateRangeParams['created:gte'];
+      }
+      if (dateRangeParams['created:lte']) {
+        params['created:lte'] = dateRangeParams['created:lte'];
+      }
 
       if (cursor) {
         params.cursor = cursor;
@@ -72,18 +79,18 @@ export class ImportAccountService extends BaseImportService {
           }
 
           try {
-            await importService.create({ 
-              externalId: externalAccount.id, 
-              type: 'account', 
-              userId: externalAccount.created_by.id, 
-              data: JSON.stringify(externalAccount) 
+            await importService.create({
+              externalId: externalAccount.id,
+              type: 'account',
+              userId: externalAccount.created_by.id,
+              data: JSON.stringify(externalAccount)
             });
-            
-            await importService.createIfNotExists({ 
-              externalId: externalAccount.created_by.id, 
-              type: 'user', 
-              userId: externalAccount.created_by.id, 
-              data: JSON.stringify(externalAccount.created_by) 
+
+            await importService.createIfNotExists({
+              externalId: externalAccount.created_by.id,
+              type: 'user',
+              userId: externalAccount.created_by.id,
+              data: JSON.stringify(externalAccount.created_by)
             });
 
             processed++;
