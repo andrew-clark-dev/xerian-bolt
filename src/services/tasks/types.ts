@@ -28,5 +28,5 @@ export interface TaskConfig {
   schedule: 'now' | 'daily' | 'weekly' | 'monthly';
   retentionDays: number;
   notifyOnComplete: boolean;
-  dateRange?: DateRange;
+  dateRange: DateRange;
 }

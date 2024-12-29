@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { TaskProgress, TaskResult, TaskConfig } from './types';
-import { ImportAccountsTask } from './ImportAccountsTask';
-import { ImportItemsTask } from './ImportItemsTask';
 import { InitializeModelCountsTask } from './InitializeModelCountsTask';
 import { TruncateTableTask } from './TruncateTableTask';
+import { ImportAccountsTask, ImportItemsTask } from './import_task';
+
 
 export class TaskManager {
   private tasks: Map<string, TaskProgress> = new Map();
@@ -21,7 +21,7 @@ export class TaskManager {
     this.listeners.forEach(listener => listener(tasks));
   }
 
-  async startTask(config: TaskConfig, apiKey?: string): Promise<string> {
+  async startTask(config: TaskConfig, apiKey: string): Promise<string> {
     const taskId = uuidv4();
     const task: TaskProgress = {
       id: taskId,
@@ -55,7 +55,7 @@ export class TaskManager {
       }
 
       this.activeTask = new ImportItemsTask({
-        apiKey,
+        apiKey: apiKey,
         dateRange: config.dateRange,
         onProgress: (progress, message) => {
           this.updateTaskProgress(taskId, progress, message);
@@ -67,7 +67,7 @@ export class TaskManager {
       }
 
       this.activeTask = new ImportAccountsTask({
-        apiKey,
+        apiKey: apiKey,
         dateRange: config.dateRange,
         onProgress: (progress, message) => {
           this.updateTaskProgress(taskId, progress, message);
