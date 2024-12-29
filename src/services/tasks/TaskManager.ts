@@ -2,13 +2,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { TaskProgress, TaskResult, TaskConfig } from './types';
 import { InitializeModelCountsTask } from './InitializeModelCountsTask';
 import { TruncateTableTask } from './TruncateTableTask';
-import { ImportAccountsTask, ImportItemsTask } from './import_task';
-
+import { ImportTask } from './import_task';
 
 export class TaskManager {
   private tasks: Map<string, TaskProgress> = new Map();
   private listeners: Set<(tasks: TaskProgress[]) => void> = new Set();
-  private activeTask: ImportAccountsTask | ImportItemsTask | InitializeModelCountsTask | TruncateTableTask | null = null;
+  private activeTask: ImportTask | InitializeModelCountsTask | TruncateTableTask | null = null;
 
   subscribe(callback: (tasks: TaskProgress[]) => void) {
     this.listeners.add(callback);
@@ -49,34 +48,24 @@ export class TaskManager {
           this.updateTaskProgress(taskId, progress, message);
         },
       });
-    } else if (config.name === 'Import Items') {
+    } else if (config.name.startsWith('Import')) {
       if (!apiKey) {
         throw new Error('API key is required for import tasks');
       }
 
-      this.activeTask = new ImportItemsTask({
-        apiKey: apiKey,
+      const importType = config.name.split(' ')[1].toLowerCase() as 'accounts' | 'items' | 'categories' | 'sales';
+      this.activeTask = ImportTask.create({
+        apiKey,
         dateRange: config.dateRange,
         onProgress: (progress, message) => {
           this.updateTaskProgress(taskId, progress, message);
         },
-      });
-    } else {
-      if (!apiKey) {
-        throw new Error('API key is required for import tasks');
-      }
-
-      this.activeTask = new ImportAccountsTask({
-        apiKey: apiKey,
-        dateRange: config.dateRange,
-        onProgress: (progress, message) => {
-          this.updateTaskProgress(taskId, progress, message);
-        },
+        importType
       });
     }
 
     try {
-      const result = await this.activeTask.execute();
+      const result = await this.activeTask!.execute();
       this.completeTask(taskId, result);
     } catch (error) {
       this.failTask(taskId, error as Error);
@@ -145,5 +134,7 @@ export class TaskManager {
     this.notify();
   }
 }
+
+
 
 export const taskManager = new TaskManager();

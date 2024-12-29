@@ -12,6 +12,8 @@ import { Users } from './pages/Users';
 import { NewUser } from './pages/NewUser';
 import { UpdateUserProfile } from './pages/UpdateUser';
 import { Maintenance } from './pages/Maintenance';
+import { Imports } from './pages/Imports';
+import { UpdateImport } from './pages/UpdateImport';
 import '@aws-amplify/ui-react/styles.css';
 
 export default function App() {
@@ -32,6 +34,8 @@ export default function App() {
                 <Route path="users" element={<Users />} />
                 <Route path="users/new" element={<NewUser />} />
                 <Route path="users/:email" element={<UpdateUserProfile />} />
+                <Route path="imports" element={<Imports />} />
+                <Route path="imports/:externalId" element={<UpdateImport />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="maintenance" element={<Maintenance />} />
