@@ -13,24 +13,23 @@ export function Imports() {
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [prevTokens, setPrevTokens] = useState<string[]>([]);
   const [recordsPerPage, setRecordsPerPage] = useState<number>(RECORDS_PER_PAGE_OPTIONS[0]);
-  const [sortColumn, setSortColumn] = useState<keyof ImportedObject>('createdAt');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
   const [selectedType, setSelectedType] = useState<ImportType | 'all'>('all');
 
   useEffect(() => {
     loadImports();
-  }, [sortColumn, sortDirection, recordsPerPage, selectedType]);
+  }, [recordsPerPage, selectedType]);
 
   const loadImports = async (token?: string | null) => {
     try {
       setIsLoading(true);
-      const { imports: fetchedImports, nextToken: newNextToken } = 
+      const { imports: fetchedImports, nextToken: newNextToken } =
         await importedObjectService.listImportedObjects({
           limit: recordsPerPage,
           nextToken: token ?? null,
           type: selectedType,
         });
-      
+
       setImports(fetchedImports);
       setNextToken(newNextToken);
       setTotalPages(newNextToken ? currentPage + 1 : currentPage);
@@ -59,15 +58,6 @@ export function Imports() {
     }
   };
 
-  const handleSort = (column: keyof ImportedObject) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
-
   const handleRecordsPerPageChange = (newValue: number) => {
     setRecordsPerPage(newValue);
     setCurrentPage(1);
@@ -86,23 +76,20 @@ export function Imports() {
   return (
     <div className="space-y-6">
       <ImportsHeader />
-      
+
       <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <ImportFilter
           selectedType={selectedType}
           onChange={handleTypeChange}
         />
       </div>
-      
+
       <ImportList
         imports={imports}
         isLoading={isLoading}
         currentPage={currentPage}
         totalPages={totalPages}
-        sortColumn={sortColumn}
-        sortDirection={sortDirection}
         recordsPerPage={recordsPerPage}
-        onSort={handleSort}
         onPageChange={(page) => {
           if (page > currentPage) {
             handleNextPage();

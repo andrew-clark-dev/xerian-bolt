@@ -4,10 +4,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ImportedObject, importedObjectService } from '../services/import/imported-object.service';
 import { ImportForm } from '../components/imports/ImportForm';
 import { JsonViewer } from '../components/ui/JsonViewer';
-import { Button } from '../components/ui/Button';
 import { theme } from '../theme';
 
-export function UpdateImport() {
+export function ViewImport() {
   const navigate = useNavigate();
   const { externalId } = useParams<{ externalId: string }>();
   const [formData, setFormData] = useState<Partial<ImportedObject>>({});
@@ -41,31 +40,6 @@ export function UpdateImport() {
     loadImport();
   }, [externalId, navigate]);
 
-  const handleFieldChange = (field: keyof ImportedObject, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!externalId) {
-      setError('Import ID is required');
-      return;
-    }
-
-    setError('');
-    setIsLoading(true);
-
-    try {
-      await importedObjectService.updateImportedObject(externalId, formData);
-      navigate('/imports');
-    } catch (err) {
-      console.error('Error updating import:', err);
-      setError('Failed to update import. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   if (!externalId) {
     return null;
   }
@@ -82,12 +56,12 @@ export function UpdateImport() {
           >
             <ArrowLeft className="w-6 h-6" />
           </Link>
-          <h1 className="text-2xl font-semibold text-gray-900">Update Import</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">View Import</h1>
         </div>
       </div>
 
       <div className={`${theme.surface()} ${theme.border()} rounded-lg shadow-sm`}>
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <div className="p-6 space-y-6">
           {error && (
             <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">
               {error}
@@ -97,7 +71,7 @@ export function UpdateImport() {
           <ImportForm
             formData={formData}
             isLoading={isLoading}
-            onChange={handleFieldChange}
+            readOnly
           />
 
           <div className="space-y-4">
@@ -106,22 +80,7 @@ export function UpdateImport() {
               <JsonViewer data={importData} />
             )}
           </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Link
-              to="/imports"
-              className={theme.component('button', 'secondary')}
-            >
-              Cancel
-            </Link>
-            <Button
-              type="submit"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Updating...' : 'Update Import'}
-            </Button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

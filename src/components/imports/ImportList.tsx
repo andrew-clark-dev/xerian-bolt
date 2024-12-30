@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { ImportedObject } from '../../services/import/imported-object.service';
-import { TableHeader } from '../ui/table/TableHeader';
 import { Pagination } from '../ui/table/Pagination';
 import { RECORDS_PER_PAGE_OPTIONS } from '../accounts/AccountColumns';
 import { columns } from './columns';
@@ -10,10 +9,7 @@ interface ImportListProps {
   isLoading: boolean;
   currentPage: number;
   totalPages: number;
-  sortColumn: keyof ImportedObject;
-  sortDirection: 'asc' | 'desc';
   recordsPerPage: number;
-  onSort: (column: keyof ImportedObject) => void;
   onPageChange: (page: number) => void;
   onRecordsPerPageChange: (value: number) => void;
 }
@@ -23,10 +19,7 @@ export function ImportList({
   isLoading,
   currentPage,
   totalPages,
-  sortColumn,
-  sortDirection,
   recordsPerPage,
-  onSort,
   onPageChange,
   onRecordsPerPageChange,
 }: ImportListProps) {
@@ -98,17 +91,24 @@ export function ImportList({
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <TableHeader
-            columns={columns}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onSort={onSort}
-          />
+          <thead className="bg-gray-50 dark:bg-gray-800">
+            <tr>
+              {columns.map((column) => (
+                <th
+                  key={column.key}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  {column.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {renderTableBody()}
           </tbody>
         </table>
       </div>
+
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}

@@ -1,24 +1,24 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../../amplify/data/resource';
-import type { ImportType } from '../../components/imports/ImportFilter';
+import { createServiceError } from './utils/error.utils';
+import { ImportType } from '../../components/imports/ImportFilter';
 
 const client = generateClient<Schema>();
 
 export type ImportedObject = Schema['ImportedObject']['type'];
 
-interface ListImportsOptions {
+export interface ListImportsOptions {
   limit?: number;
   nextToken?: string | null;
   type?: ImportType | 'all';
 }
 
-class ImportedObjectService {
-  private serviceError(error: unknown, context: string): Error {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`Error in ${context}:`, error);
-    return new Error(`${context}: ${message}`);
-  }
+export interface ImportResult {
+  imports: ImportedObject[];
+  nextToken: string | null;
+}
 
+class ImportedObjectService {
   async getImportedObject(externalId: string): Promise<ImportedObject> {
     if (!externalId) {
       throw new Error('Import ID is required');
@@ -28,7 +28,7 @@ class ImportedObjectService {
       const { data: importObj, errors } = await client.models.ImportedObject.get({ externalId });
 
       if (errors) {
-        throw this.serviceError(errors, 'getImportedObject');
+        throw createServiceError(errors, 'getImportedObject');
       }
 
       if (!importObj) {
@@ -37,42 +37,39 @@ class ImportedObjectService {
 
       return importObj;
     } catch (error) {
-      throw this.serviceError(error, 'getImportedObject');
+      throw createServiceError(error, 'getImportedObject');
     }
   }
 
-  async updateImportedObject(id: string, updates: Partial<ImportedObject>): Promise<ImportedObject> {
-    if (!id) {
+  async updateImportedObject(externalId: string, updates: Partial<ImportedObject>): Promise<ImportedObject> {
+    if (!externalId) {
       throw new Error('Import ID is required');
     }
 
     try {
-      const existingImport = await this.getImportedObject(id);
+      const existingImport = await this.getImportedObject(externalId);
 
       const { data: importObj, errors } = await client.models.ImportedObject.update({
         ...existingImport,
         ...updates,
-        externalId: id,
+        externalId,
       });
 
       if (errors) {
-        throw this.serviceError(errors, 'updateImportedObject');
+        throw createServiceError(errors, 'updateImportedObject');
       }
 
       if (!importObj) {
-        throw new Error(`Failed to update import with ID ${id}`);
+        throw new Error(`Failed to update import with ID ${externalId}`);
       }
 
       return importObj;
     } catch (error) {
-      throw this.serviceError(error, 'updateImportedObject');
+      throw createServiceError(error, 'updateImportedObject');
     }
   }
 
-  async listImportedObjects(options: ListImportsOptions = {}): Promise<{
-    imports: ImportedObject[];
-    nextToken: string | null
-  }> {
+  async listImportedObjects(options: ListImportsOptions = {}): Promise<ImportResult> {
     try {
       const filter = options.type && options.type !== 'all'
         ? { type: { eq: options.type } }
@@ -81,16 +78,16 @@ class ImportedObjectService {
       const { data: imports, nextToken, errors } = await client.models.ImportedObject.list({
         limit: options.limit || 10,
         nextToken: options.nextToken,
-        filter
+        filter: filter
       });
 
       if (errors) {
-        throw this.serviceError(errors, 'listImportedObjects');
+        throw createServiceError(errors, 'listImportedObjects');
       }
 
       return { imports, nextToken: nextToken ?? null };
     } catch (error) {
-      throw this.serviceError(error, 'listImportedObjects');
+      throw createServiceError(error, 'listImportedObjects');
     }
   }
 }

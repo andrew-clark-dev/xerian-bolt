@@ -18,12 +18,13 @@ import '@aws-amplify/ui-react/styles.css';
 
 export default function App() {
   return (
-    <Authenticator
-      initialState="signIn"
-      signUpAttributes={['nickname']}
-    >
-      {({ signOut }) => (
-        <ThemeProvider>
+    <ThemeProvider>
+      <Authenticator
+        initialState="signIn"
+        signUpAttributes={['nickname']}
+      >
+        {({ signOut }) => (
+
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Layout onSignOut={signOut} />}>
@@ -42,8 +43,9 @@ export default function App() {
               </Route>
             </Routes>
           </BrowserRouter>
-        </ThemeProvider>
-      )}
-    </Authenticator>
+
+        )}
+      </Authenticator>
+    </ThemeProvider>
   );
 }
