@@ -56,7 +56,7 @@ export function ImportList({
     return imports.map((importObj) => (
       <tr
         key={`${importObj.externalId}-${importObj.type}`}
-        onClick={() => navigate(`/imports/${importObj.id}`)}
+        onClick={() => navigate(`/imports/${importObj.externalId}`)}
         className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
       >
         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
