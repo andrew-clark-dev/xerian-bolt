@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Settings, Users, FileSpreadsheet, Wrench, Download } from 'lucide-react';
+import { Home, LayoutDashboard, Settings, Users, FileSpreadsheet, Wrench, Download, RefreshCw } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export function Sidebar() {
@@ -9,6 +9,7 @@ export function Sidebar() {
     { name: 'Accounts', href: '/accounts', icon: FileSpreadsheet },
     { name: 'Users', href: '/users', icon: Users },
     { name: 'Imports', href: '/imports', icon: Download },
+    { name: 'Sync Status', href: '/sync', icon: RefreshCw },
     { name: 'Maintenance', href: '/maintenance', icon: Wrench },
     { name: 'Profile', href: '/profile', icon: Users },
     { name: 'Settings', href: '/settings', icon: Settings }
