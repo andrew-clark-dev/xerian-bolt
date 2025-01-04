@@ -1,10 +1,10 @@
-import type { DateRange, ImportProgress, ImportResult } from '../types';
-import { apiClient } from '../../api/client';
+import type { DateRange, ImportProgress, ImportResult } from './import/types';
+import { apiClient } from './api/client';
 import { AxiosError } from 'axios';
 
 import { generateClient } from 'aws-amplify/data';
 
-import type { Schema } from '../../../../amplify/data/resource';
+import type { Schema } from '../../amplify/data/resource';
 
 const client = generateClient<Schema>();
 

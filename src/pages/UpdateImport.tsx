@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ImportedObject, importedObjectService } from '../services/import/imported-object.service';
+import { ImportedObject, importedObjectService } from '../services/imported-object.service';
 import { ImportForm } from '../components/imports/ImportForm';
 import { JsonViewer } from '../components/ui/JsonViewer';
 import { Button } from '../components/ui/Button';
@@ -70,7 +70,7 @@ export function UpdateImport() {
     return null;
   }
 
-  const importData = formData.data ? JSON.parse(formData.data) : null;
+  const importData = typeof formData.data === 'string' ? JSON.parse(formData.data) : null;
 
   return (
     <div className="space-y-6">

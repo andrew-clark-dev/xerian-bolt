@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { TaskDialog } from '../components/maintenance/task-dialog/TaskDialog';
 import { TaskProgress } from '../components/maintenance/TaskProgress';
 import { TaskOutput } from '../components/maintenance/TaskOutput';
-import { taskManager } from '../services/tasks/TaskManager';
+import { taskManager } from '../services/tasks/task_manager';
 import { profileService } from '../services/profile.service';
 import { theme } from '../theme';
 import type { TaskConfig, TaskProgress as TaskProgressType } from '../services/tasks/types';

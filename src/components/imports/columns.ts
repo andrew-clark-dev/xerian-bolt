@@ -1,4 +1,4 @@
-import type { ImportedObject } from '../../services/import/imported-object.service';
+import type { ImportedObject } from '../../services/imported-object.service';
 
 export const columns = [
   { key: 'externalId' as keyof ImportedObject, label: 'External ID' },

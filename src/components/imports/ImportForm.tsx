@@ -1,4 +1,4 @@
-import { ImportedObject } from '../../services/import/imported-object.service';
+import { ImportedObject } from '../../services/imported-object.service';
 import { Input } from '../ui/Input';
 import { theme } from '../../theme';
 
@@ -20,7 +20,7 @@ export function ImportForm({ formData, isLoading, readOnly, onChange }: ImportFo
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <h3 className={`text-lg font-medium ${theme.text()}`}>Import Information</h3>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               External ID

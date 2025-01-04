@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ImportedObject } from '../../services/import/imported-object.service';
+import { ImportedObject } from '../../services/imported-object.service';
 import { Pagination } from '../ui/table/Pagination';
 import { RECORDS_PER_PAGE_OPTIONS } from '../accounts/AccountColumns';
 import { columns } from './columns';

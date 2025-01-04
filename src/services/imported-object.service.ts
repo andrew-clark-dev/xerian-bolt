@@ -1,7 +1,6 @@
 import { generateClient } from 'aws-amplify/data';
-import type { Schema } from '../../../amplify/data/resource';
+import type { Schema } from '../../amplify/data/resource';
 import { createServiceError } from './utils/error.utils';
-import { ImportType } from '../../components/imports/ImportFilter';
 
 const client = generateClient<Schema>();
 
@@ -10,7 +9,7 @@ export type ImportedObject = Schema['ImportedObject']['type'];
 export interface ListImportsOptions {
   limit?: number;
   nextToken?: string | null;
-  type?: ImportType | 'all';
+  type: string | 'all';
 }
 
 export interface ImportResult {
@@ -69,17 +68,15 @@ class ImportedObjectService {
     }
   }
 
-  async listImportedObjects(options: ListImportsOptions = {}): Promise<ImportResult> {
+  async listImportedObjects(options: ListImportsOptions): Promise<ImportResult> {
     try {
-      const filter = options.type && options.type !== 'all'
-        ? { type: { eq: options.type } }
-        : undefined;
-
-      const { data: imports, nextToken, errors } = await client.models.ImportedObject.list({
-        limit: options.limit || 10,
-        nextToken: options.nextToken,
-        filter: filter
-      });
+      const { data: imports, nextToken, errors } = await client.models.ImportedObject.listImportedObjectByType(
+        { type: options.type! },
+        {
+          limit: options.limit || 10,
+          nextToken: options.nextToken
+        }
+      );
 
       if (errors) {
         throw createServiceError(errors, 'listImportedObjects');

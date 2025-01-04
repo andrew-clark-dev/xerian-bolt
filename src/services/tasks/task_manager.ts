@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { TaskProgress, TaskResult, TaskConfig } from './types';
-import { InitializeModelCountsTask } from './InitializeModelCountsTask';
-import { TruncateTableTask } from './TruncateTableTask';
-import { ImportTask } from './import_task';
+import { InitializeModelCountsTask } from './initialize_model_counts.task';
+import { TruncateTableTask } from './truncate_table.task';
+import { ImportTask } from './import.task';
+import { ImportType } from '../../components/imports/ImportFilter';
 
 export class TaskManager {
   private tasks: Map<string, TaskProgress> = new Map();
@@ -53,7 +54,7 @@ export class TaskManager {
         throw new Error('API key is required for import tasks');
       }
 
-      const importType = config.name.split(' ')[1].toLowerCase() as 'accounts' | 'items' | 'categories' | 'sales';
+      const importType = config.name.split(' ')[1].toLowerCase() as ImportType;
       this.activeTask = ImportTask.create({
         apiKey,
         dateRange: config.dateRange,

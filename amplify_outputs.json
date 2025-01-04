@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "eu-central-1_2sOnp0muh",
+    "user_pool_id": "eu-central-1_CwQBjiwUQ",
     "aws_region": "eu-central-1",
-    "user_pool_client_id": "kmh822vio037a6di9cuc739u9",
-    "identity_pool_id": "eu-central-1:30f052a1-9abb-4daf-9ad0-48289c9b8c60",
+    "user_pool_client_id": "3g0c0h49cjjsssl92k77667mdg",
+    "identity_pool_id": "eu-central-1:936d8e30-2098-4549-a908-2eb9fe068e42",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -52,7 +52,7 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://yg3f4si5gfeuxhilq7zo2rscnu.appsync-api.eu-central-1.amazonaws.com/graphql",
+    "url": "https://5hcykpmlmjbfpcu262df6csskq.appsync-api.eu-central-1.amazonaws.com/graphql",
     "aws_region": "eu-central-1",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
@@ -1872,11 +1872,11 @@
   },
   "storage": {
     "aws_region": "eu-central-1",
-    "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-lmvcwh8csja8",
+    "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-jud19er4xogv",
     "buckets": [
       {
         "name": "drive",
-        "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-lmvcwh8csja8",
+        "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-jud19er4xogv",
         "aws_region": "eu-central-1",
         "paths": {
           "data/${cognito-identity.amazonaws.com:sub}/*": {

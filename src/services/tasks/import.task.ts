@@ -1,12 +1,13 @@
 import { TaskResult } from './types';
-import { ImportService, ImportConfig } from '../import/services/import.service';
+import { ImportService, ImportConfig } from '../import.service';
 import { DateRange } from '../import/types';
+import { ImportType } from '../../components/imports/ImportFilter';
 
 interface ImportTaskConfig {
   apiKey: string;
   dateRange: DateRange;
   onProgress: (progress: number, message: string) => void;
-  importType: 'accounts' | 'items' | 'categories' | 'sales' | 'users';
+  importType: ImportType;
 }
 
 export class ImportTask {

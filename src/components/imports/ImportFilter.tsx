@@ -1,6 +1,6 @@
 import { theme } from '../../theme';
 
-const IMPORT_TYPES = ['account', 'item', 'category', 'sale', 'user'] as const;
+const IMPORT_TYPES = ['accounts', 'items', 'categories', 'sales', 'users'] as const;
 export type ImportType = typeof IMPORT_TYPES[number];
 
 interface ImportFilterProps {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ImportsHeader } from '../components/imports/ImportsHeader';
 import { ImportList } from '../components/imports/ImportList';
 import { ImportFilter, ImportType } from '../components/imports/ImportFilter';
-import { importedObjectService, ImportedObject } from '../services/import/imported-object.service';
+import { importedObjectService, ImportedObject } from '../services/imported-object.service';
 import { RECORDS_PER_PAGE_OPTIONS } from '../components/accounts/AccountColumns';
 
 export function Imports() {
