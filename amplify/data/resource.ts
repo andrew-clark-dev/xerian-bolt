@@ -2,14 +2,41 @@ import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
 import { truncateTableFunction } from '../function/truncate-table/resource';
+import { fetchFromSource } from '../function/fetch-from-source/resource';
 
-const schema = a.schema({
+export const schema = a.schema({
 
   // Models
+  SyncLog: a.customType({
+    // fields can be required or optional
+    syncTime: a.datetime().required(),
+    recieved: a.integer().required(),
+    processed: a.integer().required(),
+    failed: a.integer().required(),
+  }),
+  SyncParams: a.customType({
+    path: a.string().required(),
+    includes: a.string().array(),
+    expands: a.string().array(),
+  }),
+
+  SyncInterface: a.enum(['account', 'item', 'sales', 'category']),
+
+  SyncData: a
+    .model({
+      interface: a.ref('SyncInterface').required(),
+      parameters: a.ref('SyncParams').required(),
+      total: a.integer().default(0),
+      lastSync: a.datetime().default(new Date('2000-01-01').toISOString()), // default to a long time ago
+      log: a.ref('SyncLog').required(),
+      history: a.ref('SyncLog').array(),
+    }),
+
   Counter: a
     .model({
       name: a.string().required(),
       val: a.integer().required(),
+
     })
     .identifier(['name']),
 
@@ -229,6 +256,7 @@ const schema = a.schema({
   allow.resource(postConfirmation),
   allow.resource(createActionFunction),
   allow.resource(truncateTableFunction),
+  allow.resource(fetchFromSource),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

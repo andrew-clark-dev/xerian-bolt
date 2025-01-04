@@ -42,16 +42,6 @@ class CounterService {
   }
 
 
-  async exists(externalId: string, type: string): Promise<boolean> {
-    try {
-      const importedObject = await client.models.ImportedObject.get({ externalId, type });
-      return !!importedObject; // Return true if the Todo exists, false otherwise
-    } catch (error) {
-      console.error('Error checking Todo existence:', error);
-      return false; // Return false in case of any other errors
-    }
-  }
-
   async findCounter(counterName: string): Promise<Counter | null> {
     try {
       const counter = await client.models.Counter.get({ name: counterName });

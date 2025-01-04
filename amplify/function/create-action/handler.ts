@@ -17,7 +17,7 @@ const client = generateClient<Schema>();
 
 const logger = new Logger({
     logLevel: "INFO",
-    serviceName: "dynamodb-stream-handler",
+    serviceName: "create-action-function",
 });
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();

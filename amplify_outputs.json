@@ -61,6 +61,119 @@
     "model_introspection": {
       "version": 1,
       "models": {
+        "SyncData": {
+          "name": "SyncData",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "interface": {
+              "name": "interface",
+              "isArray": false,
+              "type": {
+                "enum": "SyncInterface"
+              },
+              "isRequired": true,
+              "attributes": []
+            },
+            "parameters": {
+              "name": "parameters",
+              "isArray": false,
+              "type": {
+                "nonModel": "SyncParams"
+              },
+              "isRequired": true,
+              "attributes": []
+            },
+            "total": {
+              "name": "total",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "lastSync": {
+              "name": "lastSync",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "log": {
+              "name": "log",
+              "isArray": false,
+              "type": {
+                "nonModel": "SyncLog"
+              },
+              "isRequired": true,
+              "attributes": []
+            },
+            "history": {
+              "name": "history",
+              "isArray": true,
+              "type": {
+                "nonModel": "SyncLog"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "SyncData",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "Employee"
+                    ],
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
+            "sortKeyFieldNames": []
+          }
+        },
         "Counter": {
           "name": "Counter",
           "fields": {
@@ -1719,6 +1832,15 @@
         }
       },
       "enums": {
+        "SyncInterface": {
+          "name": "SyncInterface",
+          "values": [
+            "account",
+            "item",
+            "sales",
+            "category"
+          ]
+        },
         "ActionType": {
           "name": "ActionType",
           "values": [
@@ -1835,7 +1957,69 @@
           ]
         }
       },
-      "nonModels": {},
+      "nonModels": {
+        "SyncLog": {
+          "name": "SyncLog",
+          "fields": {
+            "syncTime": {
+              "name": "syncTime",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": true,
+              "attributes": []
+            },
+            "recieved": {
+              "name": "recieved",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
+            "processed": {
+              "name": "processed",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
+            "failed": {
+              "name": "failed",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
+        },
+        "SyncParams": {
+          "name": "SyncParams",
+          "fields": {
+            "path": {
+              "name": "path",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "includes": {
+              "name": "includes",
+              "isArray": true,
+              "type": "String",
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
+            },
+            "expands": {
+              "name": "expands",
+              "isArray": true,
+              "type": "String",
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
+            }
+          }
+        }
+      },
       "mutations": {
         "incCounter": {
           "name": "incCounter",
