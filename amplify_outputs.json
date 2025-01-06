@@ -524,7 +524,7 @@
               "name": "email",
               "isArray": false,
               "type": "String",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "profileOwner": {
@@ -534,8 +534,8 @@
               "isRequired": false,
               "attributes": []
             },
-            "username": {
-              "name": "username",
+            "cognitoId": {
+              "name": "cognitoId",
               "isArray": false,
               "type": "String",
               "isRequired": false,
@@ -663,10 +663,10 @@
             {
               "type": "key",
               "properties": {
-                "name": "userProfilesByUsername",
-                "queryField": "listUserProfileByUsername",
+                "name": "userProfilesByCognitoId",
+                "queryField": "listUserProfileByCognitoId",
                 "fields": [
-                  "username"
+                  "cognitoId"
                 ]
               }
             },

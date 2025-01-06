@@ -1,5 +1,4 @@
 import type { Schema } from '../../../amplify/data/resource';
-import type { DateRange } from '../import/types';
 
 export type ModelType = keyof Schema;
 

@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Settings, Users, FileSpreadsheet, Wrench, Download, RefreshCw } from 'lucide-react';
+import { Home, LayoutDashboard, Settings, Users, FileSpreadsheet, Wrench } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export function Sidebar() {
@@ -8,8 +8,6 @@ export function Sidebar() {
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Accounts', href: '/accounts', icon: FileSpreadsheet },
     { name: 'Users', href: '/users', icon: Users },
-    { name: 'Imports', href: '/imports', icon: Download },
-    { name: 'Sync Status', href: '/sync', icon: RefreshCw },
     { name: 'Maintenance', href: '/maintenance', icon: Wrench },
     { name: 'Profile', href: '/profile', icon: Users },
     { name: 'Settings', href: '/settings', icon: Settings }
@@ -33,15 +31,13 @@ export function Sidebar() {
               <li key={item.name}>
                 <Link
                   to={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                    isActive
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${isActive
                       ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white'
-                  }`}
+                    }`}
                 >
-                  <Icon className={`w-5 h-5 ${
-                    isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'
-                  }`} />
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'
+                    }`} />
                   <span className="font-medium">{item.name}</span>
                 </Link>
               </li>
