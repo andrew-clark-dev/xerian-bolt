@@ -2,13 +2,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { TaskProgress, TaskResult, TaskConfig } from './types';
 import { InitializeModelCountsTask } from './initialize_model_counts.task';
 import { TruncateTableTask } from './truncate_table.task';
-import { ImportTask } from './import.task';
-import { ImportType } from '../../components/imports/ImportFilter';
 
-export class TaskManager {
+class TaskManager {
   private tasks: Map<string, TaskProgress> = new Map();
   private listeners: Set<(tasks: TaskProgress[]) => void> = new Set();
-  private activeTask: ImportTask | InitializeModelCountsTask | TruncateTableTask | null = null;
+  private activeTask: InitializeModelCountsTask | TruncateTableTask | null = null;
 
   subscribe(callback: (tasks: TaskProgress[]) => void) {
     this.listeners.add(callback);
@@ -21,7 +19,7 @@ export class TaskManager {
     this.listeners.forEach(listener => listener(tasks));
   }
 
-  async startTask(config: TaskConfig, apiKey: string): Promise<string> {
+  async startTask(config: TaskConfig): Promise<string> {
     const taskId = uuidv4();
     const task: TaskProgress = {
       id: taskId,
@@ -48,20 +46,6 @@ export class TaskManager {
         onProgress: (progress, message) => {
           this.updateTaskProgress(taskId, progress, message);
         },
-      });
-    } else if (config.name.startsWith('Import')) {
-      if (!apiKey) {
-        throw new Error('API key is required for import tasks');
-      }
-
-      const importType = config.name.split(' ')[1].toLowerCase() as ImportType;
-      this.activeTask = ImportTask.create({
-        apiKey,
-        dateRange: config.dateRange,
-        onProgress: (progress, message) => {
-          this.updateTaskProgress(taskId, progress, message);
-        },
-        importType
       });
     }
 
@@ -136,6 +120,5 @@ export class TaskManager {
   }
 }
 
-
-
+// Create and export a singleton instance
 export const taskManager = new TaskManager();

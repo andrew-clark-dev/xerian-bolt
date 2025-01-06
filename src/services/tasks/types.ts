@@ -2,6 +2,12 @@ import type { Schema } from '../../../amplify/data/resource';
 
 export type ModelType = keyof Schema;
 
+// Add date range type
+export interface DateRange {
+  from: Date;
+  to: Date;
+}
+
 export interface TaskProgress {
   id: string;
   name: string;

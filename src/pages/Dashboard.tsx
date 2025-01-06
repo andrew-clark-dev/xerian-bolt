@@ -1,4 +1,5 @@
 import { Activity, DollarSign, Users, ArrowUp, ArrowDown } from 'lucide-react';
+import { CounterTotals } from '../components/dashboard/CounterTotals';
 
 const stats = [
   {
@@ -34,6 +35,8 @@ export function Dashboard() {
         </button>
       </div>
 
+      <CounterTotals />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat) => {
           const Icon = stat.icon;
@@ -47,11 +50,10 @@ export function Dashboard() {
                   <Icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <span
-                  className={`flex items-center gap-1 text-sm ${
-                    stat.trend === 'up' 
-                      ? 'text-green-600 dark:text-green-400' 
+                  className={`flex items-center gap-1 text-sm ${stat.trend === 'up'
+                      ? 'text-green-600 dark:text-green-400'
                       : 'text-red-600 dark:text-red-400'
-                  }`}
+                    }`}
                 >
                   {stat.trend === 'up' ? (
                     <ArrowUp className="w-4 h-4" />
