@@ -1,20 +1,15 @@
-import { TableHeader } from '../ui/table/TableHeader';
 import { Pagination } from '../ui/table/Pagination';
 import { SyncData } from '../../services/sync-data.service';
 import { useNavigate } from 'react-router-dom';
-import { columns, formatDate, RECORDS_PER_PAGE_OPTIONS } from './SyncDataColumns';
+import { columns, formatDate } from './SyncDataColumns';
 
 interface SyncDataListProps {
   syncData: SyncData[];
   isLoading: boolean;
   currentPage: number;
   totalPages: number;
-  sortColumn: keyof SyncData;
-  sortDirection: 'asc' | 'desc';
   recordsPerPage: number;
-  onSort: (column: keyof SyncData) => void;
   onPageChange: (page: number) => void;
-  onRecordsPerPageChange: (value: number) => void;
 }
 
 export function SyncDataList({
@@ -22,44 +17,26 @@ export function SyncDataList({
   isLoading,
   currentPage,
   totalPages,
-  sortColumn,
-  sortDirection,
-  recordsPerPage,
-  onSort,
   onPageChange,
-  onRecordsPerPageChange,
 }: SyncDataListProps) {
   const navigate = useNavigate();
 
   return (
     <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-end gap-2">
-          <label className="text-sm text-gray-600 dark:text-gray-400">
-            Records per page:
-          </label>
-          <select
-            value={recordsPerPage}
-            onChange={(e) => onRecordsPerPageChange(Number(e.target.value))}
-            className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
-            {RECORDS_PER_PAGE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <TableHeader
-            columns={columns}
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onSort={onSort}
-          />
+          <thead className="bg-gray-50 dark:bg-gray-800">
+            <tr>
+              {columns.map((column) => (
+                <th
+                  key={column.key}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  {column.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {isLoading ? (
               <tr>
@@ -84,10 +61,10 @@ export function SyncDataList({
                     {item.interface}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {item.total.toLocaleString()}
+                    {(item.total ?? 0).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {formatDate(item.lastSync)}
+                    {formatDate(item.lastSync ?? '')}
                   </td>
                 </tr>
               ))

@@ -3,12 +3,14 @@ import { Stack } from 'aws-cdk-lib';
 import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import { StartingPosition, EventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import { auth } from './auth/resource';
-import { data, schema } from './data/resource';
+import { data } from './data/resource';
 import { storage } from './storage/resource';
 import { createActionFunction } from './function/create-action/resource';
 import { truncateTableFunction } from './function/truncate-table/resource';
-import { fetchFromSource } from './function/fetch-from-source/resource';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { importAccountFunction } from './function/import-account/resource';
+import { fetchAccountUpdatesFunction } from './function/fetch-account-updates/resource';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -19,7 +21,8 @@ const backend = defineBackend({
   storage,
   createActionFunction,
   truncateTableFunction,
-  fetchFromSource,
+  fetchAccountUpdatesFunction,
+  importAccountFunction
 });
 
 // extract L1 CfnUserPool resources
@@ -87,9 +90,19 @@ for (const key in tables) {
 
 
 // Extend ENV for fetchFromSource
+
 const customStack = backend.createStack('CustomResources');
-schema.data.types.SyncInterface.values.forEach((syncInterface) => {
-  const syncQueue = new sqs.Queue(customStack, `${syncInterface}SyncQueue`);
-  backend.fetchFromSource.addEnvironment(`SYNC_QUEUE_URL_FOR_${syncInterface.toUpperCase()}`, syncQueue.queueUrl);
-  syncQueue.grantSendMessages(backend.fetchFromSource.resources.lambda);
-});
+
+const acountImportQueue = new sqs.Queue(customStack, `AcountImportQueue`);
+backend.fetchAccountUpdatesFunction.addEnvironment(`IMPORT_QUEUE_URL`, acountImportQueue.queueUrl);
+acountImportQueue.grantSendMessages(backend.fetchAccountUpdatesFunction.resources.lambda);
+backend.importAccountFunction.resources.lambda.addEventSource(new SqsEventSource(acountImportQueue));
+
+//   syncQueue.grantSendMessages(backend.fetchFromSource.resources.lambda);
+
+// schema.data.types.SyncInterface.values.forEach((syncInterface) => {
+//   const syncQueue = new sqs.Queue(customStack, `${syncInterface}SyncQueue`);
+//   backend.fetchFromSource.addEnvironment(`SYNC_QUEUE_URL_FOR_${syncInterface.toUpperCase()}`, syncQueue.queueUrl);
+//   syncQueue.grantSendMessages(backend.fetchFromSource.resources.lambda);
+//   backend.fetchFromSource.resources.lambda.addEventSource(new SqsEventSource(syncQueue));
+// });

@@ -1,13 +1,23 @@
 
 import { API_CONFIG } from './api';
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+
+export interface ExternalItemPage<T> {
+  count: number;
+  data: T[];
+  next_cursor: string | null;
+}
 
 export class ApiClient {
   private client: AxiosInstance;
-
+  private url: string;
+  private config: AxiosRequestConfig;
   constructor() {
+    this.config = JSON.parse(process.env.REQUEST_CONFIG!);
+    this.url = this.config.baseURL! + this.config.url!;
+
     this.client = axios.create({
-      baseURL: 'api',
+      baseURL: API_CONFIG.baseUrl,
       headers: {
         ...API_CONFIG.defaultHeaders,
       },
@@ -54,56 +64,44 @@ export class ApiClient {
         return Promise.reject(error);
       }
     );
+
+    this.client.defaults.headers.common['Authorization'] = `Bearer ${API_CONFIG.apiKey}`;
+
   }
 
-  setAuthToken(token: string) {
-    if (!token) {
-      delete this.client.defaults.headers.common['Authorization'];
-      return;
-    }
-    this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  }
-
-  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  async get<T>(cursor?: string | null): Promise<T> {
+    this.config.params.cursor = cursor || null;
     try {
-      const response = await this.client.get<T>(url, config);
+      const response = await this.client.get<T>(this.url, this.config);
       return response.data;
     } catch (error) {
-      console.error('GET request failed:', url, error);
+      console.error('GET request failed:', this.url, error);
       throw error;
     }
   }
 
-  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+  async fetch<T>(cursor?: string | null): Promise<ExternalItemPage<T>> {
     try {
-      const response = await this.client.post<T>(url, data, config);
-      return response.data;
+
+      return await this.get<ExternalItemPage<T>>(cursor);
+
     } catch (error) {
-      console.error('POST request failed:', url, error);
+      if (error instanceof AxiosError) {
+        console.log(error.response);
+        if (error.response?.status == 429) {
+          // Too many requests, wait and try again
+          console.log("Too many requests, wait and try again");
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          return this.fetch();
+        }
+        console.error(`AxiosError (${error.response?.status}) in fetchItems:`, error);
+      }
       throw error;
     }
   }
 
-  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    try {
-      const response = await this.client.put<T>(url, data, config);
-      return response.data;
-    } catch (error) {
-      console.error('PUT request failed:', url, error);
-      throw error;
-    }
-  }
-
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    try {
-      const response = await this.client.delete<T>(url, config);
-      return response.data;
-    } catch (error) {
-      console.error('DELETE request failed:', url, error);
-      throw error;
-    }
-  }
 }
 
 export const apiClient = new ApiClient();
+
 

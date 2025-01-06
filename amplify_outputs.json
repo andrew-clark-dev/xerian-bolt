@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "eu-central-1_CwQBjiwUQ",
+    "user_pool_id": "eu-central-1_Yr2hyJsWK",
     "aws_region": "eu-central-1",
-    "user_pool_client_id": "3g0c0h49cjjsssl92k77667mdg",
-    "identity_pool_id": "eu-central-1:936d8e30-2098-4549-a908-2eb9fe068e42",
+    "user_pool_client_id": "1qk343pq69p641tsss6950nkoh",
+    "identity_pool_id": "eu-central-1:07cd9ba4-c5ce-4c15-90e5-80028adb32e5",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -52,7 +52,7 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://5hcykpmlmjbfpcu262df6csskq.appsync-api.eu-central-1.amazonaws.com/graphql",
+    "url": "https://7qala2me2bf63kbesvp3tyxwie.appsync-api.eu-central-1.amazonaws.com/graphql",
     "aws_region": "eu-central-1",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
@@ -616,7 +616,7 @@
               "name": "settings",
               "isArray": false,
               "type": "AWSJSON",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "deletedAt": {
@@ -859,13 +859,6 @@
               "isArray": false,
               "type": "String",
               "isRequired": true,
-              "attributes": []
-            },
-            "userId": {
-              "name": "userId",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false,
               "attributes": []
             },
             "lastActivityBy": {
@@ -1596,6 +1589,13 @@
               "isRequired": true,
               "attributes": []
             },
+            "linkedTransaction": {
+              "name": "linkedTransaction",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
             "itemSku": {
               "name": "itemSku",
               "isArray": false,
@@ -1617,13 +1617,6 @@
                   "itemSku"
                 ]
               }
-            },
-            "linkedTransaction": {
-              "name": "linkedTransaction",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false,
-              "attributes": []
             },
             "accountNumber": {
               "name": "accountNumber",
@@ -1688,6 +1681,26 @@
                 "queryField": "listTransactionByPaymentType",
                 "fields": [
                   "paymentType"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "transactionsByItemSku",
+                "queryField": "listTransactionByItemSku",
+                "fields": [
+                  "itemSku"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "transactionsByAccountNumber",
+                "queryField": "listTransactionByAccountNumber",
+                "fields": [
+                  "accountNumber"
                 ]
               }
             },
@@ -1909,7 +1922,9 @@
             "Standard",
             "VIP",
             "Vender",
-            "Employee"
+            "Employee",
+            "Customer",
+            "Owner"
           ]
         },
         "ItemCondition": {
@@ -2001,21 +2016,28 @@
               "isRequired": true,
               "attributes": []
             },
-            "includes": {
-              "name": "includes",
+            "include": {
+              "name": "include",
               "isArray": true,
               "type": "String",
-              "isRequired": false,
+              "isRequired": true,
               "attributes": [],
-              "isArrayNullable": true
+              "isArrayNullable": false
             },
-            "expands": {
-              "name": "expands",
+            "expand": {
+              "name": "expand",
               "isArray": true,
               "type": "String",
-              "isRequired": false,
+              "isRequired": true,
               "attributes": [],
-              "isArrayNullable": true
+              "isArrayNullable": false
+            },
+            "sort": {
+              "name": "sort",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
             }
           }
         }
@@ -2056,11 +2078,11 @@
   },
   "storage": {
     "aws_region": "eu-central-1",
-    "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-jud19er4xogv",
+    "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-rlc8gk3oy2vu",
     "buckets": [
       {
         "name": "drive",
-        "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-jud19er4xogv",
+        "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-rlc8gk3oy2vu",
         "aws_region": "eu-central-1",
         "paths": {
           "data/${cognito-identity.amazonaws.com:sub}/*": {

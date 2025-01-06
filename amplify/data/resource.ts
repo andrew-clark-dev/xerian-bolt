@@ -2,7 +2,8 @@ import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
 import { truncateTableFunction } from '../function/truncate-table/resource';
-import { fetchFromSource } from '../function/fetch-from-source/resource';
+import { fetchAccountUpdatesFunction } from '../function/fetch-account-updates/resource';
+import { importAccountFunction } from '../function/import-account/resource';
 
 export const schema = a.schema({
 
@@ -16,8 +17,9 @@ export const schema = a.schema({
   }),
   SyncParams: a.customType({
     path: a.string().required(),
-    includes: a.string().array(),
-    expands: a.string().array(),
+    include: a.string().required().array().required(),
+    expand: a.string().required().array().required(),
+    sort: a.string(),
   }),
 
   SyncInterface: a.enum(['account', 'item', 'sales', 'category']),
@@ -80,9 +82,9 @@ export const schema = a.schema({
 
   UserProfile: a
     .model({
-      email: a.string().required(),
+      email: a.string(),
       profileOwner: a.string(),
-      username: a.string(), // the cognito username not for display
+      cognitoId: a.string(), // the cognito id not for display
       nickname: a.string(), // the display name
       phoneNumber: a.string(),
       status: a.enum(["Active", "Inactive", "Suspended", "Pending"]),
@@ -92,12 +94,12 @@ export const schema = a.schema({
       comments: a.hasMany('Comment', 'userId'),
       actions: a.hasMany('Action', 'userId'),
 
-      settings: a.json().required(),
+      settings: a.json(),
       deletedAt: a.datetime(),
 
     })
     .secondaryIndexes((index) => [
-      index("username"),
+      index("cognitoId"),
       index("email"),
     ])
     .authorization((allow) => [
@@ -124,7 +126,6 @@ export const schema = a.schema({
     .model({
       id: a.id(),
       number: a.string().required(),
-      userId: a.id(),
       lastActivityBy: a.id().required(),
       firstName: a.string(),
       lastName: a.string(),
@@ -138,7 +139,7 @@ export const schema = a.schema({
       postcode: a.string(),
       comunicationPreferences: a.enum(["TextMessage", "Email", "Whatsapp", "None"]),
       status: a.enum(["Active", "Inactive", "Suspended"]),
-      kind: a.enum(["Standard", "VIP", "Vender", "Employee"]),
+      kind: a.enum(["Standard", "VIP", "Vender", "Employee", "Customer", "Owner"]),
       defaultSplit: a.integer(),
       items: a.hasMany("Item", "accountNumber"), // setup relationships between main types
       transactions: a.hasMany("Transaction", "accountNumber"), // setup relationships between types
@@ -217,15 +218,17 @@ export const schema = a.schema({
       type: a.enum(["Sale", "Refund", "Payout", "Reversal"]),
       paymentType: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
       amount: a.integer().required(),
+      linkedTransaction: a.string(),  // for refund link to sale, or for a reversal link to original
       itemSku: a.string(),
       item: a.belongsTo("Item", "itemSku"),
-      linkedTransaction: a.id(),  // for refund link to sale, or for a reversal link to original
       accountNumber: a.string(),
       account: a.belongsTo("Account", "accountNumber"),
     })
     .secondaryIndexes((index) => [
       index("type"),
       index("paymentType"),
+      index("itemSku"),
+      index("accountNumber"),
     ]),
 
   ImportedObject: a
@@ -256,7 +259,8 @@ export const schema = a.schema({
   allow.resource(postConfirmation),
   allow.resource(createActionFunction),
   allow.resource(truncateTableFunction),
-  allow.resource(fetchFromSource),
+  allow.resource(fetchAccountUpdatesFunction),
+  allow.resource(importAccountFunction),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

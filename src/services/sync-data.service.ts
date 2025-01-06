@@ -93,7 +93,7 @@ class SyncDataService {
         throw this.serviceError(errors, 'listSyncData');
       }
 
-      return { syncData: syncData as SyncData[], nextToken: nextToken ?? null };
+      return { syncData: syncData, nextToken: nextToken ?? null };
     } catch (error) {
       throw this.serviceError(error, 'listSyncData');
     }

@@ -15,6 +15,8 @@ import { Maintenance } from './pages/Maintenance';
 import { Imports } from './pages/Imports';
 import { UpdateImport } from './pages/UpdateImport';
 import { SyncData } from './pages/SyncData';
+import { NewSyncData } from './pages/NewSyncData';
+import { UpdateSyncData } from './pages/UpdateSyncData';
 import '@aws-amplify/ui-react/styles.css';
 
 export default function App() {
@@ -38,6 +40,8 @@ export default function App() {
                 <Route path="imports" element={<Imports />} />
                 <Route path="imports/:externalId" element={<UpdateImport />} />
                 <Route path="sync" element={<SyncData />} />
+                <Route path="sync/new" element={<NewSyncData />} />
+                <Route path="sync/:id" element={<UpdateSyncData />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="maintenance" element={<Maintenance />} />
