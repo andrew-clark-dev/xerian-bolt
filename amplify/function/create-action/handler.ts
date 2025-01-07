@@ -90,41 +90,41 @@ export const handler: DynamoDBStreamHandler = async (event) => {
                     fail.push({ itemIdentifier: newImage.id.S! });
                 }
 
-            } else if (record.eventName === "REMOVE") {
-                // business logic to process deleted records
-                const oldImage = record.dynamodb!.OldImage!;
-                const modelName = oldImage.__typename.S;
-                logger.info(`Old ${modelName} Image: ${JSON.stringify(oldImage)}`);
-                const { errors } = await client.models.Action.create({
-                    type: "Delete",
-                    description: `Deleted ${modelName} - (auto-log)`,
-                    userId: oldImage.lastActivityBy.S,
-                    modelName: modelName,
-                    refId: oldImage.id.S,
-                    before: JSON.stringify(oldImage)
-                });
+                // } else if (record.eventName === "REMOVE") {
+                //     // business logic to process deleted records
+                //     const oldImage = record.dynamodb!.OldImage!;
+                //     const modelName = oldImage.__typename.S;
+                //     logger.info(`Old ${modelName} Image: ${JSON.stringify(oldImage)}`);
+                //     const { errors } = await client.models.Action.create({
+                //         type: "Delete",
+                //         description: `Deleted ${modelName} - (auto-log)`,
+                //         userId: oldImage.lastActivityBy.S,
+                //         modelName: modelName,
+                //         refId: oldImage.id.S,
+                //         before: JSON.stringify(oldImage)
+                //     });
 
-                if (errors) {
-                    console.error(`Errors in creating action:`, errors);
-                    fail.push({ itemIdentifier: oldImage.id.S! });
-                    continue;
-                }
+                //     if (errors) {
+                //         console.error(`Errors in creating action:`, errors);
+                //         fail.push({ itemIdentifier: oldImage.id.S! });
+                //         continue;
+                //     }
 
-                const params = {
-                    TableName: env.COUNTER_TABLE_NAME,
-                    Key: { name: [`${modelName}Total`] },
-                    UpdateExpression: `ADD val :minusOne`,
-                    ExpressionAttributeValues: { ':minusOne': -1 },
-                    ReturnValues: 'UPDATED_NEW',
-                };
-                try {
-                    const result = await dynamoDb.update(params).promise();
-                    logger.info(`Counter updated: ${JSON.stringify(result)}`);
-                } catch (error) {
-                    console.error(`Error in decrementing count:`, error);
-                    fail.push({ itemIdentifier: oldImage.id.S! });
-                    continue;
-                }
+                //     const params = {
+                //         TableName: env.COUNTER_TABLE_NAME,
+                //         Key: { name: [`${modelName}Total`] },
+                //         UpdateExpression: `ADD val :minusOne`,
+                //         ExpressionAttributeValues: { ':minusOne': -1 },
+                //         ReturnValues: 'UPDATED_NEW',
+                //     };
+                //     try {
+                //         const result = await dynamoDb.update(params).promise();
+                //         logger.info(`Counter updated: ${JSON.stringify(result)}`);
+                //     } catch (error) {
+                //         console.error(`Error in decrementing count:`, error);
+                //         fail.push({ itemIdentifier: oldImage.id.S! });
+                //         continue;
+                //     }
             }
         } catch (error) {
             console.error(`Error creating profile:`, error);
