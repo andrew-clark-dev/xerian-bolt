@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Import } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { accountService, type Account } from '../services/account.service';
 import { profileService } from '../services/profile.service';
@@ -72,6 +72,10 @@ export function NewAccount() {
     }
   };
 
+  const handleImport = () => {
+    navigate('/maintenance', { state: { openImport: true, importType: 'accounts' } });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -105,6 +109,15 @@ export function NewAccount() {
             >
               Cancel
             </Link>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleImport}
+              className="inline-flex items-center gap-2"
+            >
+              <Import className="w-4 h-4" />
+              Import
+            </Button>
             <Button
               type="submit"
               disabled={isLoading}

@@ -1,7 +1,6 @@
 import { Account } from '../../services/account.service';
 import { Input } from '../ui/Input';
 import { theme } from '../../theme';
-import { formatBalance } from './AccountColumns';
 
 interface AccountFormProps {
   formData: Partial<Account>;
@@ -16,16 +15,16 @@ export function AccountForm({ formData, isLoading, onChange }: AccountFormProps)
         {/* Basic Information */}
         <div className="space-y-4">
           <h3 className={`text-lg font-medium ${theme.text()}`}>Basic Information</h3>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Account Number
             </label>
             <Input
               type="text"
-              value={formData.number}
-              readOnly
-              className="bg-gray-50"
+              value={formData.number || ''}
+              onChange={(e) => onChange('number', e.target.value)}
+              disabled={isLoading}
             />
           </div>
 
@@ -76,12 +75,28 @@ export function AccountForm({ formData, isLoading, onChange }: AccountFormProps)
               disabled={isLoading}
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mobile Number
+            </label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="checkbox"
+                checked={formData.isMobile || false}
+                onChange={(e) => onChange('isMobile', e.target.checked)}
+                disabled={isLoading}
+                className="w-4 h-4"
+              />
+              <span className="text-sm text-gray-600">Is mobile number</span>
+            </div>
+          </div>
         </div>
 
         {/* Address Information */}
         <div className="space-y-4">
           <h3 className={`text-lg font-medium ${theme.text()}`}>Address</h3>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Address Line 1
@@ -149,7 +164,7 @@ export function AccountForm({ formData, isLoading, onChange }: AccountFormProps)
       {/* Account Settings */}
       <div className="space-y-4">
         <h3 className={`text-lg font-medium ${theme.text()}`}>Account Settings</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -206,17 +221,17 @@ export function AccountForm({ formData, isLoading, onChange }: AccountFormProps)
       {/* Account Statistics */}
       <div className="space-y-4">
         <h3 className={`text-lg font-medium ${theme.text()}`}>Account Statistics</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Balance
             </label>
             <Input
-              type="text"
-              value={formData.balance ? formatBalance(formData.balance) : '-'}
-              readOnly
-              className="bg-gray-50"
+              type="number"
+              value={formData.balance || 0}
+              onChange={(e) => onChange('balance', parseInt(e.target.value))}
+              disabled={isLoading}
             />
           </div>
 
@@ -239,10 +254,10 @@ export function AccountForm({ formData, isLoading, onChange }: AccountFormProps)
               Number of Sales
             </label>
             <Input
-              type="text"
+              type="number"
               value={formData.noSales || 0}
-              readOnly
-              className="bg-gray-50"
+              onChange={(e) => onChange('noSales', parseInt(e.target.value))}
+              disabled={isLoading}
             />
           </div>
 
@@ -251,10 +266,53 @@ export function AccountForm({ formData, isLoading, onChange }: AccountFormProps)
               Number of Items
             </label>
             <Input
-              type="text"
+              type="number"
               value={formData.noItems || 0}
-              readOnly
-              className="bg-gray-50"
+              onChange={(e) => onChange('noItems', parseInt(e.target.value))}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Timestamps */}
+      <div className="space-y-4">
+        <h3 className={`text-lg font-medium ${theme.text()}`}>Activity Dates</h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Last Activity
+            </label>
+            <Input
+              type="datetime-local"
+              value={formData.lastActivityAt ? new Date(formData.lastActivityAt).toISOString().slice(0, 16) : ''}
+              onChange={(e) => onChange('lastActivityAt', e.target.value ? new Date(e.target.value).toISOString() : null)}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Last Item
+            </label>
+            <Input
+              type="datetime-local"
+              value={formData.lastItemAt ? new Date(formData.lastItemAt).toISOString().slice(0, 16) : ''}
+              onChange={(e) => onChange('lastItemAt', e.target.value ? new Date(e.target.value).toISOString() : null)}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Last Settlement
+            </label>
+            <Input
+              type="datetime-local"
+              value={formData.lastSettlementAt ? new Date(formData.lastSettlementAt).toISOString().slice(0, 16) : ''}
+              onChange={(e) => onChange('lastSettlementAt', e.target.value ? new Date(e.target.value).toISOString() : null)}
+              disabled={isLoading}
             />
           </div>
         </div>
