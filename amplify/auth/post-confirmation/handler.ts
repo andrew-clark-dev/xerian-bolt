@@ -19,7 +19,7 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
         const { errors, data: newUserProfile } = await client.models.UserProfile.create({
             email: event.request.userAttributes.email,
             profileOwner: `${event.request.userAttributes.sub}::${event.userName}`,
-            cognitoId: event.userName,
+            cognitoName: event.userName,
             status: "Pending",
             role: "Guest",
             nickname: event.request.userAttributes.nickname,

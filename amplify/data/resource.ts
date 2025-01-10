@@ -8,31 +8,13 @@ import { importAccountFunction } from '../function/import-account/resource';
 export const schema = a.schema({
 
   // Models
-  SyncLog: a.customType({
-    // fields can be required or optional
-    syncTime: a.datetime().required(),
-    recieved: a.integer().required(),
-    processed: a.integer().required(),
-    failed: a.integer().required(),
-  }),
-  SyncParams: a.customType({
-    path: a.string().required(),
-    include: a.string().required().array().required(),
-    expand: a.string().required().array().required(),
-    sort: a.string(),
-  }),
-
-  SyncInterface: a.enum(['account', 'item', 'sales', 'category']),
 
   SyncData: a
     .model({
-      interface: a.ref('SyncInterface').required(),
-      parameters: a.ref('SyncParams').required(),
-      total: a.integer().default(0),
-      lastSync: a.datetime().default(new Date('2000-01-01').toISOString()), // default to a long time ago
-      log: a.ref('SyncLog').required(),
-      history: a.ref('SyncLog').array(),
-    }),
+      interface: a.string().required(),
+      lastSync: a.datetime(),
+    })
+    .identifier(['interface']),
 
   Counter: a
     .model({
@@ -67,7 +49,7 @@ export const schema = a.schema({
       before: a.json(),
       after: a.json(),
     })
-    .secondaryIndexes((index) => [index("refId")]),
+    .secondaryIndexes((index) => [index("refId"), index("userId")]),
 
   Comment: a
     .model({
@@ -84,7 +66,7 @@ export const schema = a.schema({
     .model({
       email: a.string(),
       profileOwner: a.string(),
-      cognitoId: a.string(), // the cognito id not for display
+      cognitoName: a.string(), // the cognito name not for display
       nickname: a.string(), // the display name
       phoneNumber: a.string(),
       status: a.enum(["Active", "Inactive", "Suspended", "Pending"]),
@@ -99,28 +81,13 @@ export const schema = a.schema({
 
     })
     .secondaryIndexes((index) => [
-      index("cognitoId"),
+      index("cognitoName"),
       index("email"),
     ])
     .authorization((allow) => [
       allow.ownerDefinedIn("profileOwner"),
       allow.group('ADMIN')
     ]),
-
-  Employee: a
-    .model({
-      name: a.string().required(),
-      user: a.id(), // profile id can be null
-      addressLine1: a.string(),
-      addressLine2: a.string(),
-      city: a.string(),
-      state: a.string(),
-      postcode: a.string(),
-      status: a.enum(["Normal", "Inactive", "CompetenceCenter", "Provisional", "Partner", "Owner"]),
-      startDate: a.date(),
-      endDate: a.date(),
-    }),
-
 
   Account: a
     .model({
@@ -179,7 +146,7 @@ export const schema = a.schema({
       quantity: a.integer().required(),
       split: a.integer().required(),
       price: a.integer().required(),
-      status: a.enum(['Tagged', 'HungOut', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen']),
+      status: a.enum(['Created', 'Tagged', 'HungOut', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen', 'Hidden', 'Unknown']),
       transactions: a.hasMany("Transaction", "itemSku"), // setup relationships between types
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
@@ -229,19 +196,6 @@ export const schema = a.schema({
       index("paymentType"),
       index("itemSku"),
       index("accountNumber"),
-    ]),
-
-  ImportedObject: a
-    .model({
-      externalId: a.string().required(),
-      type: a.string().required(),
-      userId: a.string(),
-      data: a.json(),
-    })
-    .identifier(['externalId'])
-    .secondaryIndexes((index) => [
-      index("type"),
-      index("userId"),
     ]),
 
   truncateTable: a

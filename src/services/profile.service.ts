@@ -62,17 +62,17 @@ class ProfileService {
 
   async getCurrentUserProfile(): Promise<UserProfile> {
     const cognitoUser = await getCurrentUser();
-    const user = await this.findUserProfileByCognitoId(cognitoUser.username);
+    const user = await this.findUserProfileByCognitoName(cognitoUser.username);
     if (!user) {
       throw new Error('UserProfile not found');
     }
     return user;
   }
 
-  async findUserProfileByCognitoId(id: string): Promise<UserProfile | null> {
+  async findUserProfileByCognitoName(name: string): Promise<UserProfile | null> {
     try {
-      const { data: user, errors } = await client.models.UserProfile.listUserProfileByCognitoId({
-        cognitoId: id
+      const { data: user, errors } = await client.models.UserProfile.listUserProfileByCognitoName({
+        cognitoName: name
       });
 
       if (errors) {
