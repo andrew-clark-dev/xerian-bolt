@@ -64,36 +64,11 @@
         "SyncData": {
           "name": "SyncData",
           "fields": {
-            "id": {
-              "name": "id",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
             "interface": {
               "name": "interface",
               "isArray": false,
-              "type": {
-                "enum": "SyncInterface"
-              },
+              "type": "String",
               "isRequired": true,
-              "attributes": []
-            },
-            "parameters": {
-              "name": "parameters",
-              "isArray": false,
-              "type": {
-                "nonModel": "SyncParams"
-              },
-              "isRequired": true,
-              "attributes": []
-            },
-            "total": {
-              "name": "total",
-              "isArray": false,
-              "type": "Int",
-              "isRequired": false,
               "attributes": []
             },
             "lastSync": {
@@ -102,25 +77,6 @@
               "type": "AWSDateTime",
               "isRequired": false,
               "attributes": []
-            },
-            "log": {
-              "name": "log",
-              "isArray": false,
-              "type": {
-                "nonModel": "SyncLog"
-              },
-              "isRequired": true,
-              "attributes": []
-            },
-            "history": {
-              "name": "history",
-              "isArray": true,
-              "type": {
-                "nonModel": "SyncLog"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true
             },
             "createdAt": {
               "name": "createdAt",
@@ -147,6 +103,14 @@
               "properties": {}
             },
             {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "interface"
+                ]
+              }
+            },
+            {
               "type": "auth",
               "properties": {
                 "rules": [
@@ -169,8 +133,8 @@
             }
           ],
           "primaryKeyInfo": {
-            "isCustomPrimaryKey": false,
-            "primaryKeyFieldName": "id",
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "interface",
             "sortKeyFieldNames": []
           }
         },
@@ -369,6 +333,16 @@
               }
             },
             {
+              "type": "key",
+              "properties": {
+                "name": "actionsByUserId",
+                "queryField": "listActionByUserId",
+                "fields": [
+                  "userId"
+                ]
+              }
+            },
+            {
               "type": "auth",
               "properties": {
                 "rules": [
@@ -534,8 +508,8 @@
               "isRequired": false,
               "attributes": []
             },
-            "cognitoId": {
-              "name": "cognitoId",
+            "cognitoName": {
+              "name": "cognitoName",
               "isArray": false,
               "type": "String",
               "isRequired": false,
@@ -663,10 +637,10 @@
             {
               "type": "key",
               "properties": {
-                "name": "userProfilesByCognitoId",
-                "queryField": "listUserProfileByCognitoId",
+                "name": "userProfilesByCognitoName",
+                "queryField": "listUserProfileByCognitoName",
                 "fields": [
-                  "cognitoId"
+                  "cognitoName"
                 ]
               }
             },
@@ -692,140 +666,6 @@
                     "allow": "groups",
                     "groups": [
                       "ADMIN"
-                    ],
-                    "operations": [
-                      "create",
-                      "update",
-                      "delete",
-                      "read"
-                    ]
-                  }
-                ]
-              }
-            }
-          ],
-          "primaryKeyInfo": {
-            "isCustomPrimaryKey": false,
-            "primaryKeyFieldName": "id",
-            "sortKeyFieldNames": []
-          }
-        },
-        "Employee": {
-          "name": "Employee",
-          "fields": {
-            "id": {
-              "name": "id",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
-            "name": {
-              "name": "name",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            },
-            "user": {
-              "name": "user",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": false,
-              "attributes": []
-            },
-            "addressLine1": {
-              "name": "addressLine1",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
-              "attributes": []
-            },
-            "addressLine2": {
-              "name": "addressLine2",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
-              "attributes": []
-            },
-            "city": {
-              "name": "city",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
-              "attributes": []
-            },
-            "state": {
-              "name": "state",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
-              "attributes": []
-            },
-            "postcode": {
-              "name": "postcode",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
-              "attributes": []
-            },
-            "status": {
-              "name": "status",
-              "isArray": false,
-              "type": {
-                "enum": "EmployeeStatus"
-              },
-              "isRequired": false,
-              "attributes": []
-            },
-            "startDate": {
-              "name": "startDate",
-              "isArray": false,
-              "type": "AWSDate",
-              "isRequired": false,
-              "attributes": []
-            },
-            "endDate": {
-              "name": "endDate",
-              "isArray": false,
-              "type": "AWSDate",
-              "isRequired": false,
-              "attributes": []
-            },
-            "createdAt": {
-              "name": "createdAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": [],
-              "isReadOnly": true
-            },
-            "updatedAt": {
-              "name": "updatedAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": [],
-              "isReadOnly": true
-            }
-          },
-          "syncable": true,
-          "pluralName": "Employees",
-          "attributes": [
-            {
-              "type": "model",
-              "properties": {}
-            },
-            {
-              "type": "auth",
-              "properties": {
-                "rules": [
-                  {
-                    "groupClaim": "cognito:groups",
-                    "provider": "userPools",
-                    "allow": "groups",
-                    "groups": [
-                      "Employee"
                     ],
                     "operations": [
                       "create",
@@ -1731,129 +1571,9 @@
             "primaryKeyFieldName": "id",
             "sortKeyFieldNames": []
           }
-        },
-        "ImportedObject": {
-          "name": "ImportedObject",
-          "fields": {
-            "externalId": {
-              "name": "externalId",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            },
-            "type": {
-              "name": "type",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            },
-            "userId": {
-              "name": "userId",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
-              "attributes": []
-            },
-            "data": {
-              "name": "data",
-              "isArray": false,
-              "type": "AWSJSON",
-              "isRequired": false,
-              "attributes": []
-            },
-            "createdAt": {
-              "name": "createdAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": [],
-              "isReadOnly": true
-            },
-            "updatedAt": {
-              "name": "updatedAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": [],
-              "isReadOnly": true
-            }
-          },
-          "syncable": true,
-          "pluralName": "ImportedObjects",
-          "attributes": [
-            {
-              "type": "model",
-              "properties": {}
-            },
-            {
-              "type": "key",
-              "properties": {
-                "fields": [
-                  "externalId"
-                ]
-              }
-            },
-            {
-              "type": "key",
-              "properties": {
-                "name": "importedObjectsByType",
-                "queryField": "listImportedObjectByType",
-                "fields": [
-                  "type"
-                ]
-              }
-            },
-            {
-              "type": "key",
-              "properties": {
-                "name": "importedObjectsByUserId",
-                "queryField": "listImportedObjectByUserId",
-                "fields": [
-                  "userId"
-                ]
-              }
-            },
-            {
-              "type": "auth",
-              "properties": {
-                "rules": [
-                  {
-                    "groupClaim": "cognito:groups",
-                    "provider": "userPools",
-                    "allow": "groups",
-                    "groups": [
-                      "Employee"
-                    ],
-                    "operations": [
-                      "create",
-                      "update",
-                      "delete",
-                      "read"
-                    ]
-                  }
-                ]
-              }
-            }
-          ],
-          "primaryKeyInfo": {
-            "isCustomPrimaryKey": true,
-            "primaryKeyFieldName": "externalId",
-            "sortKeyFieldNames": []
-          }
         }
       },
       "enums": {
-        "SyncInterface": {
-          "name": "SyncInterface",
-          "values": [
-            "account",
-            "item",
-            "sales",
-            "category"
-          ]
-        },
         "ActionType": {
           "name": "ActionType",
           "values": [
@@ -1886,17 +1606,6 @@
             "Employee",
             "Service",
             "Guest"
-          ]
-        },
-        "EmployeeStatus": {
-          "name": "EmployeeStatus",
-          "values": [
-            "Normal",
-            "Inactive",
-            "CompetenceCenter",
-            "Provisional",
-            "Partner",
-            "Owner"
           ]
         },
         "AccountComunicationPreferences": {
@@ -1940,6 +1649,7 @@
         "ItemStatus": {
           "name": "ItemStatus",
           "values": [
+            "Created",
             "Tagged",
             "HungOut",
             "Sold",
@@ -1949,7 +1659,9 @@
             "Returned",
             "Expired",
             "Lost",
-            "Stolen"
+            "Stolen",
+            "Hidden",
+            "Unknown"
           ]
         },
         "TransactionType": {
@@ -1972,76 +1684,7 @@
           ]
         }
       },
-      "nonModels": {
-        "SyncLog": {
-          "name": "SyncLog",
-          "fields": {
-            "syncTime": {
-              "name": "syncTime",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": true,
-              "attributes": []
-            },
-            "recieved": {
-              "name": "recieved",
-              "isArray": false,
-              "type": "Int",
-              "isRequired": true,
-              "attributes": []
-            },
-            "processed": {
-              "name": "processed",
-              "isArray": false,
-              "type": "Int",
-              "isRequired": true,
-              "attributes": []
-            },
-            "failed": {
-              "name": "failed",
-              "isArray": false,
-              "type": "Int",
-              "isRequired": true,
-              "attributes": []
-            }
-          }
-        },
-        "SyncParams": {
-          "name": "SyncParams",
-          "fields": {
-            "path": {
-              "name": "path",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            },
-            "include": {
-              "name": "include",
-              "isArray": true,
-              "type": "String",
-              "isRequired": true,
-              "attributes": [],
-              "isArrayNullable": false
-            },
-            "expand": {
-              "name": "expand",
-              "isArray": true,
-              "type": "String",
-              "isRequired": true,
-              "attributes": [],
-              "isArrayNullable": false
-            },
-            "sort": {
-              "name": "sort",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
-              "attributes": []
-            }
-          }
-        }
-      },
+      "nonModels": {},
       "mutations": {
         "incCounter": {
           "name": "incCounter",

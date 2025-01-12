@@ -21,7 +21,7 @@ export const API_CONFIG = {
     'Accept': 'application/json',
   },
   cors: corsConfig,
-  apiKey: process.env.API_KEY,
+  apiKey: 'YWI3YWViMGItYWIwMS00YTcyLWI0ODktYzZhYzdhYTEyMTlmOnZsN0UybnZpaTdPYldIb0QwdFF5bVE=',
   configuration: process.env.CONFIGURATION ? JSON.parse(process.env.CONFIGURATION) : {},
 
 } as const;

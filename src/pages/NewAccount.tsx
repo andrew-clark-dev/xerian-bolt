@@ -6,6 +6,7 @@ import { profileService } from '../services/profile.service';
 import { AccountForm } from '../components/accounts/AccountForm';
 import { Button } from '../components/ui/Button';
 import { theme } from '../theme';
+import { findFirst } from '../../amplify';
 
 type AccountFormData = Omit<Account, 'id' | 'items' | 'transactions' | 'createdAt' | 'updatedAt' | 'tags' | 'userId'>;
 
@@ -72,8 +73,26 @@ export function NewAccount() {
     }
   };
 
-  const handleImport = () => {
-    navigate('/maintenance', { state: { openImport: true, importType: 'accounts' } });
+  const handleImport = async () => {
+    if (!formData.number) return;
+
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const importedAccount = await findFirst(formData.number);
+      if (importedAccount) {
+        setFormData({
+          ...importedAccount,
+          lastActivityBy: '',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to import account:', error);
+      setError('Failed to import account. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -113,6 +132,7 @@ export function NewAccount() {
               type="button"
               variant="secondary"
               onClick={handleImport}
+              disabled={!formData.number || isLoading}
               className="inline-flex items-center gap-2"
             >
               <Import className="w-4 h-4" />

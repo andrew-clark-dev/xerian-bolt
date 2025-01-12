@@ -16,6 +16,5 @@ export * from './SuccessMessage';
 export * from './user/RoleCheckboxes';
 
 // Maintenance components
-export * from './maintenance/TaskDialog';
 export * from './maintenance/TaskOutput';
 export * from './maintenance/TaskProgress';

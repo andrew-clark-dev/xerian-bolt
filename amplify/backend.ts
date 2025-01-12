@@ -41,13 +41,12 @@ cfnUserPool.policies = {
 
 const { tables } = backend.data.resources
 
-const counterTable = backend.data.resources.tables["Counter"];
-counterTable.grantFullAccess(backend.createActionFunction.resources.lambda);
+const createActionLambda = backend.createActionFunction.resources.lambda
+tables["Counter"].grantFullAccess(createActionLambda);
 
-const accountTable = backend.data.resources.tables["Account"];
 const policy = new Policy(
-  Stack.of(accountTable),
-  "AccountDBFunctionStreamingPolicy",
+  Stack.of(createActionLambda),
+  "createActionFunctionStreamingPolicy",
   {
     statements: [
       new PolicyStatement({
@@ -64,20 +63,44 @@ const policy = new Policy(
   }
 );
 
-backend.createActionFunction.resources.lambda.role?.attachInlinePolicy(policy);
-backend.createActionFunction.addEnvironment("COUNTER_TABLE_NAME", counterTable.tableName);
+createActionLambda.role?.attachInlinePolicy(policy);
+backend.createActionFunction.addEnvironment("COUNTER_TABLE_NAME", tables["Counter"].tableName);
 
-const mapping = new EventSourceMapping(
-  Stack.of(accountTable),
-  "DBFunctionAccountEventStreamMapping",
+const accountMapping = new EventSourceMapping(
+  Stack.of(tables["Account"]),
+  "createActionAccountEventStreamMapping",
   {
-    target: backend.createActionFunction.resources.lambda,
-    eventSourceArn: accountTable.tableStreamArn,
+    target: createActionLambda,
+    eventSourceArn: tables["Account"].tableStreamArn,
     startingPosition: StartingPosition.LATEST,
   }
 );
 
-mapping.node.addDependency(policy);
+accountMapping.node.addDependency(policy);
+
+const itemMapping = new EventSourceMapping(
+  Stack.of(tables["Item"]),
+  "createActionItemEventStreamMapping",
+  {
+    target: createActionLambda,
+    eventSourceArn: tables["Item"].tableStreamArn,
+    startingPosition: StartingPosition.LATEST,
+  }
+);
+
+itemMapping.node.addDependency(policy);
+
+const transactionMapping = new EventSourceMapping(
+  Stack.of(tables["Transaction"]),
+  "createActionTransactionEventStreamMapping",
+  {
+    target: createActionLambda,
+    eventSourceArn: tables["Transaction"].tableStreamArn,
+    startingPosition: StartingPosition.LATEST,
+  }
+);
+
+transactionMapping.node.addDependency(policy);
 
 
 // Extend ENV for truncateTable
@@ -89,20 +112,14 @@ for (const key in tables) {
 
 
 
-// Extend ENV for fetchFromSource
-
+// Set up account import queue and grant permissions to importAccountFunction
 const customStack = backend.createStack('CustomResources');
 
 const acountImportQueue = new sqs.Queue(customStack, `AcountImportQueue`);
 backend.fetchAccountUpdatesFunction.addEnvironment(`IMPORT_QUEUE_URL`, acountImportQueue.queueUrl);
 acountImportQueue.grantSendMessages(backend.fetchAccountUpdatesFunction.resources.lambda);
 backend.importAccountFunction.resources.lambda.addEventSource(new SqsEventSource(acountImportQueue));
+tables['Account'].grantFullAccess(backend.importAccountFunction.resources.lambda);
+tables['UserProfile'].grantFullAccess(backend.importAccountFunction.resources.lambda);
+tables['Action'].grantFullAccess(backend.importAccountFunction.resources.lambda);
 
-//   syncQueue.grantSendMessages(backend.fetchFromSource.resources.lambda);
-
-// schema.data.types.SyncInterface.values.forEach((syncInterface) => {
-//   const syncQueue = new sqs.Queue(customStack, `${syncInterface}SyncQueue`);
-//   backend.fetchFromSource.addEnvironment(`SYNC_QUEUE_URL_FOR_${syncInterface.toUpperCase()}`, syncQueue.queueUrl);
-//   syncQueue.grantSendMessages(backend.fetchFromSource.resources.lambda);
-//   backend.fetchFromSource.resources.lambda.addEventSource(new SqsEventSource(syncQueue));
-// });

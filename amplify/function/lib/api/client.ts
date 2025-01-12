@@ -8,13 +8,22 @@ export interface ExternalItemPage<T> {
   next_cursor: string | null;
 }
 
-export class ApiClient {
+interface FetchParms {
+  cursor: string | null;
+  include: string[],
+  expand: string[],
+  sort_by: string,
+}
+
+export class ApiClient<T> {
   private client: AxiosInstance;
   private url: string;
-  private config: AxiosRequestConfig;
-  constructor() {
-    this.config = JSON.parse(process.env.REQUEST_CONFIG!);
-    this.url = this.config.baseURL! + this.config.url!;
+  private entities: string;
+  private fetchParms: FetchParms;
+  constructor(url: string, entities: string, fetchParms: FetchParms) {  // Add entities parameter
+    this.url = API_CONFIG.baseUrl + url;
+    this.entities = entities;
+    this.fetchParms = fetchParms;
 
     this.client = axios.create({
       baseURL: API_CONFIG.baseUrl,
@@ -69,21 +78,48 @@ export class ApiClient {
 
   }
 
-  async get<T>(cursor?: string | null): Promise<T> {
-    this.config.params.cursor = cursor || null;
+
+  async get(id: string): Promise<T> {
+    const url = this.url + "/" + id;
+    const response = await this.client.get<T>(url);
+    return response.data;
+  }
+
+
+  async searchForEntityId(query: string): Promise<string | null> {
+
+    const url = 'https://api.consigncloud.com/api/v1/search';
+    const params: AxiosRequestConfig = {
+      params: {
+        query: query,
+        entities: [this.entities],
+      }
+    };
+
     try {
-      const response = await this.client.get<T>(this.url, this.config);
-      return response.data;
+      const response = await this.client.get(url, params);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      response.data.results.forEach((result: any) => {
+        return result.document.id as string;
+      });
+      return null;
     } catch (error) {
       console.error('GET request failed:', this.url, error);
       throw error;
     }
   }
 
-  async fetch<T>(cursor?: string | null): Promise<ExternalItemPage<T>> {
-    try {
+  async search(query: string): Promise<T | null> {
+    const id = await this.searchForEntityId(query);
+    return id ? this.get(id) : null;
+  }
 
-      return await this.get<ExternalItemPage<T>>(cursor);
+  async fetch(cursor?: string | null): Promise<ExternalItemPage<T>> {
+    try {
+      this.fetchParms.cursor = cursor ?? null;
+      const response = await this.client.get<ExternalItemPage<T>>(this.url, { params: this.fetchParms });
+      return response.data;
+      // return await this.fetch<ExternalItemPage<T>>(cursor);
 
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -100,8 +136,6 @@ export class ApiClient {
     }
   }
 
+
 }
-
-export const apiClient = new ApiClient();
-
 

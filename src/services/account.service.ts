@@ -1,14 +1,13 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { profileService } from './profile.service';
+import { checkErrors, logAndRethow } from './utils/error.utils';
 
 const client = generateClient<Schema>();
 
 export type Account = Schema['Account']['type'];
 export type AccountDTO = Partial<Omit<Account, 'id'>>;
 export type AccountStatus = Schema['Account']['type']['status'];
-
-
 
 interface ListAccountsOptions {
   limit?: number;
@@ -47,7 +46,6 @@ class AccountService {
     }
     return account;
   }
-
 
   async createAccount(account: AccountDTO): Promise<Account> {
     try {
@@ -98,14 +96,11 @@ class AccountService {
         limit: options.limit || 10,
         nextToken: options.nextToken,
       });
-
-      if (errors) {
-        throw this.serviceError(errors, 'listAccounts');
-      }
+      checkErrors(errors);
 
       return { accounts: accounts as Account[], nextToken: nextToken ?? null };
     } catch (error) {
-      throw this.serviceError(error, 'listAccounts');
+      throw logAndRethow(error);
     }
   }
 }

@@ -127,6 +127,26 @@ export const schema = a.schema({
       index("deletedAt").sortKeys(["number", "createdAt", "balance"]),
     ]),
 
+  getExternalAccount: a
+    .mutation()
+    // arguments that this query accepts
+    .arguments({
+      query: a.string().required()
+    })
+    // return type of the query
+    .returns(a.ref('Account'))
+    .handler(a.handler.function(truncateTableFunction)),
+
+  // updateExternalAccount: a
+  // .mutation()
+  // // arguments that this query accepts
+  // .arguments({
+  //   account: a.ref('Account').required()
+  // })
+  // // return type of the query
+  // .returns(a.ref('Account'))
+  // .handler(a.handler.function(truncateTableFunction)),
+
   Item: a
     .model({
       id: a.id(),

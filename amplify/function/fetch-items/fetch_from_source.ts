@@ -68,8 +68,6 @@ export async function fetchNewData(lastSync: Date): Promise<void> {
           });
 
           processed++;
-          logger.info(`Processed : ${processed} of ${page.count}`);
-
         } catch (error) {
           logger.error(`Error pushing item to queue: ${item.id}`, error as Error);
           failed++;
@@ -79,8 +77,6 @@ export async function fetchNewData(lastSync: Date): Promise<void> {
 
 
       cursor = page.next_cursor;
-
-      if (processed > 50) { break; }
 
     } while (cursor);
 
