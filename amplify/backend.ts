@@ -1,11 +1,11 @@
 import { defineBackend } from '@aws-amplify/backend';
-// import { Stack } from 'aws-cdk-lib';
-// import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
+import { Stack } from 'aws-cdk-lib';
+import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 // import { StartingPosition, EventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { storage } from './storage/resource';
-// import { createActionFunction } from './function/create-action/resource';
+import { createActionFunction } from './function/create-action/resource';
 // import { truncateTableFunction } from './function/truncate-table/resource';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 // import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
@@ -18,7 +18,7 @@ const backend = defineBackend({
   auth,
   data,
   storage,
-  // createActionFunction,
+  createActionFunction,
   // truncateTableFunction,
   // importAccountFunction
 });
@@ -37,32 +37,32 @@ cfnUserPool.policies = {
   },
 };
 
-// const { tables } = backend.data.resources
+const { tables } = backend.data.resources
 
-// const createActionLambda = backend.createActionFunction.resources.lambda
-// tables["Counter"].grantFullAccess(createActionLambda);
+const createActionLambda = backend.createActionFunction.resources.lambda
+tables["Counter"].grantFullAccess(createActionLambda);
 
-// const policy = new Policy(
-//   Stack.of(createActionLambda),
-//   "createActionFunctionStreamingPolicy",
-//   {
-//     statements: [
-//       new PolicyStatement({
-//         effect: Effect.ALLOW,
-//         actions: [
-//           "dynamodb:DescribeStream",
-//           "dynamodb:GetRecords",
-//           "dynamodb:GetShardIterator",
-//           "dynamodb:ListStreams",
-//         ],
-//         resources: ["*"],
-//       }),
-//     ],
-//   }
-// );
+const policy = new Policy(
+  Stack.of(createActionLambda),
+  "createActionFunctionStreamingPolicy",
+  {
+    statements: [
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          "dynamodb:DescribeStream",
+          "dynamodb:GetRecords",
+          "dynamodb:GetShardIterator",
+          "dynamodb:ListStreams",
+        ],
+        resources: ["*"],
+      }),
+    ],
+  }
+);
 
-// createActionLambda.role?.attachInlinePolicy(policy);
-// backend.createActionFunction.addEnvironment("COUNTER_TABLE_NAME", tables["Counter"].tableName);
+createActionLambda.role?.attachInlinePolicy(policy);
+backend.createActionFunction.addEnvironment("COUNTER_TABLE_NAME", tables["Counter"].tableName);
 
 // const accountMapping = new EventSourceMapping(
 //   Stack.of(tables["Account"]),
