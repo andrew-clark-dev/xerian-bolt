@@ -1,5 +1,5 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
-// import { postConfirmation } from '../auth/post-confirmation/resource';
+import { postConfirmation } from '../auth/post-confirmation/resource';
 // import { createActionFunction } from '../function/create-action/resource';
 import { truncateTableFunction } from '../function/truncate-table/resource';
 // import { fetchAccountUpdatesFunction } from '../function/fetch-account-updates/resource';
@@ -221,7 +221,7 @@ export const schema = a.schema({
 
 }).authorization(allow => [
   allow.group('Employee'), // default to employee
-  // allow.resource(postConfirmation),
+  allow.resource(postConfirmation),
   // allow.resource(createActionFunction),
   // allow.resource(truncateTableFunction),
   // allow.resource(fetchAccountUpdatesFunction),
