@@ -6,7 +6,7 @@ import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { storage } from './storage/resource';
 import { createActionFunction } from './function/create-action/resource';
-import { findExternalAccount } from './function/external-account/resource';
+import { findExternalAccount } from './data/external-account/resource';
 // import { truncateTableFunction } from './function/truncate-table/resource';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 // import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';

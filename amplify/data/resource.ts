@@ -4,7 +4,7 @@ import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
 // import { fetchAccountUpdatesFunction } from '../function/fetch-account-updates/resource';
 // import { importAccountFunction } from '../function/import-account/resource';
-import { findExternalAccount } from '../function/external-account/resource';
+import { findExternalAccount } from './external-account/resource';
 
 export const schema = a.schema({
 
