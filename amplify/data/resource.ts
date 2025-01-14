@@ -1,9 +1,10 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
-import { postConfirmation } from '../auth/post-confirmation/resource';
-import { createActionFunction } from '../function/create-action/resource';
+// import { postConfirmation } from '../auth/post-confirmation/resource';
+// import { createActionFunction } from '../function/create-action/resource';
 import { truncateTableFunction } from '../function/truncate-table/resource';
-import { fetchAccountUpdatesFunction } from '../function/fetch-account-updates/resource';
-import { importAccountFunction } from '../function/import-account/resource';
+// import { fetchAccountUpdatesFunction } from '../function/fetch-account-updates/resource';
+// import { importAccountFunction } from '../function/import-account/resource';
+// import { findExternalAccount } from '../function/external-account/resource';
 
 export const schema = a.schema({
 
@@ -127,25 +128,15 @@ export const schema = a.schema({
       index("deletedAt").sortKeys(["number", "createdAt", "balance"]),
     ]),
 
-  getExternalAccount: a
-    .mutation()
-    // arguments that this query accepts
-    .arguments({
-      query: a.string().required()
-    })
-    // return type of the query
-    .returns(a.ref('Account'))
-    .handler(a.handler.function(truncateTableFunction)),
-
-  // updateExternalAccount: a
-  // .mutation()
-  // // arguments that this query accepts
-  // .arguments({
-  //   account: a.ref('Account').required()
-  // })
-  // // return type of the query
-  // .returns(a.ref('Account'))
-  // .handler(a.handler.function(truncateTableFunction)),
+  // findExternalAccount: a
+  //   .query()
+  //   // arguments that this query accepts
+  //   .arguments({
+  //     query: a.string().required()
+  //   })
+  //   // return type of the query
+  //   .returns(a.ref('Account'))
+  //   .handler(a.handler.function(findExternalAccount)),
 
   Item: a
     .model({
@@ -230,11 +221,12 @@ export const schema = a.schema({
 
 }).authorization(allow => [
   allow.group('Employee'), // default to employee
-  allow.resource(postConfirmation),
-  allow.resource(createActionFunction),
-  allow.resource(truncateTableFunction),
-  allow.resource(fetchAccountUpdatesFunction),
-  allow.resource(importAccountFunction),
+  // allow.resource(postConfirmation),
+  // allow.resource(createActionFunction),
+  // allow.resource(truncateTableFunction),
+  // allow.resource(fetchAccountUpdatesFunction),
+  // allow.resource(importAccountFunction),
+  // allow.resource(findExternalAccount)
 ]);
 
 // Used for code completion / highlighting when making requests from frontend
