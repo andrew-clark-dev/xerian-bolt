@@ -4,7 +4,7 @@ import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
 // import { fetchAccountUpdatesFunction } from '../function/fetch-account-updates/resource';
 // import { importAccountFunction } from '../function/import-account/resource';
-// import { findExternalAccount } from '../function/external-account/resource';
+import { findExternalAccount } from '../function/external-account/resource';
 
 export const schema = a.schema({
 
@@ -128,15 +128,15 @@ export const schema = a.schema({
       index("deletedAt").sortKeys(["number", "createdAt", "balance"]),
     ]),
 
-  // findExternalAccount: a
-  //   .query()
-  //   // arguments that this query accepts
-  //   .arguments({
-  //     query: a.string().required()
-  //   })
-  //   // return type of the query
-  //   .returns(a.ref('Account'))
-  //   .handler(a.handler.function(findExternalAccount)),
+  findExternalAccount: a
+    .query()
+    // arguments that this query accepts
+    .arguments({
+      query: a.string().required()
+    })
+    // return type of the query
+    .returns(a.ref('Account'))
+    .handler(a.handler.function(findExternalAccount)),
 
   Item: a
     .model({
@@ -226,7 +226,7 @@ export const schema = a.schema({
   // allow.resource(truncateTableFunction),
   // allow.resource(fetchAccountUpdatesFunction),
   // allow.resource(importAccountFunction),
-  // allow.resource(findExternalAccount)
+  allow.resource(findExternalAccount),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend
