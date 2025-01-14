@@ -1,12 +1,12 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, CreateAxiosDefaults } from 'axios';
 
 export const API_CONFIG: CreateAxiosDefaults = {
-  baseURL: '/api/',
+  baseURL: process.env.BASE_URL || '/api/',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Access-Control-Allow-Origin': '*', // Allow all origins
-    'Authorization': 'Bearer YWI3YWViMGItYWIwMS00YTcyLWI0ODktYzZhYzdhYTEyMTlmOnZsN0UybnZpaTdPYldIb0QwdFF5bVE='
+    'Authorization': 'Bearer ' + process.env.API_KEY,
   },
   withCredentials: true,
   timeout: 30000, // 30 second timeout
