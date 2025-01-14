@@ -6,7 +6,8 @@ import { profileService } from '../services/profile.service';
 import { AccountForm } from '../components/accounts/AccountForm';
 import { Button } from '../components/ui/Button';
 import { theme } from '../theme';
-import { findFirst } from '../../amplify';
+import { errorMessage } from '../services/utils/error.utils';
+// import { findFirst } from '@/amplify';
 
 type AccountFormData = Omit<Account, 'id' | 'items' | 'transactions' | 'createdAt' | 'updatedAt' | 'tags' | 'userId'>;
 
@@ -80,7 +81,7 @@ export function NewAccount() {
     setIsLoading(true);
 
     try {
-      const importedAccount = await findFirst(formData.number);
+      const importedAccount = await accountService.findFirstExternalAccount(formData.number);
       if (importedAccount) {
         setFormData({
           ...importedAccount,
@@ -89,7 +90,7 @@ export function NewAccount() {
       }
     } catch (error) {
       console.error('Failed to import account:', error);
-      setError('Failed to import account. Please try again.');
+      setError(errorMessage(error, 'Failed to import account. Please try again.'));
     } finally {
       setIsLoading(false);
     }

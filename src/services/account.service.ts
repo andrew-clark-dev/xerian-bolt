@@ -1,7 +1,7 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { profileService } from './profile.service';
-import { checkErrors, logAndRethow } from './utils/error.utils';
+import { checkErrors, logAndRethow, checkedValue } from './utils/error.utils';
 
 const client = generateClient<Schema>();
 
@@ -32,6 +32,7 @@ class AccountService {
       if (errors) {
         throw this.serviceError(errors, 'findAccount');
       }
+
 
       return account;
     } catch (error) {
@@ -103,6 +104,18 @@ class AccountService {
       throw logAndRethow(error);
     }
   }
+  /*
+  */
+  async findFirstExternalAccount(query: string): Promise<Account> {
+    try {
+      const { data: account, errors } = await client.queries.findExternalAccount({ query: query });
+
+      return checkedValue(account, errors) as Account;
+    } catch (error) {
+      throw logAndRethow(error);
+    }
+  }
+
 }
 
 export const accountService = new AccountService();

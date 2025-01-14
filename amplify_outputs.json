@@ -1685,6 +1685,24 @@
         }
       },
       "nonModels": {},
+      "queries": {
+        "findExternalAccount": {
+          "name": "findExternalAccount",
+          "isArray": false,
+          "type": {
+            "model": "Account"
+          },
+          "isRequired": false,
+          "arguments": {
+            "query": {
+              "name": "query",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        }
+      },
       "mutations": {
         "incCounter": {
           "name": "incCounter",
