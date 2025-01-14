@@ -7,7 +7,7 @@ import { data } from './data/resource';
 import { storage } from './storage/resource';
 import { createActionFunction } from './function/create-action/resource';
 import { findExternalAccount } from './data/external-account/resource';
-// import { truncateTableFunction } from './function/truncate-table/resource';
+import { truncateTableFunction } from './data/truncate-table/resource';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 // import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 // import { importAccountFunction } from './function/import-account/resource';
@@ -21,7 +21,7 @@ const backend = defineBackend({
   storage,
   createActionFunction,
   findExternalAccount,
-  // truncateTableFunction,
+  truncateTableFunction,
   // importAccountFunction
 });
 
@@ -103,12 +103,12 @@ backend.createActionFunction.addEnvironment("COUNTER_TABLE_NAME", tables["Counte
 // transactionMapping.node.addDependency(policy);
 
 
-// // Extend ENV for truncateTable
-// for (const key in tables) {
-//   const t = tables[key];
-//   backend.truncateTableFunction.addEnvironment(`${key.toUpperCase()}_TABLE`, t.tableName)
-//   t.grantFullAccess(backend.truncateTableFunction.resources.lambda);
-// }
+// Extend ENV for truncateTable
+for (const key in tables) {
+  const t = tables[key];
+  backend.truncateTableFunction.addEnvironment(`${key.toUpperCase()}_TABLE`, t.tableName)
+  t.grantFullAccess(backend.truncateTableFunction.resources.lambda);
+}
 
 
 

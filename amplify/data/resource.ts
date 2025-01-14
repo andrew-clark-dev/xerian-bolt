@@ -1,5 +1,5 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
-import { truncateTableFunction } from '../function/truncate-table/resource';
+import { truncateTableFunction } from './truncate-table/resource';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
 // import { fetchAccountUpdatesFunction } from '../function/fetch-account-updates/resource';
