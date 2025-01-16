@@ -2,11 +2,11 @@ import type { SQSHandler } from "aws-lambda";
 import { type Schema } from "../../data/resource";
 import { generateClient } from "aws-amplify/data";
 import { Logger } from "@aws-lambda-powertools/logger";
+import { ExternalAccount, toAccount } from "../../lib/services/account.external.sevice";
 import { Amplify } from "aws-amplify";
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import { env } from "$amplify/env/import-account-function";
 import AWS from "aws-sdk";
-import { ExternalAccount } from "../fetch-account-updates/fetch_from_source";
 
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
     env
@@ -23,8 +23,8 @@ const logger = new Logger({
 });
 
 type UserProfile = Schema['UserProfile']['type'];
-type AccountStatus = Schema['Account']['type']['status'];
-type AccountKind = Schema['Account']['type']['kind'];
+// type AccountStatus = Schema['Account']['type']['status'];
+// type AccountKind = Schema['Account']['type']['kind'];
 
 interface UserSettings {
     apiKey?: string;
@@ -47,55 +47,31 @@ export const handler: SQSHandler = async (event) => {
         try {
             logger.info(`Processing record: ${JSON.stringify(record)}`);
             const body = JSON.parse(record.body);
-            const userId = body.createdById;
+            const user = body.createdBy;
             const exAccount: ExternalAccount = body.account;
-            const profile = await provisionUser(userId, exAccount.created_by.name);
-
-            const { errors: actionErrors } = await client.models.Action.create({
-                description: `Import of account`,
-                modelName: "Account",
-                type: "Import",
-                refId: exAccount.id,
-                userId: profile.id,
-            });
-
-            if (actionErrors) {
-                logger.error(`Failed to create import action - ${JSON.stringify(actionErrors)}`);
-            }
-
-            const accountParams = {
-                id: exAccount.id,
-                number: exAccount.number,
-                lastActivityBy: profile.id,
-                firstName: exAccount.first_name,
-                lastName: exAccount.last_name,
-                email: exAccount.email,
-                phoneNumber: exAccount.phone_number,
-                isMobile: isMobile(exAccount),
-                addressLine1: exAccount.address_line_1,
-                addressLine2: exAccount.address_line_2,
-                city: exAccount.city,
-                state: exAccount.state,
-                postcode: exAccount.postal_code,
-                comunicationPreferences: getPrefs(exAccount),
-                status: 'Active' as AccountStatus,
-                kind: 'Standard' as AccountKind,
-                defaultSplit: exAccount.default_split == null ? null : (100 * exAccount.default_split!),
-                balance: exAccount.balance,
-            }
 
             const { data: account } = await client.models.Account.get({ number: exAccount.number });
 
             if (account) {
-                logger.info(`Updating account: ${exAccount.number}`);
-                const { errors } = await client.models.Account.update(accountParams);
-                if (errors) {
-                    logger.error(`Errors in updating account: ${JSON.stringify(errors)}`);
-                    continue;
-                }
+                logger.info(`Account already exists: ${exAccount.number}`);
+
             } else {
+                const profile = await provisionUser(user.id, user.name);
+                const { errors: actionErrors } = await client.models.Action.create({
+                    description: `Import of account`,
+                    modelName: "Account",
+                    type: "Import",
+                    refId: exAccount.id,
+                    userId: profile.id,
+                });
+
+                if (actionErrors) {
+                    logger.error(`Failed to create import action - ${JSON.stringify(actionErrors)}`);
+                }
+
                 logger.info(`Creating account: ${exAccount.number}`);
-                const { errors } = await client.models.Account.create(accountParams);
+
+                const { errors } = await client.models.Account.create(toAccount(exAccount));
 
                 if (errors) {
                     logger.error(`Errors in creating account: ${JSON.stringify(errors)}`);
@@ -116,21 +92,6 @@ export const handler: SQSHandler = async (event) => {
 
 }
 
-function isMobile(account: ExternalAccount): boolean {
-    const phone_number = account.phone_number ?? '';
-    const regex = /078|076|079|(0).*78|(0).*78|(0).*78/gm;
-    return regex.test(phone_number.trim());
-}
-
-function getPrefs(account: ExternalAccount): "TextMessage" | "Email" | "None" {
-    if (isMobile(account)) {
-        return "TextMessage";
-    }
-    if (account.email) {
-        return "Email";
-    }
-    return "None";
-}
 
 async function provisionUser(id: string, name: string): Promise<UserProfile> {
 
@@ -155,7 +116,7 @@ async function provisionUser(id: string, name: string): Promise<UserProfile> {
         const { data: newUserProfile, errors: errors } = await client.models.UserProfile.create({
             id: id,
             status: "Pending",
-            role: "Guest",
+            role: "Employee",
             nickname: name,
             settings: JSON.stringify(initialSettings),
         });

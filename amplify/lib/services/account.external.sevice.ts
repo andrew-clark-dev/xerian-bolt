@@ -10,7 +10,11 @@ export interface ExternalAccount {
     last_item_entered?: string,
     last_settlement?: string,
     created: string,
-    created_by: string,
+    created_by: {
+        id: string,
+        name: string,
+        user_type: string,
+    } | string,
     first_name: string | null,
     last_name: string | null,
     email: string | null,
@@ -25,13 +29,14 @@ export interface ExternalAccount {
     deleted?: string | null,
 }
 
-// export const accountParams: Params = {
-//     include: ['default_split', 'last_settlement', 'number_of_purchases', 'created_by', 'last_activity', 'last_item_entered],
-//     expand: ['created_by'],
-//     sort_by: 'created'
-// }
+export const accountFetchParams: Params = {
+    include: ['created_by', 'last_activity', 'last_settlement', 'default_split', 'last_item_entered'],
+    expand: ['created_by'],
+    sort_by: 'created',
+    cursor: null
+}
 
-export const accountParams: Params = {
+export const accountGetParams: Params = {
     include: ['created_by', 'last_activity', 'last_settlement', 'default_split', 'last_item_entered'],
 }
 
@@ -51,9 +56,11 @@ export const accountSearchClient = new SearchClient<AccountSearchEntry>('account
 
 export const toAccount = (externalAccount: ExternalAccount): Account => {
     // Map external data to our Account type
+    const created_by_id = typeof externalAccount.created_by === "string" ? externalAccount.created_by : externalAccount.created_by.id;
+
     return {
         number: externalAccount.number,
-        lastActivityBy: externalAccount.created_by,
+        lastActivityBy: created_by_id,
         lastActivityAt: externalAccount.last_activity || new Date().toISOString(),
         lastItemAt: externalAccount.last_item_entered,
         lastSettlementAt: externalAccount.last_settlement,
@@ -88,7 +95,7 @@ export async function findFirst(query: string): Promise<Account | null> {
         return null;
     }
 
-    const exAccount = await accountClient.getbyId(accountSearchEntries[0].id, accountParams);
+    const exAccount = await accountClient.getbyId(accountSearchEntries[0].id, accountGetParams);
 
     if (!exAccount) {
         return null;

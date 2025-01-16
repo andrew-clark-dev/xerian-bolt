@@ -1,18 +1,23 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
-  plugins: [react()],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'https://api.consigncloud.com/api',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+    define: { 'process.env': env },
+    plugins: [react()],
+    optimizeDeps: {
+      exclude: ['lucide-react'],
     },
-  },
+    server: {
+      proxy: {
+        '/api': {
+          target: 'https://api.consigncloud.com/api',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+      },
+    }
+  };
 });

@@ -61,7 +61,7 @@ export interface Page<T> {
 }
 
 export interface Params {
-  [name: string]: string | number | (string | number)[];
+  [name: string]: string | number | (string | number)[] | null;
 }
 
 export class Client<T> {

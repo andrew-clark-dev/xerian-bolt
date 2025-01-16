@@ -5,6 +5,7 @@ import { createActionFunction } from '../function/create-action/resource';
 // import { fetchAccountUpdatesFunction } from '../function/fetch-account-updates/resource';
 // import { importAccountFunction } from '../function/import-account/resource';
 import { findExternalAccount } from './external-account/resource';
+import { importAccountFunction } from '../function/sync-account/resource';
 
 export const schema = a.schema({
 
@@ -225,7 +226,7 @@ export const schema = a.schema({
   allow.resource(createActionFunction),
   // allow.resource(truncateTableFunction),
   // allow.resource(fetchAccountUpdatesFunction),
-  // allow.resource(importAccountFunction),
+  allow.resource(importAccountFunction),
   allow.resource(findExternalAccount),
 ]);
 
