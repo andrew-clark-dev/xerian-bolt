@@ -6,6 +6,7 @@ import { createActionFunction } from '../function/create-action/resource';
 // import { importAccountFunction } from '../function/import-account/resource';
 import { findExternalAccount } from './external-account/resource';
 import { importAccountFunction } from '../function/sync-account/resource';
+import { findExternalItem } from './external-item/resource';
 
 export const schema = a.schema({
 
@@ -88,7 +89,7 @@ export const schema = a.schema({
     ])
     .authorization((allow) => [
       allow.ownerDefinedIn("profileOwner"),
-      allow.group('ADMIN')
+      allow.group('Admin')
     ]),
 
   Account: a
@@ -139,6 +140,7 @@ export const schema = a.schema({
     .returns(a.ref('Account'))
     .handler(a.handler.function(findExternalAccount)),
 
+  ItemStatus: a.enum(['Created', 'Tagged', 'Active', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen', 'Multi', 'Unknown']),
   Item: a
     .model({
       id: a.id(),
@@ -154,11 +156,12 @@ export const schema = a.schema({
       description: a.string(),
       details: a.string(),
       images: a.url().array(), // fields can be arrays,
-      condition: a.enum(['AsNew', 'Good', 'Marked', 'Damaged', 'Unknown']),
+      condition: a.enum(['AsNew', 'Good', 'Marked', 'Damaged', 'Unknown', 'NotSpecified']),
       quantity: a.integer().required(),
-      split: a.integer().required(),
-      price: a.integer().required(),
-      status: a.enum(['Created', 'Tagged', 'HungOut', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen', 'Hidden', 'Unknown']),
+      split: a.integer(),
+      price: a.integer(),
+      status: a.ref('ItemStatus'), // this is the status of unique items. 
+      statuses: a.ref('ItemStatus').array(), // for the rare cases where multiple instances of items are sold we use this arrray for tracking.
       transactions: a.hasMany("Transaction", "itemSku"), // setup relationships between types
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
@@ -172,6 +175,16 @@ export const schema = a.schema({
       index("id"),
       index("deletedAt").sortKeys(["accountNumber", "category", "brand", "color", "size"]),
     ]),
+
+  findExternalItem: a
+    .query()
+    // arguments that this query accepts
+    .arguments({
+      query: a.string().required()
+    })
+    // return type of the query
+    .returns(a.ref('Item'))
+    .handler(a.handler.function(findExternalItem)),
 
   ItemCategory: a
     .model({
@@ -228,6 +241,7 @@ export const schema = a.schema({
   // allow.resource(fetchAccountUpdatesFunction),
   allow.resource(importAccountFunction),
   allow.resource(findExternalAccount),
+  allow.resource(findExternalItem),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

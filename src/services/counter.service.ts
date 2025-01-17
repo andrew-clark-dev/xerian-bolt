@@ -94,6 +94,14 @@ class CounterService {
     }
   }
 
+  // async listTotals(): Promise<{ totals: Counter[] }> {
+  //   const response = await client.models.Counter.list({
+  //     filter: { name: { With: 'Total' } },
+  //   });
+
+  //   return { accounts: checkedResponse(response) as Account[], nextToken: response.nextToken ?? null };
+  // }
+
 }
 
 export const counterService = new CounterService();

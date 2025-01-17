@@ -62,7 +62,6 @@ export function NewAccount() {
       const currentUserProfile = await profileService.getCurrentUserProfile();
       await accountService.createAccount({
         ...formData,
-        lastActivityBy: currentUserProfile.id,
       });
 
       navigate('/accounts');

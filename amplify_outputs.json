@@ -665,7 +665,7 @@
                     "provider": "userPools",
                     "allow": "groups",
                     "groups": [
-                      "ADMIN"
+                      "Admin"
                     ],
                     "operations": [
                       "create",
