@@ -1,12 +1,13 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
-import { profileService } from './profile.service';
-import { checkErrors, logAndRethow, checkedValue } from './utils/error.utils';
+import { currentUserId } from './profile.service';
+import { checkedFutureResponse, checkedNotNullFutureResponse, checkedResponse } from './utils/error.utils';
 
 const client = generateClient<Schema>();
 
 export type Account = Schema['Account']['type'];
-export type AccountDTO = Partial<Omit<Account, 'id'>>;
+export type AccountUpdate = Partial<Omit<Account, 'number' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>> & { number: string };
+export type AccountCreate = Omit<Account, 'id' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>;
 export type AccountStatus = Schema['Account']['type']['status'];
 
 interface ListAccountsOptions {
@@ -18,102 +19,44 @@ interface ListAccountsOptions {
   };
 }
 
+
 class AccountService {
-  private serviceError(error: unknown, context: string): Error {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`Error in ${context}:`, error);
-    return new Error(`${context}: ${message}`);
-  }
 
   async findAccount(number: string): Promise<Account | null> {
-    try {
-      const { data: account, errors } = await client.models.Account.get({ number: number });
-
-      if (errors) {
-        throw this.serviceError(errors, 'findAccount');
-      }
-
-
-      return account;
-    } catch (error) {
-      throw this.serviceError(error, 'findAccount');
-    }
+    return await checkedFutureResponse(client.models.Account.get({ number })) as Account;
   }
 
   async getAccount(number: string): Promise<Account> {
-    const account = await this.findAccount(number);
-    if (!account) {
-      throw new Error('Account not found');
-    }
-    return account;
+    return await checkedNotNullFutureResponse(client.models.Account.get({ number })) as Account;
   }
 
-  async createAccount(account: AccountDTO): Promise<Account> {
-    try {
-      const { data: newAccount, errors } = await client.models.Account.create({
-        number: account.number!,
-        lastActivityBy: (await profileService.getCurrentUserProfile()).id,
-        status: account.status,
-      });
+  async createAccount(account: AccountCreate): Promise<Account> {
+    const response = await client.models.Account.create({ ...account, lastActivityBy: await currentUserId() });
 
-      if (errors) {
-        throw this.serviceError(errors, 'createAccount');
-      }
-
-      return newAccount!;
-    } catch (error) {
-      throw this.serviceError(error, 'createAccount');
-    }
+    return checkedResponse(response) as Account;
   }
 
-  async updateAccount(accountId: string, updates: Partial<Account>): Promise<Account> {
-    try {
-      const existingAccount = await this.getAccount(accountId);
+  async updateAccount(update: AccountUpdate): Promise<Account> {
 
-      const { data: account, errors } = await client.models.Account.update({
-        ...existingAccount,
-        ...updates,
-        id: accountId,
-        updatedAt: new Date().toISOString(),
-      });
+    const response = await client.models.Account.update({ ...update, lastActivityBy: await currentUserId() });
 
-      if (errors) {
-        throw this.serviceError(errors, 'updateAccount');
-      }
-
-      return account!;
-    } catch (error) {
-      throw this.serviceError(error, 'updateAccount');
-    }
+    return checkedResponse(response) as Account;
   }
 
   async listAccounts(options: ListAccountsOptions = {}): Promise<{ accounts: Account[]; nextToken: string | null }> {
-    try {
-      const {
-        data: accounts,
-        nextToken,
-        errors
-      } = await client.models.Account.list({
-        limit: options.limit || 10,
-        nextToken: options.nextToken,
-      });
-      checkErrors(errors);
+    const response = await client.models.Account.list({
+      limit: options.limit || 10,
+      nextToken: options.nextToken,
+    });
 
-      return { accounts: accounts as Account[], nextToken: nextToken ?? null };
-    } catch (error) {
-      throw logAndRethow(error);
-    }
+    return { accounts: checkedResponse(response) as Account[], nextToken: response.nextToken ?? null };
   }
-  /*
-  */
-  async findFirstExternalAccount(query: string): Promise<Account> {
-    try {
-      const { data: account, errors } = await client.queries.findExternalAccount({ query: query });
 
-      return checkedValue(account, errors) as Account;
-    } catch (error) {
-      throw logAndRethow(error);
-    }
+  async findFirstExternalAccount(query: string): Promise<Account> {
+    const response = await client.queries.findExternalAccount({ query: query });
+
+    return checkedResponse(response) as Account;
+
   }
 
 }

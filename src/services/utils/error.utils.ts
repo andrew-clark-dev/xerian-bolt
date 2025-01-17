@@ -52,11 +52,41 @@ export function checkErrors(errors?: GraphQLFormattedError[]): void {
 
 }
 
-export function checkNotFound(object: unknown): void {
+type Reponse = { data: unknown, errors?: GraphQLFormattedError[] };
+
+export function checkedResponse(response: Reponse): unknown {
+  if (response.errors) {
+    for (const err of response.errors) {
+      console.error(`Error ${err.message} in ${callerName()} : `, err);
+    }
+    throw new ServiceError('Amplify api errors occurred', response.errors);
+  } else {
+    return response.data;
+  }
+
+}
+
+export async function checkedFutureResponse(response: Promise<Reponse>): Promise<unknown> {
+  return checkedResponse(await response);
+}
+
+export async function checkedNotNullFutureResponse(response: Promise<Reponse>): Promise<unknown> {
+  return checkNotFound(await checkedFutureResponse(response));
+}
+
+
+export function checkNotFound(object: unknown): object {
   if (!object) {
     throw new ServiceError('Not found');
+  } else {
+    if (object instanceof Array && object.length === 0) {
+      throw new ServiceError('Not found');
+    }
+    return object;
   }
 }
+
+
 
 
 /**

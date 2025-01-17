@@ -3,12 +3,13 @@ import { getCurrentUser } from 'aws-amplify/auth';
 import { generateClient } from 'aws-amplify/data';
 
 import type { Schema } from '../../amplify/data/resource';
+import { checkedFutureResponse, checkedNotNullFutureResponse, checkedResponse } from './utils/error.utils';
 
 const client = generateClient<Schema>();
 
-export type UserProfile = Omit<Schema['UserProfile']['type'], 'updatedAt' | 'createdAt'>;
-export type UserProfileUpdate = Omit<UserProfile, 'comments' | 'actions'>;
-export type UserProfileCreate = Omit<UserProfileUpdate, 'id' | 'settings' | 'username'>;
+export type UserProfile = Schema['UserProfile']['type'];
+export type UserProfileUpdate = Partial<Omit<UserProfile, 'id' | 'comments' | 'actions' | 'createdAt' | 'updatedAt'>> & { id: string };
+export type UserProfileCreate = Omit<UserProfile, 'id' | 'settings' | 'createdAt' | 'updatedAt'>;
 
 export type UserRole = Schema['UserProfile']['type']['role'];
 export type UserStatus = Schema['UserProfile']['type']['status'];
@@ -31,110 +32,39 @@ export interface UserSettings {
 
 class ProfileService {
 
-  private serviceError(error: unknown, context: string): Error {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`Error in ${context}:`, error);
-    return new Error(`${context}: ${message}`);
-  }
-
   async findUserProfile(id: string): Promise<UserProfile | null> {
-    try {
-      const { data: user, errors } = await client.models.UserProfile.get({ id: id });
-
-      if (errors) {
-        throw this.serviceError(errors, 'findUserProfile');
-      }
-
-      return user;
-    } catch (error) {
-      throw this.serviceError(error, 'findUserProfile');
-    }
-    return null;
+    return await checkedFutureResponse(client.models.UserProfile.get({ id })) as UserProfile;
   }
 
   async getUserProfile(id: string): Promise<UserProfile> {
-    const user = await this.findUserProfile(id);
-    if (!user) {
-      throw new Error('UserProfile not found');
-    }
-    return user;
+    return await checkedNotNullFutureResponse(client.models.UserProfile.get({ id })) as UserProfile;
+  }
+
+  async createUserProfile(user: UserProfileCreate): Promise<UserProfile> {
+    const response = await client.models.UserProfile.create({ ...user, settings: JSON.stringify(initialSettings) });
+
+    return checkedResponse(response) as UserProfile;
+  }
+
+  async updateUserProfile(update: UserProfileUpdate): Promise<UserProfile> {
+    return await checkedFutureResponse(client.models.UserProfile.update(update)) as UserProfile;
   }
 
   async getCurrentUserProfile(): Promise<UserProfile> {
     const cognitoUser = await getCurrentUser();
-    const user = await this.findUserProfileByCognitoName(cognitoUser.username);
-    if (!user) {
-      throw new Error('UserProfile not found');
-    }
-    return user;
+    return await this.getUserProfileByCognitoName(cognitoUser.username);
   }
 
-  async findUserProfileByCognitoName(name: string): Promise<UserProfile | null> {
-    try {
-      const { data: user, errors } = await client.models.UserProfile.listUserProfileByCognitoName({
-        cognitoName: name
-      });
-
-      if (errors) {
-        throw this.serviceError(errors, 'findUserProfileByEmail');
-      }
-
-      return user[0];
-    } catch (error) {
-      throw this.serviceError(error, 'findUserProfileByEmail');
-    }
-  }
-  async findUserProfileByEmail(email: string): Promise<UserProfile | null> {
-    try {
-      const { data: user, errors } = await client.models.UserProfile.listUserProfileByEmail({
-        email: email
-      });
-
-      if (errors) {
-        throw this.serviceError(errors, 'findUserProfileByEmail');
-      }
-
-      return user[0];
-    } catch (error) {
-      throw this.serviceError(error, 'findUserProfileByEmail');
-    }
+  async getUserProfileByCognitoName(cognitoName: string): Promise<UserProfile> {
+    const response = client.models.UserProfile.listUserProfileByCognitoName({ cognitoName });
+    const list = await checkedNotNullFutureResponse(response) as UserProfile[];
+    return list[0];
   }
 
-
-  async createUserProfile(user: UserProfileCreate): Promise<UserProfile> {
-    try {
-      const { data: newUserProfile, errors } = await client.models.UserProfile.create({
-        ...user,
-
-        settings: JSON.stringify(initialSettings),
-      });
-
-      if (errors) {
-        throw this.serviceError(errors, 'createUserProfile');
-      }
-
-      return newUserProfile!;
-    } catch (error) {
-      throw this.serviceError(error, 'createUserProfile');
-    }
-  }
-
-  async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
-    try {
-
-      const { data: user, errors } = await client.models.UserProfile.update({
-        id: userId,
-        ...updates,
-      });
-
-      if (errors) {
-        throw this.serviceError(errors, 'updateUserProfile');
-      }
-
-      return user!;
-    } catch (error) {
-      throw this.serviceError(error, 'updateUserProfile');
-    }
+  async getUserProfileByEmail(email: string): Promise<UserProfile> {
+    const response = client.models.UserProfile.listUserProfileByEmail({ email });
+    const list = await checkedNotNullFutureResponse(response) as UserProfile[];
+    return list[0];
   }
 
   async getCurrentSettings(): Promise<UserSettings> {
@@ -145,10 +75,15 @@ class ProfileService {
   async updateCurrentSettings(userSettings: UserSettings): Promise<void> {
     const user = await this.getCurrentUserProfile();
     const settings = JSON.stringify(userSettings);
-    await this.updateUserProfile(user.id, { settings });
+    await this.updateUserProfile({ id: user.id, settings });
   }
 
 }
 
 export const profileService = new ProfileService();
 
+async function currentUserId(): Promise<string> {
+  return (await profileService.getCurrentUserProfile()).id;
+}
+
+export { currentUserId };
