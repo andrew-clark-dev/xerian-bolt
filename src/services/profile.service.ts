@@ -29,6 +29,14 @@ export interface UserSettings {
   hasLogin: false;
 }
 
+interface ListProfilesOptions {
+  limit?: number;
+  nextToken?: string | null;
+  sort?: {
+    field: keyof UserProfile;
+    direction: 'asc' | 'desc';
+  };
+}
 
 class ProfileService {
 
@@ -50,10 +58,15 @@ class ProfileService {
     return await checkedFutureResponse(client.models.UserProfile.update(update)) as UserProfile;
   }
 
-  async getCurrentUserProfile(): Promise<UserProfile> {
-    const cognitoUser = await getCurrentUser();
-    return await this.getUserProfileByCognitoName(cognitoUser.username);
+  async listProfiles(options: ListProfilesOptions = {}): Promise<{ profiles: UserProfile[]; nextToken: string | null }> {
+    const response = await client.models.UserProfile.list({
+      limit: options.limit || 10,
+      nextToken: options.nextToken,
+    });
+
+    return { profiles: checkedResponse(response) as UserProfile[], nextToken: response.nextToken ?? null };
   }
+
 
   async getUserProfileByCognitoName(cognitoName: string): Promise<UserProfile> {
     const response = client.models.UserProfile.listUserProfileByCognitoName({ cognitoName });
@@ -66,6 +79,13 @@ class ProfileService {
     const list = await checkedNotNullFutureResponse(response) as UserProfile[];
     return list[0];
   }
+
+  // Current user profile methods 
+  async getCurrentUserProfile(): Promise<UserProfile> {
+    const cognitoUser = await getCurrentUser();
+    return await this.getUserProfileByCognitoName(cognitoUser.username);
+  }
+
 
   async getCurrentSettings(): Promise<UserSettings> {
     const user = await this.getCurrentUserProfile();
