@@ -1105,14 +1105,14 @@
               "name": "split",
               "isArray": false,
               "type": "Int",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "price": {
               "name": "price",
               "isArray": false,
               "type": "Int",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "status": {
@@ -1123,6 +1123,16 @@
               },
               "isRequired": false,
               "attributes": []
+            },
+            "statuses": {
+              "name": "statuses",
+              "isArray": true,
+              "type": {
+                "enum": "ItemStatus"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
             },
             "transactions": {
               "name": "transactions",
@@ -1574,6 +1584,24 @@
         }
       },
       "enums": {
+        "ItemStatus": {
+          "name": "ItemStatus",
+          "values": [
+            "Created",
+            "Tagged",
+            "Active",
+            "Sold",
+            "ToDonate",
+            "Donated",
+            "Parked",
+            "Returned",
+            "Expired",
+            "Lost",
+            "Stolen",
+            "Multi",
+            "Unknown"
+          ]
+        },
         "ActionType": {
           "name": "ActionType",
           "values": [
@@ -1643,25 +1671,8 @@
             "Good",
             "Marked",
             "Damaged",
-            "Unknown"
-          ]
-        },
-        "ItemStatus": {
-          "name": "ItemStatus",
-          "values": [
-            "Created",
-            "Tagged",
-            "HungOut",
-            "Sold",
-            "ToDonate",
-            "Donated",
-            "Parked",
-            "Returned",
-            "Expired",
-            "Lost",
-            "Stolen",
-            "Hidden",
-            "Unknown"
+            "Unknown",
+            "NotSpecified"
           ]
         },
         "TransactionType": {
@@ -1691,6 +1702,22 @@
           "isArray": false,
           "type": {
             "model": "Account"
+          },
+          "isRequired": false,
+          "arguments": {
+            "query": {
+              "name": "query",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            }
+          }
+        },
+        "findExternalItem": {
+          "name": "findExternalItem",
+          "isArray": false,
+          "type": {
+            "model": "Item"
           },
           "isRequired": false,
           "arguments": {
