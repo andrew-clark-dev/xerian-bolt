@@ -33,7 +33,6 @@ export const accountFetchParams: Params = {
     include: ['created_by', 'last_activity', 'last_settlement', 'default_split', 'last_item_entered'],
     expand: ['created_by'],
     sort_by: 'created',
-    cursor: null
 }
 
 export const accountGetParams: Params = {

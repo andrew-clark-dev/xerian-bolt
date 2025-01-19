@@ -1,5 +1,5 @@
 import { Schema } from "../../data/resource";
-import { Client, SearchClient, Params } from "../api/client2";
+import { Client, Params } from "../api/client2";
 
 export type Item = Schema['Item']['type'];
 export type ItemStatus = Schema['Item']['type']['status'];
@@ -38,7 +38,7 @@ export interface ExternalItem {
         id: string,
         name: string,
         user_type: string,
-    } | string,
+    },
     days_on_shelf?: number,
     deleted: string | null,
     description: string | null,
@@ -63,33 +63,13 @@ export interface ExternalItem {
 
 }
 
-export const itemFetchParams: Params = {
+export const itemParams: Params = {
     include: ['created_by', 'days_on_shelf', 'last_sold', 'last_viewed', 'printed', 'split_price', 'tax_exempt', 'quantity'],
     expand: ['created_by', 'category', 'account'],
     sort_by: 'created',
-    cursor: null
-}
-
-export const itemGetParams: Params = {
-    include: ['printed', 'split_price', 'quantity'],
-    expand: ['category', 'account'],
 }
 
 export const itemClient = new Client<ExternalItem>('items');
-
-interface ItemSearchEntry {
-    brand: string | null,
-    color: string | null,
-    created: string,
-    description: string | null,
-    id: string,
-    size: string | null,
-    sku: string,
-    tag_price: number | null,
-    title: string | null
-}
-
-export const itemSearchClient = new SearchClient<ItemSearchEntry>('items');
 
 export const toItem = (externalItem: ExternalItem): Item => {
     // Map external data to our Item type
@@ -127,22 +107,16 @@ export const toItem = (externalItem: ExternalItem): Item => {
 * @returns A boolean indicating if the number is a mobile number
 */
 export async function findFirstItem(query: string): Promise<Item | null> {
-    const itemSearchEntries = await itemSearchClient.search(query);
 
-    if (!itemSearchEntries || itemSearchEntries.length === 0) {
+    const itemSearchEntries = await itemClient.fetch({ ...itemParams, search: query });
+
+    if (!itemSearchEntries || itemSearchEntries.data.length === 0) {
         return null;
     }
 
-    const exItem = await itemClient.getbyId(itemSearchEntries[0].id, itemGetParams);
-
-    if (!exItem) {
-        return null;
-    }
-
-    return toItem(exItem);
+    return toItem(itemSearchEntries.data[0]);
 
 }
-
 
 export function toStatus(exItem: ExternalItem): ItemStatus {
     if (exItem.quantity ?? 1 > 1) return 'Multi'
