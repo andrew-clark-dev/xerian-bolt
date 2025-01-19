@@ -1,8 +1,9 @@
 import { Schema } from "../../data/resource";
-import { Client, SearchClient, Params } from "../api/client2";
+import { Client, Params } from "../api/client2";
 
 export type Item = Schema['Item']['type'];
 export type ItemStatus = Schema['Item']['type']['status'];
+export type ItemGroup = Schema['ItemGroup']['type'];
 
 export interface ExternalItemStatus {
     active: number,
@@ -38,7 +39,7 @@ export interface ExternalItem {
         id: string,
         name: string,
         user_type: string,
-    } | string,
+    },
     days_on_shelf?: number,
     deleted: string | null,
     description: string | null,
@@ -70,26 +71,7 @@ export const itemFetchParams: Params = {
     cursor: null
 }
 
-export const itemGetParams: Params = {
-    include: ['printed', 'split_price', 'quantity'],
-    expand: ['category', 'account'],
-}
-
 export const itemClient = new Client<ExternalItem>('items');
-
-interface ItemSearchEntry {
-    brand: string | null,
-    color: string | null,
-    created: string,
-    description: string | null,
-    id: string,
-    size: string | null,
-    sku: string,
-    tag_price: number | null,
-    title: string | null
-}
-
-export const itemSearchClient = new SearchClient<ItemSearchEntry>('items');
 
 export const toItem = (externalItem: ExternalItem): Item => {
     // Map external data to our Item type
@@ -108,11 +90,10 @@ export const toItem = (externalItem: ExternalItem): Item => {
         description: externalItem.description,
         details: externalItem.details,
         condition: 'NotSpecified',
-        quantity: externalItem.quantity,
-        split: externalItem.split,
+        split: Math.trunc((externalItem.split ?? 0) * 100),
         price: externalItem.tag_price,
         status: toStatus(externalItem),
-        statuses: toStatuses(externalItem),
+        //        group: toGroup(externalItem),
         printedAt: externalItem.printed,
         lastSoldAt: externalItem.last_sold,
         lastViewedAt: externalItem.last_viewed,
@@ -121,31 +102,18 @@ export const toItem = (externalItem: ExternalItem): Item => {
     } as Item;
 }
 
-/**
-* Checks if an accoutn phone number indicates a mobile number based on Swiss mobile prefixes
-* @param exItem The account read from thee external system.
-* @returns A boolean indicating if the number is a mobile number
-*/
+
 export async function findFirstItem(query: string): Promise<Item | null> {
-    const itemSearchEntries = await itemSearchClient.search(query);
+    const { data } = await itemClient.fetch({ ...itemFetchParams, search: query });
 
-    if (!itemSearchEntries || itemSearchEntries.length === 0) {
-        return null;
-    }
+    if (data.length === 0) { return null; }
 
-    const exItem = await itemClient.getbyId(itemSearchEntries[0].id, itemGetParams);
-
-    if (!exItem) {
-        return null;
-    }
-
-    return toItem(exItem);
+    return toItem(data[0]);
 
 }
 
 
 export function toStatus(exItem: ExternalItem): ItemStatus {
-    if (exItem.quantity ?? 1 > 1) return 'Multi'
     if (exItem.status.sold > 0) return 'Sold'
     if (exItem.status.active > 0) return 'Active'
     if (exItem.status.donated > 0) return 'Donated'
@@ -168,4 +136,12 @@ export function toStatuses(exItem: ExternalItem): ItemStatus[] | null {
     for (let i = 0; i < exItem.status.sold_on_shopify; i++) { statuses.push('Sold') }
     for (let i = 0; i < exItem.status.stolen; i++) { statuses.push('Stolen') }
     return statuses;
+}
+
+export function toGroup(exItem: ExternalItem): ItemGroup | null {
+    if (exItem.quantity ?? 1 == 1) { return null }
+    return {
+        quantity: exItem.quantity!,
+        statuses: toStatuses(exItem),
+    } as ItemGroup;
 }

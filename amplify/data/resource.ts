@@ -11,6 +11,12 @@ import { findExternalItem } from './external-item/resource';
 export const schema = a.schema({
 
   // Models
+  AppConfig: a
+    .model({
+      name: a.string().required(),
+      data: a.json(),
+    })
+    .identifier(['name']),
 
   SyncData: a
     .model({
@@ -140,7 +146,8 @@ export const schema = a.schema({
     .returns(a.ref('Account'))
     .handler(a.handler.function(findExternalAccount)),
 
-  ItemStatus: a.enum(['Created', 'Tagged', 'Active', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen', 'Multi', 'Unknown']),
+  ItemStatus: a.enum(['Created', 'Tagged', 'Active', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen', 'Unknown']),
+
   Item: a
     .model({
       id: a.id(),
@@ -149,7 +156,7 @@ export const schema = a.schema({
       title: a.string(),
       account: a.belongsTo("Account", "accountNumber"),
       accountNumber: a.string(),
-      category: a.string().required(),
+      category: a.string(),
       brand: a.string(),
       color: a.string(),
       size: a.string(),
@@ -157,11 +164,10 @@ export const schema = a.schema({
       details: a.string(),
       images: a.url().array(), // fields can be arrays,
       condition: a.enum(['AsNew', 'Good', 'Marked', 'Damaged', 'Unknown', 'NotSpecified']),
-      quantity: a.integer().required(),
       split: a.integer(),
       price: a.integer(),
-      status: a.ref('ItemStatus'), // this is the status of unique items. 
-      statuses: a.ref('ItemStatus').array(), // for the rare cases where multiple instances of items are sold we use this arrray for tracking.
+      status: a.ref('ItemStatus'), // this is the status of unique items.
+      group: a.hasOne('ItemGroup', 'itemSku'), // this is the group of items that are the same. 
       transactions: a.hasMany("Transaction", "itemSku"), // setup relationships between types
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
@@ -185,6 +191,14 @@ export const schema = a.schema({
     // return type of the query
     .returns(a.ref('Item'))
     .handler(a.handler.function(findExternalItem)),
+
+  ItemGroup: a
+    .model({
+      quantity: a.integer().required(),
+      statuses: a.ref('ItemStatus').array(), // for the rare cases where multiple instances of items are sold we use this arrray for tracking.
+      itemSku: a.string(),
+      item: a.belongsTo('Item', 'itemSku'),
+    }),
 
   ItemCategory: a
     .model({

@@ -8,16 +8,6 @@ interface ItemFormProps {
   onChange: (field: keyof ItemCreate, value: string | string[] | number | boolean | null) => void;
 }
 
-// interface ItemFormProps {
-
-//   formData: Partial<ItemFormData>;
-
-//   isLoading: boolean;
-
-//   onChange: (field: keyof ItemFormData, value: string | number | boolean | null) => void;
-
-// }
-
 export function ItemForm({ formData, isLoading, onChange }: ItemFormProps) {
   return (
     <div className="space-y-6">
