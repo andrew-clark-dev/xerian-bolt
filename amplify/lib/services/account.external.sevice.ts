@@ -88,7 +88,7 @@ export const toAccount = (externalAccount: ExternalAccount): Account => {
 * @param exAccount The account read from thee external system.
 * @returns A boolean indicating if the number is a mobile number
 */
-export async function findFirst(query: string): Promise<Account | null> {
+export async function findFirstAccount(query: string): Promise<Account | null> {
     const accountSearchEntries = await accountSearchClient.search(query);
 
     if (!accountSearchEntries || accountSearchEntries.length === 0) {

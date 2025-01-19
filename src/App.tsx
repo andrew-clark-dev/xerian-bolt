@@ -8,6 +8,9 @@ import { Settings } from './pages/Settings';
 import { Accounts } from './pages/Accounts';
 import { NewAccount } from './pages/NewAccount';
 import { UpdateAccount } from './pages/UpdateAccount';
+import { Items } from './pages/Items';
+import { NewItem } from './pages/NewItem';
+import { UpdateItem } from './pages/UpdateItem';
 import { Users } from './pages/Users';
 import { NewUser } from './pages/NewUser';
 import { UpdateUserProfile } from './pages/UpdateUser';
@@ -29,6 +32,9 @@ export default function App() {
                 <Route path="accounts" element={<Accounts />} />
                 <Route path="accounts/new" element={<NewAccount />} />
                 <Route path="accounts/:number" element={<UpdateAccount />} />
+                <Route path="items" element={<Items />} />
+                <Route path="items/new" element={<NewItem />} />
+                <Route path="items/:sku" element={<UpdateItem />} />
                 <Route path="users" element={<Users />} />
                 <Route path="users/new" element={<NewUser />} />
                 <Route path="users/:email" element={<UpdateUserProfile />} />

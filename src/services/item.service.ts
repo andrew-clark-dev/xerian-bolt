@@ -2,12 +2,13 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { currentUserId } from './profile.service';
 import { checkedFutureResponse, checkedNotNullFutureResponse, checkedResponse } from './utils/error.utils';
+import { findFirstItem } from '../../amplify'; // Adjust the import path as necessary
 
 const client = generateClient<Schema>();
 
 export type Item = Schema['Item']['type'];
-export type ItemUpdate = Partial<Omit<Item, 'sku' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>> & { sku: string };
-export type ItemCreate = Omit<Item, 'id' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>;
+export type ItemCreate = Omit<Item, 'id' | 'transactions' | 'account' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>;
+export type ItemUpdate = Partial<Omit<ItemCreate, 'sku'>> & { sku: string };
 export type ItemStatus = Schema['Item']['type']['status'];
 
 interface ListItemsOptions {
@@ -52,12 +53,13 @@ class ItemService {
     return { accounts: checkedResponse(response) as Item[], nextToken: response.nextToken ?? null };
   }
 
-  // async findFirstExternalItem(query: string): Promise<Item> {
-  //   const response = await client.queries.findExternalItem({ query: query });
+  async findFirstExternalItem(query: string): Promise<Item | null> {
 
-  //   return checkedResponse(response) as Item;
+    return await findFirstItem(query);
 
-  // }
+    // return checkedResponse(response) as Item;
+
+  }
 
 }
 

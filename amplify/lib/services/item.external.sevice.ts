@@ -126,7 +126,7 @@ export const toItem = (externalItem: ExternalItem): Item => {
 * @param exItem The account read from thee external system.
 * @returns A boolean indicating if the number is a mobile number
 */
-export async function findFirst(query: string): Promise<Item | null> {
+export async function findFirstItem(query: string): Promise<Item | null> {
     const itemSearchEntries = await itemSearchClient.search(query);
 
     if (!itemSearchEntries || itemSearchEntries.length === 0) {
