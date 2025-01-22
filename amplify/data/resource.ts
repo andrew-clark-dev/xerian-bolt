@@ -2,8 +2,6 @@ import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 import { truncateTableFunction } from './truncate-table/resource';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
-// import { fetchAccountUpdatesFunction } from '../function/fetch-account-updates/resource';
-// import { importAccountFunction } from '../function/import-account/resource';
 import { findExternalAccount } from './external-account/resource';
 import { importAccountFunction } from '../function/sync-account/resource';
 import { findExternalItem } from './external-item/resource';
@@ -14,7 +12,7 @@ export const schema = a.schema({
   AppConfig: a
     .model({
       name: a.string().required(),
-      data: a.json(),
+      value: a.string(),
     })
     .identifier(['name']),
 

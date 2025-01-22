@@ -1,5 +1,6 @@
 import { Schema } from "../../data/resource";
 import { Client, Params } from "../api/client2";
+import { ExternalUser } from "./user.external.sevice";
 
 export type Item = Schema['Item']['type'];
 export type ItemStatus = Schema['Item']['type']['status'];
@@ -35,11 +36,7 @@ export interface ExternalItem {
     color: string | null,
     cost_per: number | null,
     created: string,
-    created_by: {
-        id: string,
-        name: string,
-        user_type: string,
-    },
+    created_by: ExternalUser,
     days_on_shelf?: number,
     deleted: string | null,
     description: string | null,

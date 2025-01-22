@@ -1,17 +1,17 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { Stack } from 'aws-cdk-lib';
 import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
-import { StartingPosition, EventSourceMapping } from "aws-cdk-lib/aws-lambda";
+import { StartingPosition, EventSourceMapping, Function as LambdaFunction } from "aws-cdk-lib/aws-lambda";
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { storage } from './storage/resource';
 import { createActionFunction } from './function/create-action/resource';
 import { findExternalAccount } from './data/external-account/resource';
 import { truncateTableFunction } from './data/truncate-table/resource';
-import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { fetchAccountsFunction, importAccountFunction } from './function/sync-account/resource';
-import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
-// import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { fetchItemsFunction, importItemFunction } from './function/import-item/resource';
+import { QueueLambdaIntegration } from './backend/queue.lambda.integration';
+
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -25,6 +25,8 @@ const backend = defineBackend({
   truncateTableFunction,
   fetchAccountsFunction,
   importAccountFunction,
+  fetchItemsFunction,
+  importItemFunction,
 });
 
 // extract L1 CfnUserPool resources
@@ -112,16 +114,54 @@ for (const key in tables) {
   t.grantFullAccess(backend.truncateTableFunction.resources.lambda);
 }
 
-
-
-// Set up account import queue and grant permissions to importAccountFunction
+// Set up import queues and integrate with Lambda functions
 const customStack = backend.createStack('CustomResources');
 
-const accountImportQueue = new sqs.Queue(customStack, `AccountImportQueue`);
-backend.fetchAccountsFunction.addEnvironment(`IMPORT_QUEUE_URL`, accountImportQueue.queueUrl);
-accountImportQueue.grantSendMessages(backend.fetchAccountsFunction.resources.lambda);
-backend.importAccountFunction.resources.lambda.addEventSource(new SqsEventSource(accountImportQueue));
-tables['Account'].grantFullAccess(backend.importAccountFunction.resources.lambda);
-tables['UserProfile'].grantFullAccess(backend.importAccountFunction.resources.lambda);
-tables['Action'].grantFullAccess(backend.importAccountFunction.resources.lambda);
+// Get the Lambda function objects
+const fetchAccountsLambda = backend.fetchAccountsFunction.resources.lambda;
+const importAccountLambda = backend.importAccountFunction.resources.lambda;
 
+// Create the Queue-Lambda integration construct
+new QueueLambdaIntegration(customStack, 'AccountImportIntegration', {
+  queueName: 'AccountImport',
+  sendFunction: fetchAccountsLambda as LambdaFunction,
+  receiveFunction: importAccountLambda as LambdaFunction,
+  tables: [tables['Account'], tables['UserProfile'], tables['Action']],
+});
+
+// Get the Lambda function objects
+const fetchItemsLambda = backend.fetchItemsFunction.resources.lambda;
+const importItemLambda = backend.importItemFunction.resources.lambda;
+
+// Create the Queue-Lambda integration construct
+new QueueLambdaIntegration(customStack, 'ItemImportIntegration', {
+  queueName: 'ItemImport',
+  sendFunction: fetchItemsLambda as LambdaFunction,
+  receiveFunction: importItemLambda as LambdaFunction,
+  tables: [tables['Item'], tables['UserProfile'], tables['Action']],
+});
+
+
+// const fetchAccountsLambda = backend.fetchAccountsFunction.resources.lambda;
+// const importAccountLambda = backend.importAccountFunction.resources.lambda;
+
+// backend.fetchAccountsFunction.addEnvironment(`QUEUE_URL`, queues.itemImportQueue.queueUrl);
+// queues.accountImportQueue.grantSendMessages(fetchAccountsLambda);
+// importAccountLambda.addEventSource(new SqsEventSource(queues.accountImportQueue));
+// queues.accountImportQueue.grantConsumeMessages(importAccountLambda);
+
+// tables['Account'].grantFullAccess(importAccountLambda);
+// tables['UserProfile'].grantFullAccess(importAccountLambda);
+// tables['Action'].grantFullAccess(importAccountLambda);
+
+// const fetchItemsLambda = backend.fetchItemsFunction.resources.lambda;
+// const importItemLambda = backend.importItemFunction.resources.lambda;
+
+// backend.fetchItemsFunction.addEnvironment(`QUEUE_URL`, queues.itemImportQueue.queueUrl);
+// queues.itemImportQueue.grantSendMessages(fetchItemsLambda);
+// importItemLambda.addEventSource(new SqsEventSource(queues.itemImportQueue));
+// queues.itemImportQueue.grantConsumeMessages(importItemLambda);
+
+// tables['Item'].grantFullAccess(importItemLambda);
+// tables['UserProfile'].grantFullAccess(importItemLambda);
+// tables['Action'].grantFullAccess(importItemLambda);
