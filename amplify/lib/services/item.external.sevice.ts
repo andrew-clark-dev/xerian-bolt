@@ -2,6 +2,7 @@ import { Schema } from "../../data/resource";
 import { Client, Params } from "../api/client2";
 import { ExternalUser } from "./user.external.sevice";
 
+
 export type Item = Schema['Item']['type'];
 export type ItemStatus = Schema['Item']['type']['status'];
 export type ItemGroup = Schema['ItemGroup']['type'];
@@ -61,11 +62,10 @@ export interface ExternalItem {
 
 }
 
-export const itemFetchParams: Params = {
+export const itemParams: Params = {
     include: ['created_by', 'days_on_shelf', 'last_sold', 'last_viewed', 'printed', 'split_price', 'tax_exempt', 'quantity'],
     expand: ['created_by', 'category', 'account'],
     sort_by: 'created',
-    cursor: null
 }
 
 export const itemClient = new Client<ExternalItem>('items');
@@ -108,7 +108,6 @@ export async function findFirstItem(query: string): Promise<Item | null> {
     return toItem(data[0]);
 
 }
-
 
 export function toStatus(exItem: ExternalItem): ItemStatus {
     if (exItem.status.sold > 0) return 'Sold'
