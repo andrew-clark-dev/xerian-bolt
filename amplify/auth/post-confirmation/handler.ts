@@ -24,7 +24,6 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
             role: "Guest",
             nickname: event.request.userAttributes.nickname,
             settings: JSON.stringify({
-                apiKey: undefined,
                 notifications: true,
                 theme: 'light',
                 hasLogin: false,

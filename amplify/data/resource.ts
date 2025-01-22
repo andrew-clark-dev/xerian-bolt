@@ -67,7 +67,7 @@ export const schema = a.schema({
       createdBy: a.belongsTo('UserProfile', 'userId'),
       updatedAt: a.datetime(),
     })
-    .authorization(allow => [allow.owner(), allow.group('ADMIN'), allow.authenticated().to(['read'])]),
+    .authorization(allow => [allow.owner(), allow.group('Admin'), allow.authenticated().to(['read'])]),
 
   UserProfile: a
     .model({

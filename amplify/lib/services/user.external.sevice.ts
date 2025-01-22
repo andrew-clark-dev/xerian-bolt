@@ -21,7 +21,6 @@ interface UserSettings {
 }
 
 const initialSettings: UserSettings = {
-    apiKey: undefined,
     notifications: true,
     theme: 'light',
     hasLogin: false,
