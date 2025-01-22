@@ -2,12 +2,11 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { currentUserId } from './profile.service';
 import { checkedFutureResponse, checkedNotNullFutureResponse, checkedResponse } from './utils/error.utils';
-import { findFirstItem } from '../../amplify'; // Adjust the import path as necessary
-
+// import { findFirstItem } from '../../amplify';
 const client = generateClient<Schema>();
 
 export type Item = Schema['Item']['type'];
-export type ItemCreate = Omit<Item, 'id' | 'transactions' | 'account' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>;
+export type ItemCreate = Omit<Item, 'id' | 'transactions' | 'account' | 'createdAt' | 'updatedAt' | 'lastActivityBy'> & { quantity: number };
 export type ItemUpdate = Partial<Omit<ItemCreate, 'sku'>> & { sku: string };
 export type ItemStatus = Schema['Item']['type']['status'];
 
@@ -20,7 +19,6 @@ interface ListItemsOptions {
   };
 }
 
-
 class ItemService {
 
   async findItem(sku: string): Promise<Item | null> {
@@ -31,10 +29,18 @@ class ItemService {
     return await checkedNotNullFutureResponse(client.models.Item.get({ sku })) as Item;
   }
 
-  async createItem(account: ItemCreate): Promise<Item> {
-    const response = await client.models.Item.create({ ...account, lastActivityBy: await currentUserId() });
+  async createItem(item: ItemCreate): Promise<Item> {
+    const response = await client.models.Item.create({ ...item, lastActivityBy: await currentUserId() });
+    const newItem = checkedResponse(response) as Item;
+    if (item.quantity > 0) {
+      await client.models.ItemGroup.create({
+        itemSku: newItem.sku,
+        quantity: item.quantity,
+        statuses: Array(item.quantity).fill(newItem.status)
+      });
+    }
 
-    return checkedResponse(response) as Item;
+    return newItem;
   }
 
   async updateItem(update: ItemUpdate): Promise<Item> {
@@ -54,11 +60,9 @@ class ItemService {
   }
 
   async findFirstExternalItem(query: string): Promise<Item | null> {
-
-    return await findFirstItem(query);
-
-    // return checkedResponse(response) as Item;
-
+    //    return findFirstItem(query);
+    const response = await client.queries.findExternalItem({ query });
+    return checkedResponse(response) as Item;
   }
 
 }

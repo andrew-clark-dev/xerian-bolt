@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "eu-central-1_Yr2hyJsWK",
+    "user_pool_id": "eu-central-1_E6TUGiCrg",
     "aws_region": "eu-central-1",
-    "user_pool_client_id": "1qk343pq69p641tsss6950nkoh",
-    "identity_pool_id": "eu-central-1:07cd9ba4-c5ce-4c15-90e5-80028adb32e5",
+    "user_pool_client_id": "5akcd58h0advv7bjgc0n9lonl9",
+    "identity_pool_id": "eu-central-1:0074f262-97b0-44ce-869a-6b3959a90b1c",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -52,7 +52,7 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://7qala2me2bf63kbesvp3tyxwie.appsync-api.eu-central-1.amazonaws.com/graphql",
+    "url": "https://hipxaq3eobbvfaghk6sqlk773q.appsync-api.eu-central-1.amazonaws.com/graphql",
     "aws_region": "eu-central-1",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
@@ -61,6 +61,83 @@
     "model_introspection": {
       "version": 1,
       "models": {
+        "AppConfig": {
+          "name": "AppConfig",
+          "fields": {
+            "name": {
+              "name": "name",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "value": {
+              "name": "value",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "AppConfigs",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "fields": [
+                  "name"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "Employee"
+                    ],
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": true,
+            "primaryKeyFieldName": "name",
+            "sortKeyFieldNames": []
+          }
+        },
         "SyncData": {
           "name": "SyncData",
           "fields": {
@@ -459,7 +536,7 @@
                     "provider": "userPools",
                     "allow": "groups",
                     "groups": [
-                      "ADMIN"
+                      "Admin"
                     ],
                     "operations": [
                       "create",
@@ -1039,7 +1116,7 @@
               "name": "category",
               "isArray": false,
               "type": "String",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "brand": {
@@ -1094,13 +1171,6 @@
               "isRequired": false,
               "attributes": []
             },
-            "quantity": {
-              "name": "quantity",
-              "isArray": false,
-              "type": "Int",
-              "isRequired": true,
-              "attributes": []
-            },
             "split": {
               "name": "split",
               "isArray": false,
@@ -1124,15 +1194,21 @@
               "isRequired": false,
               "attributes": []
             },
-            "statuses": {
-              "name": "statuses",
-              "isArray": true,
+            "group": {
+              "name": "group",
+              "isArray": false,
               "type": {
-                "enum": "ItemStatus"
+                "model": "ItemGroup"
               },
               "isRequired": false,
               "attributes": [],
-              "isArrayNullable": true
+              "association": {
+                "connectionType": "HAS_ONE",
+                "associatedWith": [
+                  "itemSku"
+                ],
+                "targetNames": []
+              }
             },
             "transactions": {
               "name": "transactions",
@@ -1258,6 +1334,107 @@
           "primaryKeyInfo": {
             "isCustomPrimaryKey": true,
             "primaryKeyFieldName": "sku",
+            "sortKeyFieldNames": []
+          }
+        },
+        "ItemGroup": {
+          "name": "ItemGroup",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "quantity": {
+              "name": "quantity",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
+            "statuses": {
+              "name": "statuses",
+              "isArray": true,
+              "type": {
+                "enum": "ItemStatus"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
+            },
+            "itemSku": {
+              "name": "itemSku",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "item": {
+              "name": "item",
+              "isArray": false,
+              "type": {
+                "model": "Item"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "itemSku"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "ItemGroups",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "Employee"
+                    ],
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
             "sortKeyFieldNames": []
           }
         },
@@ -1598,7 +1775,6 @@
             "Expired",
             "Lost",
             "Stolen",
-            "Multi",
             "Unknown"
           ]
         },
@@ -1766,11 +1942,11 @@
   },
   "storage": {
     "aws_region": "eu-central-1",
-    "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-rlc8gk3oy2vu",
+    "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-bytx5kbmnzpr",
     "buckets": [
       {
         "name": "drive",
-        "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-rlc8gk3oy2vu",
+        "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-bytx5kbmnzpr",
         "aws_region": "eu-central-1",
         "paths": {
           "data/${cognito-identity.amazonaws.com:sub}/*": {

@@ -6,7 +6,7 @@ export const API_CONFIG: CreateAxiosDefaults = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Access-Control-Allow-Origin': '*', // Allow all origins
-    'Authorization': 'Bearer ' + 'YWI3YWViMGItYWIwMS00YTcyLWI0ODktYzZhYzdhYTEyMTlmOjFkSnRJLW1vU01LQzJYVFFxZkRiX3c=', //process.env.API_KEY,
+    'Authorization': 'Bearer ' + process.env.API_KEY,
   },
   withCredentials: true,
   timeout: 30000, // 30 second timeout
@@ -96,7 +96,7 @@ export class Client<T> {
     return response.data;
   }
 
-  async page(config: AxiosRequestConfig): Promise<Page<T> | null> {
+  async page(config: AxiosRequestConfig): Promise<Page<T>> {
 
     try {
       const response: AxiosResponse<Page<T>> = await this.client.get<Page<T>>('v1/' + this.entities, config);
@@ -122,12 +122,12 @@ export class Client<T> {
     }
   }
 
-  async next(cursor: string): Promise<Page<T> | null> {
+  async next(cursor: string): Promise<Page<T>> {
     return this.page({ params: { cursor } });
   }
 
 
-  async fetch(params: Params): Promise<Page<T> | null> {
+  async fetch(params: Params): Promise<Page<T>> {
     return this.page({ params });
   }
 }

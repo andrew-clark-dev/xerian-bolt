@@ -16,14 +16,12 @@ export type UserStatus = Schema['UserProfile']['type']['status'];
 
 
 export const initialSettings: UserSettings = {
-  apiKey: undefined,
   notifications: true,
   theme: 'light',
   hasLogin: false,
 };
 
 export interface UserSettings {
-  apiKey?: string;
   notifications: boolean;
   theme: 'light' | 'dark';
   hasLogin: false;

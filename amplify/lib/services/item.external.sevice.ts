@@ -1,8 +1,11 @@
 import { Schema } from "../../data/resource";
 import { Client, Params } from "../api/client2";
+import { ExternalUser } from "./user.external.sevice";
+
 
 export type Item = Schema['Item']['type'];
 export type ItemStatus = Schema['Item']['type']['status'];
+export type ItemGroup = Schema['ItemGroup']['type'];
 
 export interface ExternalItemStatus {
     active: number,
@@ -34,11 +37,7 @@ export interface ExternalItem {
     color: string | null,
     cost_per: number | null,
     created: string,
-    created_by: {
-        id: string,
-        name: string,
-        user_type: string,
-    },
+    created_by: ExternalUser,
     days_on_shelf?: number,
     deleted: string | null,
     description: string | null,
@@ -88,11 +87,10 @@ export const toItem = (externalItem: ExternalItem): Item => {
         description: externalItem.description,
         details: externalItem.details,
         condition: 'NotSpecified',
-        quantity: externalItem.quantity,
-        split: externalItem.split,
+        split: Math.trunc((externalItem.split ?? 0) * 100),
         price: externalItem.tag_price,
         status: toStatus(externalItem),
-        statuses: toStatuses(externalItem),
+        //        group: toGroup(externalItem),
         printedAt: externalItem.printed,
         lastSoldAt: externalItem.last_sold,
         lastViewedAt: externalItem.last_viewed,
@@ -101,25 +99,17 @@ export const toItem = (externalItem: ExternalItem): Item => {
     } as Item;
 }
 
-/**
-* Checks if an accoutn phone number indicates a mobile number based on Swiss mobile prefixes
-* @param exItem The account read from thee external system.
-* @returns A boolean indicating if the number is a mobile number
-*/
+
 export async function findFirstItem(query: string): Promise<Item | null> {
+    const { data } = await itemClient.fetch({ ...itemFetchParams, search: query });
 
-    const itemSearchEntries = await itemClient.fetch({ ...itemParams, search: query });
+    if (data.length === 0) { return null; }
 
-    if (!itemSearchEntries || itemSearchEntries.data.length === 0) {
-        return null;
-    }
-
-    return toItem(itemSearchEntries.data[0]);
+    return toItem(data[0]);
 
 }
 
 export function toStatus(exItem: ExternalItem): ItemStatus {
-    if (exItem.quantity ?? 1 > 1) return 'Multi'
     if (exItem.status.sold > 0) return 'Sold'
     if (exItem.status.active > 0) return 'Active'
     if (exItem.status.donated > 0) return 'Donated'
@@ -142,4 +132,12 @@ export function toStatuses(exItem: ExternalItem): ItemStatus[] | null {
     for (let i = 0; i < exItem.status.sold_on_shopify; i++) { statuses.push('Sold') }
     for (let i = 0; i < exItem.status.stolen; i++) { statuses.push('Stolen') }
     return statuses;
+}
+
+export function toGroup(exItem: ExternalItem): ItemGroup | null {
+    if (exItem.quantity ?? 1 == 1) { return null }
+    return {
+        quantity: exItem.quantity!,
+        statuses: toStatuses(exItem),
+    } as ItemGroup;
 }

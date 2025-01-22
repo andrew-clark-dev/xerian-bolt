@@ -2,11 +2,11 @@ import type { SQSHandler } from "aws-lambda";
 import { type Schema } from "../../data/resource";
 import { generateClient } from "aws-amplify/data";
 import { Logger } from "@aws-lambda-powertools/logger";
-import { ExternalAccount, toAccount } from "../../lib/services/account.external.sevice";
 import { Amplify } from "aws-amplify";
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import { env } from "$amplify/env/import-account-function";
-import AWS from "aws-sdk";
+import { SQS } from 'aws-sdk';
+import { ExternalItem, toItem } from "../../lib/services/item.external.sevice";
 import { provisionUser } from "../../lib/services/user.external.sevice";
 
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
@@ -16,12 +16,9 @@ const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
 Amplify.configure(resourceConfig, libraryOptions);
 
 const client = generateClient<Schema>();
-const sqs = new AWS.SQS();
+const sqs = new SQS();
 
-const logger = new Logger({
-    logLevel: "INFO",
-    serviceName: "import-account-function",
-});
+const logger = new Logger({ serviceName: "import-account-function" });
 
 
 export const handler: SQSHandler = async (event) => {
@@ -32,20 +29,20 @@ export const handler: SQSHandler = async (event) => {
             logger.info(`Processing record: ${JSON.stringify(record)}`);
             const body = JSON.parse(record.body);
             const user = body.createdBy;
-            const exAccount: ExternalAccount = body.account;
+            const exItem: ExternalItem = body.item;
 
-            const { data: account } = await client.models.Account.get({ number: exAccount.number });
+            const { data: item } = await client.models.Item.get({ sku: exItem.sku });
 
-            if (account) {
-                logger.info(`Account already exists: ${exAccount.number}`);
+            if (item) {
+                logger.info(`Item already exists: ${exItem.sku}`);
 
             } else {
                 const profile = await provisionUser(user.id, user.name);
                 const { errors: actionErrors } = await client.models.Action.create({
-                    description: `Import of account`,
-                    modelName: "Account",
+                    description: `Import of item`,
+                    modelName: "Item",
                     type: "Import",
-                    refId: exAccount.id,
+                    refId: exItem.id,
                     userId: profile.id,
                 });
 
@@ -53,9 +50,9 @@ export const handler: SQSHandler = async (event) => {
                     logger.error(`Failed to create import action - ${JSON.stringify(actionErrors)}`);
                 }
 
-                logger.info(`Creating account: ${exAccount.number}`);
+                logger.info(`Creating item: ${exItem.sku}`);
 
-                const { errors } = await client.models.Account.create(toAccount(exAccount));
+                const { errors } = await client.models.Item.create(toItem(exItem));
 
                 if (errors) {
                     logger.error(`Errors in creating account: ${JSON.stringify(errors)}`);
@@ -75,5 +72,3 @@ export const handler: SQSHandler = async (event) => {
     }
 
 }
-
-
