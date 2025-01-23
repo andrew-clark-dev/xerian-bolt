@@ -1,7 +1,7 @@
 import type { EventBridgeHandler } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { SQS } from 'aws-sdk';
-import { accountClient, accountFetchParams } from "../../lib/services/account.external.sevice";
+import { accountClient, accountParams } from "../../lib/services/account.external.sevice";
 
 const logger = new Logger({ serviceName: "fetch-external-accounts" });
 const sqs = new SQS();
@@ -11,7 +11,7 @@ export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: 
     logger.info("event", JSON.stringify(event, null, 2));
 
     try {
-        const fetchParams = accountFetchParams;
+        const fetchParams = accountParams;
         do {
             const page = await accountClient.fetch(fetchParams);
             for (const account of page?.data || []) {

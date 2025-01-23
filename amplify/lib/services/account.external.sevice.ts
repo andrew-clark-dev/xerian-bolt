@@ -1,5 +1,6 @@
 import { Schema } from "../../data/resource";
-import { Client, SearchClient, Params } from "../api/client2";
+import { Client, Params } from "../api/client2";
+import { ExternalUser } from "./user.external.sevice";
 
 export type Account = Schema['Account']['type'];
 
@@ -10,11 +11,7 @@ export interface ExternalAccount {
     last_item_entered?: string,
     last_settlement?: string,
     created: string,
-    created_by: {
-        id: string,
-        name: string,
-        user_type: string,
-    } | string,
+    created_by: ExternalUser,
     first_name: string | null,
     last_name: string | null,
     email: string | null,
@@ -29,29 +26,13 @@ export interface ExternalAccount {
     deleted?: string | null,
 }
 
-export const accountFetchParams: Params = {
+export const accountParams: Params = {
     include: ['created_by', 'last_activity', 'last_settlement', 'default_split', 'last_item_entered'],
     expand: ['created_by'],
     sort_by: 'created',
 }
 
-export const accountGetParams: Params = {
-    include: ['created_by', 'last_activity', 'last_settlement', 'default_split', 'last_item_entered'],
-}
-
 export const accountClient = new Client<ExternalAccount>('accounts');
-
-interface AccountSearchEntry {
-    company: string | null;
-    email: string | null;
-    first_name: string | null;
-    id: string;
-    last_name: string | null;
-    number: string;
-    phone_number: string | null;
-}
-
-export const accountSearchClient = new SearchClient<AccountSearchEntry>('accounts');
 
 export const toAccount = (externalAccount: ExternalAccount): Account => {
     // Map external data to our Account type
@@ -82,25 +63,12 @@ export const toAccount = (externalAccount: ExternalAccount): Account => {
     } as Account;
 }
 
-/**
-* Checks if an accoutn phone number indicates a mobile number based on Swiss mobile prefixes
-* @param exAccount The account read from thee external system.
-* @returns A boolean indicating if the number is a mobile number
-*/
 export async function findFirstAccount(query: string): Promise<Account | null> {
-    const accountSearchEntries = await accountSearchClient.search(query);
+    const { data } = await accountClient.fetch({ ...accountParams, search: query });
 
-    if (!accountSearchEntries || accountSearchEntries.length === 0) {
-        return null;
-    }
+    if (data.length === 0) { return null; }
 
-    const exAccount = await accountClient.getbyId(accountSearchEntries[0].id, accountGetParams);
-
-    if (!exAccount) {
-        return null;
-    }
-
-    return toAccount(exAccount);
+    return toAccount(data[0]);
 
 }
 

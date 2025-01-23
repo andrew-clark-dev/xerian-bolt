@@ -1,7 +1,7 @@
 import type { EventBridgeHandler } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { SQS } from 'aws-sdk';
-import { itemClient, itemFetchParams } from "../../lib/services/item.external.sevice";
+import { itemClient, itemParams } from "../../lib/services/item.external.sevice";
 import { type Schema } from "../../data/resource";
 import { generateClient } from "aws-amplify/data";
 import { Amplify } from "aws-amplify";
@@ -38,7 +38,7 @@ export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: 
         }
         let upTo = appConfig!.value!;
         logger.info(`upTo: ${upTo}`);
-        const fetchParams = itemFetchParams;
+        const fetchParams = itemParams;
         fetchParams['created:gte'] = upTo;
         do {
             const page = await itemClient.fetch(fetchParams);

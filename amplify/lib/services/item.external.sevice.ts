@@ -24,7 +24,6 @@ export interface ExternalItemStatus {
 }
 
 export interface ExternalItem {
-
     account: {
         id: string,
         number: string,
@@ -101,7 +100,7 @@ export const toItem = (externalItem: ExternalItem): Item => {
 
 
 export async function findFirstItem(query: string): Promise<Item | null> {
-    const { data } = await itemClient.fetch({ ...itemFetchParams, search: query });
+    const { data } = await itemClient.fetch({ ...itemParams, search: query });
 
     if (data.length === 0) { return null; }
 
