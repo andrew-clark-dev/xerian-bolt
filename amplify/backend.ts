@@ -7,10 +7,11 @@ import { data } from './data/resource';
 import { storage } from './storage/resource';
 import { createActionFunction } from './function/create-action/resource';
 import { findExternalAccount } from './data/external-account/resource';
-import { truncateTableFunction } from './data/truncate-table/resource';
+import { truncateTableFunction } from './function/truncate-table/resource';
 import { fetchAccountsFunction, importAccountFunction } from './function/sync-account/resource';
 import { fetchItemsFunction, importItemFunction } from './function/import-item/resource';
 import { QueueLambdaIntegration } from './backend/queue.lambda.integration';
+import { resetDataFunction } from './function/reset-data/resource';
 
 
 /**
@@ -23,6 +24,7 @@ const backend = defineBackend({
   createActionFunction,
   findExternalAccount,
   truncateTableFunction,
+  resetDataFunction,
   fetchAccountsFunction,
   importAccountFunction,
   fetchItemsFunction,
@@ -107,11 +109,13 @@ const transactionMapping = new EventSourceMapping(
 transactionMapping.node.addDependency(policy);
 
 
-// Extend ENV for truncateTable
+// Extend add environment and access for table functions
 for (const key in tables) {
   const t = tables[key];
   backend.truncateTableFunction.addEnvironment(`${key.toUpperCase()}_TABLE`, t.tableName)
+  backend.resetDataFunction.addEnvironment(`${key.toUpperCase()}_TABLE`, t.tableName)
   t.grantFullAccess(backend.truncateTableFunction.resources.lambda);
+  t.grantFullAccess(backend.resetDataFunction.resources.lambda);
 }
 
 // Set up import queues and integrate with Lambda functions

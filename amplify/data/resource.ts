@@ -1,5 +1,4 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
-import { truncateTableFunction } from './truncate-table/resource';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
 import { findExternalAccount } from './external-account/resource';
@@ -235,22 +234,10 @@ export const schema = a.schema({
       index("accountNumber"),
     ]),
 
-  truncateTable: a
-    .mutation()
-    // arguments that this query accepts
-    .arguments({
-      tablename: a.string()
-    })
-    // return type of the query
-    .returns(a.string())
-    .handler(a.handler.function(truncateTableFunction)),
-
 }).authorization(allow => [
   allow.group('Employee'), // default to employee
   allow.resource(postConfirmation),
   allow.resource(createActionFunction),
-  // allow.resource(truncateTableFunction),
-  // allow.resource(fetchAccountUpdatesFunction),
   allow.resource(importAccountFunction),
   allow.resource(findExternalAccount),
   allow.resource(findExternalItem),

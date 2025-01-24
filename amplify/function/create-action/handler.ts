@@ -15,10 +15,7 @@ Amplify.configure(resourceConfig, libraryOptions);
 
 const client = generateClient<Schema>();
 
-const logger = new Logger({
-    logLevel: "INFO",
-    serviceName: "create-action-function",
-});
+const logger = new Logger({ serviceName: "create-action-function" });
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
