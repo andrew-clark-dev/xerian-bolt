@@ -37,6 +37,7 @@ export const handler: DynamoDBStreamHandler = async (event) => {
                 logger.info(`New ${modelName} Image: ${JSON.stringify(newImage)}`);
                 const { errors } = await client.models.Action.create({
                     type: "Create",
+                    typeIndex: "Create",
                     description: `Created ${modelName} - (auto-log)`,
                     userId: newImage.lastActivityBy.S,
                     modelName: modelName,
@@ -72,56 +73,52 @@ export const handler: DynamoDBStreamHandler = async (event) => {
                 const modelName = newImage.__typename.S;
                 logger.info(`New ${modelName} Image: ${JSON.stringify(newImage)}`);
                 logger.info(`Old ${modelName} Image: ${JSON.stringify(oldImage)}`);
-                const { errors } = await client.models.Action.create({
-                    type: "Update",
-                    description: `Updated ${modelName} - (auto-log)`,
-                    userId: newImage.lastActivityBy.S,
-                    modelName: modelName,
-                    refId: newImage.id.S,
-                    before: JSON.stringify(oldImage),
-                    after: JSON.stringify(newImage)
-                });
-
-                if (errors) {
-                    console.error(`Errors in creating action:`, errors);
-                    fail.push({ itemIdentifier: newImage.id.S! });
+                if ((newImage.deletedAt ?? null) == null) {
+                    const { errors } = await client.models.Action.create({
+                        type: "Update",
+                        typeIndex: "Update",
+                        description: `Updated ${modelName} - (auto-log)`,
+                        userId: newImage.lastActivityBy.S,
+                        modelName: modelName,
+                        refId: newImage.id.S,
+                        before: JSON.stringify(oldImage),
+                        after: JSON.stringify(newImage)
+                    });
+                    if (errors) {
+                        console.error(`Errors in creating action:`, errors);
+                        fail.push({ itemIdentifier: newImage.id.S! });
+                    }
+                } else {
+                    const { errors } = await client.models.Action.create({
+                        type: "Delete",
+                        typeIndex: "Delete",
+                        description: `Deleted ${modelName} - (auto-log)`,
+                        userId: newImage.lastActivityBy.S,
+                        modelName: modelName,
+                        refId: newImage.id.S,
+                        before: JSON.stringify(oldImage)
+                    });
+                    if (errors) {
+                        console.error(`Errors in creating action:`, errors);
+                        fail.push({ itemIdentifier: newImage.id.S! });
+                    }
+                    const params = {
+                        TableName: env.COUNTER_TABLE_NAME,
+                        Key: { name: `${modelName}Total` },
+                        UpdateExpression: `ADD val :plusOne`,
+                        ExpressionAttributeValues: { ':plusOne': -1 },
+                        ReturnValues: 'UPDATED_NEW',
+                    };
+                    try {
+                        const result = await dynamoDb.update(params).promise();
+                        logger.info(`Counter updated: ${JSON.stringify(result)}`);
+                    } catch (error) {
+                        logger.error(`Errors in decrementing count: ${error}`);
+                        fail.push({ itemIdentifier: newImage.id.S! });
+                        continue;
+                    }
                 }
 
-                // } else if (record.eventName === "REMOVE") {
-                //     // business logic to process deleted records
-                //     const oldImage = record.dynamodb!.OldImage!;
-                //     const modelName = oldImage.__typename.S;
-                //     logger.info(`Old ${modelName} Image: ${JSON.stringify(oldImage)}`);
-                //     const { errors } = await client.models.Action.create({
-                //         type: "Delete",
-                //         description: `Deleted ${modelName} - (auto-log)`,
-                //         userId: oldImage.lastActivityBy.S,
-                //         modelName: modelName,
-                //         refId: oldImage.id.S,
-                //         before: JSON.stringify(oldImage)
-                //     });
-
-                //     if (errors) {
-                //         console.error(`Errors in creating action:`, errors);
-                //         fail.push({ itemIdentifier: oldImage.id.S! });
-                //         continue;
-                //     }
-
-                //     const params = {
-                //         TableName: env.COUNTER_TABLE_NAME,
-                //         Key: { name: [`${modelName}Total`] },
-                //         UpdateExpression: `ADD val :minusOne`,
-                //         ExpressionAttributeValues: { ':minusOne': -1 },
-                //         ReturnValues: 'UPDATED_NEW',
-                //     };
-                //     try {
-                //         const result = await dynamoDb.update(params).promise();
-                //         logger.info(`Counter updated: ${JSON.stringify(result)}`);
-                //     } catch (error) {
-                //         console.error(`Error in decrementing count:`, error);
-                //         fail.push({ itemIdentifier: oldImage.id.S! });
-                //         continue;
-                //     }
             }
         } catch (error) {
             console.error(`Error creating profile:`, error);

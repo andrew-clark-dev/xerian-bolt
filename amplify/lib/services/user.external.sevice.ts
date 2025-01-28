@@ -41,6 +41,7 @@ export async function provisionUser(id: string, name: string): Promise<UserProfi
             description: `Import of account creating a user profile`,
             modelName: "UserProfile",
             type: "Import",
+            typeIndex: "Import",
             refId: id
         });
 

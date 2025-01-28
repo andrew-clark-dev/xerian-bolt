@@ -50,12 +50,13 @@ export const schema = a.schema({
       modelName: a.string(),
       refId: a.id(), // Loose coupling for now
       type: a.enum(["Create", "Read", "Update", "Delete", "Search", "Import", "Export", "Increment", "Decrement", "Auth"]),
+      typeIndex: a.string().required(),
       userId: a.id(),
       createdBy: a.belongsTo('UserProfile', 'userId'),
       before: a.json(),
       after: a.json(),
     })
-    .secondaryIndexes((index) => [index("refId"), index("userId")]),
+    .secondaryIndexes((index) => [index("refId"), index("userId"), index("typeIndex")]),
 
   Comment: a
     .model({
@@ -130,6 +131,7 @@ export const schema = a.schema({
     .identifier(['number'])
     .secondaryIndexes((index) => [
       index("id"),
+      index("status"),
       index("deletedAt").sortKeys(["number", "createdAt", "balance"]),
     ]),
 

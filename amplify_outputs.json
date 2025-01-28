@@ -1021,6 +1021,16 @@
             {
               "type": "key",
               "properties": {
+                "name": "accountsByStatus",
+                "queryField": "listAccountByStatus",
+                "fields": [
+                  "status"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
                 "name": "accountsByDeletedAtAndNumberAndCreatedAtAndBalance",
                 "queryField": "listAccountByDeletedAtAndNumberAndCreatedAtAndBalance",
                 "fields": [
