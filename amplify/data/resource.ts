@@ -4,6 +4,8 @@ import { createActionFunction } from '../function/create-action/resource';
 import { findExternalAccount } from './external-account/resource';
 import { importAccountFunction } from '../function/sync-account/resource';
 import { findExternalItem } from './external-item/resource';
+import { fetchItemsFunction } from '../function/import-item/resource';
+import { importItemFunction } from '../function/import-item/resource';
 
 export const schema = a.schema({
 
@@ -201,7 +203,6 @@ export const schema = a.schema({
 
   ItemCategory: a
     .model({
-      id: a.id().required(),
       lastActivityBy: a.id().required(),
       kind: a.string().required(),
       name: a.string().required(),
@@ -212,7 +213,6 @@ export const schema = a.schema({
     })
     .identifier(['kind', 'name'])
     .secondaryIndexes((index) => [
-      index("id"),
       index("matchNames"),
       index("kind"),
     ]),
@@ -222,7 +222,9 @@ export const schema = a.schema({
       lastActivityBy: a.id().required(),
       type: a.enum(["Sale", "Refund", "Payout", "Reversal"]),
       paymentType: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
+      channel: a.string(),
       amount: a.integer().required(),
+      time: a.datetime().required(),
       linkedTransaction: a.string(),  // for refund link to sale, or for a reversal link to original
       itemSku: a.string(),
       item: a.belongsTo("Item", "itemSku"),
@@ -243,6 +245,8 @@ export const schema = a.schema({
   allow.resource(importAccountFunction),
   allow.resource(findExternalAccount),
   allow.resource(findExternalItem),
+  allow.resource(fetchItemsFunction),
+  allow.resource(importItemFunction),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

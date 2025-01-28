@@ -4,10 +4,11 @@ export const fetchItemsFunction = defineFunction({
     name: "fetch-items-function",
     entry: "./fetch.handler.ts",
     resourceGroupName: "data",
-    timeoutSeconds: 900,
+    timeoutSeconds: 30, // TODO set to 900
     environment: {  // environment variables
         API_KEY: secret('CC_API_KEY'),
         BASE_URL: 'https://api.consigncloud.com/api/',
+        MESSAGE_GROUP_ID: 'item-fetch-group',
     },
 });
 

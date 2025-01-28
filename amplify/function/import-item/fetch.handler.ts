@@ -6,7 +6,7 @@ import { type Schema } from "../../data/resource";
 import { generateClient } from "aws-amplify/data";
 import { Amplify } from "aws-amplify";
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
-import { env } from "$amplify/env/import-account-function";
+import { env } from "$amplify/env/fetch-items-function";
 
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
     env
@@ -19,7 +19,9 @@ const APP_CONFIG_NAME = 'imported_ttems_up_to';
 
 const logger = new Logger({ serviceName: "fetch-external-items" });
 const sqs = new SQS();
-const queueUrl = process.env['IMPORT_QUEUE_URL']!;
+const queueUrl = process.env['QUEUE_URL']!;
+const messageGroupId = process.env['MESSAGE_GROUP_ID']!;
+
 // Threshold to exit early (e.g., 5000 ms = 5 seconds)
 const threshold = 5000;
 let earlyExit = false;
@@ -28,13 +30,16 @@ export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: 
     logger.info("event", JSON.stringify(event, null, 2));
 
     try {
+        logger.info(`Get config: ${APP_CONFIG_NAME}`);
 
         let { data: appConfig } = await client.models.AppConfig.get({ name: APP_CONFIG_NAME });
 
         if (!appConfig) {
             // Create AppConfig if it doesn't exist, initialized to 2000-01-01
+            logger.warn(`Config not found - creating : ${APP_CONFIG_NAME}`);
             const { data } = await client.models.AppConfig.create({ name: APP_CONFIG_NAME, value: new Date(2000, 1, 1).toISOString() });
             appConfig = data;
+            logger.info(`Config created : ${JSON.stringify(appConfig, null, 2)}`);
         }
         let upTo = appConfig!.value!;
         logger.info(`upTo: ${upTo}`);
@@ -49,6 +54,7 @@ export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: 
                         createdBy: item.created_by,
                         item: item,
                     }),
+                    MessageGroupId: messageGroupId
                 };
                 try {
                     sqs.sendMessage(params, (err, data) => {

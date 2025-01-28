@@ -67,14 +67,16 @@ export interface Params {
 export class Client<T> {
   private client: AxiosInstance;
   private entities: 'items' | 'accounts';
-  constructor(entities: 'items' | 'accounts') {  // Add entities parameter
+  private subpath: string;
+  constructor(entities: 'items' | 'accounts', subpath?: string) {  // Add entities parameter
     this.entities = entities;
     this.client = axios.create(API_CONFIG);
+    this.subpath = subpath ?? '';
   }
 
   async getbyId(id: string, params?: Params): Promise<T | null> {
 
-    const response: AxiosResponse<T> = await this.client.get<T>('v1/' + this.entities + '/' + id, { params });
+    const response: AxiosResponse<T> = await this.client.get<T>('v1/' + this.entities + '/' + id + this.subpath, { params });
 
     if (response.status !== 200) {
       console.error('GET request failed:', response.status, response.data);

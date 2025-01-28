@@ -4,9 +4,9 @@ import { generateClient } from "aws-amplify/data";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Amplify } from "aws-amplify";
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
-import { env } from "$amplify/env/import-account-function";
+import { env } from "$amplify/env/import-item-function";
 import { SQS } from 'aws-sdk';
-import { ExternalItem, toItem } from "../../lib/services/item.external.sevice";
+import { ExternalItem, toCategories, toItem } from "../../lib/services/item.external.sevice";
 import { provisionUser } from "../../lib/services/user.external.sevice";
 
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
@@ -18,7 +18,7 @@ Amplify.configure(resourceConfig, libraryOptions);
 const client = generateClient<Schema>();
 const sqs = new SQS();
 
-const logger = new Logger({ serviceName: "import-account-function" });
+const logger = new Logger({ serviceName: "import-item-function" });
 
 
 export const handler: SQSHandler = async (event) => {
@@ -53,12 +53,23 @@ export const handler: SQSHandler = async (event) => {
 
                 logger.info(`Creating item: ${exItem.sku}`);
 
-                const { errors } = await client.models.Item.create(toItem(exItem));
-
+                const { data, errors } = await client.models.Item.create(toItem(exItem));
                 if (errors) {
-                    logger.error(`Errors in creating account: ${JSON.stringify(errors)}`);
+                    logger.error(`Errors in creating item : ${JSON.stringify(errors)}`);
                     continue;
                 }
+
+                if (data) {
+                    const { category, brand, color, size } = toCategories(data);
+                    await client.models.ItemCategory.create(category);
+                    await client.models.ItemCategory.create(brand);
+                    await client.models.ItemCategory.create(color);
+                    await client.models.ItemCategory.create(size);
+                } else {
+                    logger.error(`Data is null, cannot categorize item.`);
+                    continue;
+                }
+
             }
 
             // Delete the message from the queue upon successful processing
