@@ -8,6 +8,7 @@ const client = generateClient<Schema>();
 export type Account = Schema['Account']['type'];
 export type AccountUpdate = Partial<Omit<Account, 'number' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>> & { number: string };
 export type AccountCreate = Omit<Account, 'id' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>;
+
 export type AccountStatus = Schema['Account']['type']['status'];
 
 interface ListAccountsOptions {
@@ -39,6 +40,13 @@ class AccountService {
   async updateAccount(update: AccountUpdate): Promise<Account> {
 
     const response = await client.models.Account.update({ ...update, lastActivityBy: await currentUserId() });
+
+    return checkedResponse(response) as Account;
+  }
+
+  async deleteAccount(number: string): Promise<Account> {
+
+    const response = await client.models.Account.update({ number, deletedAt: new Date().toISOString(), lastActivityBy: await currentUserId() });
 
     return checkedResponse(response) as Account;
   }
