@@ -25,7 +25,7 @@ export const resetCount = async (modelName: string, counterTable: string) => {
         TableName: counterTable,
         Item: {
             name: `${modelName}Total`,
-            value: 0,
+            val: 0,
             createdAt: new Date().toISOString(), // Add/update timestamp
             updatedAt: new Date().toISOString(), // Add/update timestamp
             __typename: 'Counter',
