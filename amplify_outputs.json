@@ -339,6 +339,13 @@
               "isRequired": false,
               "attributes": []
             },
+            "typeIndex": {
+              "name": "typeIndex",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
             "userId": {
               "name": "userId",
               "isArray": false,
@@ -406,6 +413,16 @@
                 "queryField": "listActionByRefId",
                 "fields": [
                   "refId"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "actionsByTypeIndex",
+                "queryField": "listActionByTypeIndex",
+                "fields": [
+                  "typeIndex"
                 ]
               }
             },

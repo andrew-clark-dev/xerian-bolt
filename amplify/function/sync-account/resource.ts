@@ -9,6 +9,7 @@ export const fetchAccountsFunction = defineFunction({
     environment: {  // environment variables
         API_KEY: secret('CC_API_KEY'),
         BASE_URL: 'https://api.consigncloud.com/api/',
+        MESSAGE_GROUP_ID: 'account-fetch-group',
     },
 });
 
