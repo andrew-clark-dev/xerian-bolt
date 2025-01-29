@@ -1,5 +1,5 @@
 import { Schema } from "../../data/resource";
-import { Client, Params } from "../api/client2";
+import { ApiClient, Params, Page } from "../api/client";
 import { ExternalUser } from "./user.external.sevice";
 
 
@@ -7,6 +7,11 @@ export type Item = Schema['Item']['type'];
 export type ItemStatus = Schema['Item']['type']['status'];
 export type ItemGroup = Schema['ItemGroup']['type'];
 export type ItemCategory = Schema['ItemCategory']['type'];
+
+
+export const ITEM_URL = 'v1/items';
+
+export const importUserId = 'f838ed77-7eec-4d85-85f8-ca022ff42a84';
 
 export interface ExternalItemStatus {
     active: number,
@@ -62,14 +67,6 @@ export interface ExternalItem {
 
 }
 
-export const itemParams: Params = {
-    include: ['created_by', 'days_on_shelf', 'last_sold', 'last_viewed', 'printed', 'split_price', 'tax_exempt', 'quantity'],
-    expand: ['created_by', 'category', 'account'],
-    sort_by: 'created',
-}
-
-export const itemClient = new Client<ExternalItem>('items');
-
 export const toItem = (externalItem: ExternalItem): Item => {
     // Map external data to our Item type
     const created_by_id = typeof externalItem.created_by === "string" ? externalItem.created_by : externalItem.created_by.id;
@@ -99,7 +96,6 @@ export const toItem = (externalItem: ExternalItem): Item => {
     } as Item;
 }
 
-
 export const toCategories = (item: Item): { category: ItemCategory, brand: ItemCategory, color: ItemCategory, size: ItemCategory } => {
     return {
         category: { name: item.category, lastActivityBy: item.lastActivityBy, kind: 'category', matchNames: item.category } as ItemCategory,
@@ -110,13 +106,29 @@ export const toCategories = (item: Item): { category: ItemCategory, brand: ItemC
 
 }
 
-export async function findFirstItem(query: string): Promise<Item | null> {
-    const { data } = await itemClient.fetch({ ...itemParams, search: query });
+export const itemParams: Params = {
+    include: ['created_by', 'days_on_shelf', 'last_sold', 'last_viewed', 'printed', 'split_price', 'tax_exempt', 'quantity'],
+    expand: ['created_by', 'category', 'account'],
+    sort_by: 'created',
+}
+
+export const itemClient = new ApiClient<ExternalItem>(ITEM_URL);
+
+export async function findFirst(query: string): Promise<Item | null> {
+    const { data } = await itemClient.fetch({ ...itemParams, ...{ search: query } });
 
     if (data.length === 0) { return null; }
 
     return toItem(data[0]);
 
+}
+
+export async function paged(cursor?: string | null): Promise<Page<ExternalItem>> {
+    if (cursor) {
+        return itemClient.next(cursor);
+    } else {
+        return itemClient.fetch(itemParams);
+    }
 }
 
 export function toStatus(exItem: ExternalItem): ItemStatus {
@@ -144,10 +156,10 @@ export function toStatuses(exItem: ExternalItem): ItemStatus[] | null {
     return statuses;
 }
 
-export function toGroup(exItem: ExternalItem): ItemGroup | null {
-    if (exItem.quantity ?? 1 == 1) { return null }
+export function toGroup(exItem: ExternalItem): ItemGroup {
     return {
         quantity: exItem.quantity!,
         statuses: toStatuses(exItem),
+        itemSku: exItem.sku,
     } as ItemGroup;
 }

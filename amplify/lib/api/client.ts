@@ -1,48 +1,9 @@
 import { RestClient, IRequestOptions, IRestResponse } from 'typed-rest-client/RestClient';
 
+export const BASE_URL = process.env.BASE_URL || '/api';
 
-interface SearchResults<T> {
-  results: {
-    document: T;
-    entity_type: string;
-  }[];
-}
-
-export class SearchClient<T> {
-  private client: RestClient;
-  private entities: 'items' | 'accounts';
-  constructor(entities: 'items' | 'accounts') {  // Add entities parameter
-    this.entities = entities;
-    this.client = new RestClient('search-client', 'https://api.consigncloud.com/api/', [], {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer YWI3YWViMGItYWIwMS00YTcyLWI0ODktYzZhYzdhYTEyMTlmOnZsN0UybnZpaTdPYldIb0QwdFF5bVE='
-      }
-    });
-
-  }
-
-  async get(options: IRequestOptions): Promise<T[] | null> {
-
-    const response: IRestResponse<SearchResults<T>> = await this.client.get<SearchResults<T>>('v1/search', options);
-
-    if (response.statusCode !== 200) {
-      console.error('GET request failed:', response.statusCode, response.result);
-      throw new Error('GET request failed');
-    }
-
-    const result = response.result!.results.map((result) => {
-      return result.document;
-    });
-
-    return result;
-  }
-
-  async search(query: string): Promise<T[] | null> {
-    return this.get({ queryParameters: { params: { query, entities: [this.entities] } } });
-  }
-
+export interface Params {
+  [name: string]: string | number | (string | number)[];
 }
 
 export interface Page<T> {
@@ -51,21 +12,35 @@ export interface Page<T> {
   next_cursor: string | null;
 }
 
-export interface Params {
-  [name: string]: string | number | (string | number)[];
+export interface SearchResults<T> {
+  results: {
+    document: T;
+    entity_type: string;
+  }[];
 }
 
-export class Client<T> {
+export class ApiClient<T> {
   private client: RestClient;
-  private entities: 'items' | 'accounts';
-  constructor(entities: 'items' | 'accounts') {  // Add entities parameter
-    this.entities = entities;
-    this.client = new RestClient('import-' + entities + '-client', 'https://api.consigncloud.com/api');
+  private path: string;
+  constructor(path: string) {  // root path of the entity
+    this.path = path;
+    this.client = new RestClient('cc-client', BASE_URL, [], {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*', // Allow all origins
+        'Authorization': 'Bearer ' + process.env.API_KEY, // API_KEY is a secret
+      }
+    });
+
   }
 
-  async getbyId(id: string): Promise<T | null> {
+  async get(id: string, params?: Params): Promise<T | null> {
 
-    const response: IRestResponse<T> = await this.client.get<T>('/v1/' + this.entities + '/' + id);
+    const getPath = id ? this.path + '/' + id : this.path;
+    const options: IRequestOptions = params ? { queryParameters: { params } } : {};
+
+    const response: IRestResponse<T> = await this.client.get<T>(getPath, options);
 
     if (response.statusCode !== 200) {
       console.error('GET request failed:', response.statusCode, response.result);
@@ -75,36 +50,34 @@ export class Client<T> {
     return response.result;
   }
 
-  async get(options: IRequestOptions): Promise<T | null> {
+  async list(params?: Params): Promise<T[]> {
 
-    const response: IRestResponse<T> = await this.client.get<T>('/v1/' + this.entities, options);
+    return (await this.fetch(params)).data;
+
+  }
+
+  private async page(path: string, params?: Params): Promise<Page<T>> {
+
+    const response: IRestResponse<Page<T>> = await this.client.get<Page<T>>(path, this.requestOptions(params));
 
     if (response.statusCode !== 200) {
       console.error('GET request failed:', response.statusCode, response.result);
       throw new Error('GET request failed');
     }
 
-    return response.result;
+    return response.result ?? { count: 0, data: [], next_cursor: null };
   }
 
-  async page(options: IRequestOptions): Promise<Page<T> | null> {
-
-    const response: IRestResponse<Page<T>> = await this.client.get<Page<T>>('/v1/' + this.entities, options);
-
-    if (response.statusCode !== 200) {
-      console.error('GET request failed:', response.statusCode, response.result);
-      throw new Error('GET request failed');
-    }
-
-    return response.result;
-  }
-  async next(cursor: string): Promise<Page<T> | null> {
-    return this.page({ queryParameters: { params: { cursor } } });
+  async fetch(params?: Params): Promise<Page<T>> {
+    return this.page(this.path, params);
   }
 
-
-  async fetch(params: Params): Promise<Page<T> | null> {
-    return this.page({ queryParameters: { params } });
+  async next(cursor: string): Promise<Page<T>> {
+    return this.page(this.path, { cursor: cursor });
   }
+
+  private requestOptions(params?: Params): IRequestOptions | undefined {
+    return params ? { queryParameters: { params: params } } : undefined;
+  }
+
 }
-

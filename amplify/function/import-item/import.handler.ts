@@ -6,8 +6,9 @@ import { Amplify } from "aws-amplify";
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import { env } from "$amplify/env/import-item-function";
 import { SQS } from 'aws-sdk';
-import { ExternalItem, toCategories, toItem } from "../../lib/services/item.external.sevice";
+import { ExternalItem, toCategories, toGroup, toItem } from "../../lib/services/item.external.sevice";
 import { provisionUser } from "../../lib/services/user.external.sevice";
+import { getSales } from "../../lib/services/sale.external.sevice";
 
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
     env
@@ -53,14 +54,15 @@ export const handler: SQSHandler = async (event) => {
 
                 logger.info(`Creating item: ${exItem.sku}`);
 
-                const { data, errors } = await client.models.Item.create(toItem(exItem));
+                const { data: item, errors } = await client.models.Item.create(toItem(exItem));
                 if (errors) {
                     logger.error(`Errors in creating item : ${JSON.stringify(errors)}`);
                     continue;
                 }
 
-                if (data) {
-                    const { category, brand, color, size } = toCategories(data);
+                if (item) {
+                    logger.info(`Creating item categories: ${exItem.sku}`);
+                    const { category, brand, color, size } = toCategories(item);
                     await client.models.ItemCategory.create(category);
                     await client.models.ItemCategory.create(brand);
                     await client.models.ItemCategory.create(color);
@@ -70,6 +72,20 @@ export const handler: SQSHandler = async (event) => {
                     continue;
                 }
 
+                if ((exItem.quantity ?? 0) > 0) {
+                    logger.info(`Creating item group, quatity : ${exItem.quantity}`);
+                    const { errors } = await client.models.ItemGroup.create(toGroup(exItem));
+                    if (errors) {
+                        logger.error(`Errors in creating item group : ${JSON.stringify(errors)}`);
+                    }
+                }
+
+                (await getSales(exItem)).forEach(async (sale) => {
+                    const { errors } = await client.models.Transaction.create(sale);
+                    if (errors) {
+                        logger.error(`Errors in creating item sale transaction : ${JSON.stringify(errors)}`);
+                    }
+                });
             }
 
             // Delete the message from the queue upon successful processing

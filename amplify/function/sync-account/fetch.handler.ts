@@ -1,21 +1,20 @@
 import type { EventBridgeHandler } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { SQS } from 'aws-sdk';
-import { accountClient, accountParams } from "../../lib/services/account.external.sevice";
+import { paged } from "../../lib/services/account.external.sevice";
 
 const logger = new Logger({ serviceName: "fetch-external-accounts" });
 const sqs = new SQS();
 const queueUrl = process.env['QUEUE_URL']!;
 const messageGroupId = process.env['MESSAGE_GROUP_ID']!;
 
-
 export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: number, body: string }> = async (event) => {
     logger.info("event", JSON.stringify(event, null, 2));
 
     try {
-        const fetchParams = accountParams;
+        let cursor: string | null = null;
         do {
-            const page = await accountClient.fetch(fetchParams);
+            const page = await paged(cursor);
             logger.info(`Processing fecthed page - total:  ${page.count}, pagesize : ${page?.data.length || 'None'} `);
             for (const account of page?.data || []) {
                 const params = {
@@ -40,9 +39,9 @@ export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: 
                     throw error;
                 }
 
-                fetchParams.cursor = page?.next_cursor || null;
+                cursor = page?.next_cursor;
             }
-        } while (fetchParams.cursor);
+        } while (cursor);
 
         logger.info('Event processed successfully');
         return {

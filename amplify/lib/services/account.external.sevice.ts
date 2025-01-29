@@ -1,8 +1,10 @@
 import { Schema } from "../../data/resource";
-import { Client, Params } from "../api/client2";
+import { ApiClient, Page, Params } from "../api/client";
 import { ExternalUser } from "./user.external.sevice";
 
 export type Account = Schema['Account']['type'];
+
+export const ACCOUNT_URL = 'v1/accounts';
 
 export interface ExternalAccount {
     id: string,
@@ -32,7 +34,7 @@ export const accountParams: Params = {
     sort_by: 'created',
 }
 
-export const accountClient = new Client<ExternalAccount>('accounts');
+
 
 export const toAccount = (externalAccount: ExternalAccount): Account => {
     // Map external data to our Account type
@@ -63,8 +65,10 @@ export const toAccount = (externalAccount: ExternalAccount): Account => {
     } as Account;
 }
 
-export async function findFirstAccount(query: string): Promise<Account | null> {
-    const { data } = await accountClient.fetch({ ...accountParams, search: query });
+export const accountClient = new ApiClient<ExternalAccount>(ACCOUNT_URL);
+
+export async function findFirst(query: string): Promise<Account | null> {
+    const { data } = await accountClient.fetch({ ...accountParams, ...{ search: query } });
 
     if (data.length === 0) { return null; }
 
@@ -72,6 +76,13 @@ export async function findFirstAccount(query: string): Promise<Account | null> {
 
 }
 
+export async function paged(cursor?: string | null): Promise<Page<ExternalAccount>> {
+    if (cursor) {
+        return accountClient.next(cursor);
+    } else {
+        return accountClient.fetch(accountParams);
+    }
+}
 
 /**
 * Checks if an accoutn phone number indicates a mobile number based on Swiss mobile prefixes

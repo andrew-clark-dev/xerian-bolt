@@ -7,7 +7,7 @@ export const fetchItemsFunction = defineFunction({
     timeoutSeconds: 30, // TODO set to 900
     environment: {  // environment variables
         API_KEY: secret('CC_API_KEY'),
-        BASE_URL: 'https://api.consigncloud.com/api/',
+        BASE_URL: 'https://api.consigncloud.com/api',
         MESSAGE_GROUP_ID: 'item-fetch-group',
     },
 });

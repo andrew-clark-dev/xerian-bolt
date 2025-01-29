@@ -1,12 +1,13 @@
 import type { EventBridgeHandler } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { SQS } from 'aws-sdk';
-import { itemClient, itemParams } from "../../lib/services/item.external.sevice";
+import { importUserId, paged } from "../../lib/services/item.external.sevice";
 import { type Schema } from "../../data/resource";
 import { generateClient } from "aws-amplify/data";
 import { Amplify } from "aws-amplify";
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import { env } from "$amplify/env/fetch-items-function";
+import { provisionUser } from "../../lib/services/user.external.sevice";
 
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
     env
@@ -15,7 +16,7 @@ const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
 Amplify.configure(resourceConfig, libraryOptions);
 const client = generateClient<Schema>();
 
-const APP_CONFIG_NAME = 'imported_ttems_up_to';
+const APP_CONFIG_NAME = 'imported_items_up_to';
 
 const logger = new Logger({ serviceName: "fetch-external-items" });
 const sqs = new SQS();
@@ -28,6 +29,7 @@ let earlyExit = false;
 
 export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: number, body: string }> = async (event, context) => {
     logger.info("event", JSON.stringify(event, null, 2));
+    await provisionUser(importUserId, 'Import Item Function');
 
     try {
         logger.info(`Get config: ${APP_CONFIG_NAME}`);
@@ -43,10 +45,10 @@ export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: 
         }
         let upTo = appConfig!.value!;
         logger.info(`upTo: ${upTo}`);
-        const fetchParams = itemParams;
-        fetchParams['created:gte'] = upTo;
+        let cursor: string | null = null;
+
         do {
-            const page = await itemClient.fetch(fetchParams);
+            const page = await paged(cursor);
             for (const item of page?.data || []) {
                 const params = {
                     QueueUrl: queueUrl,
@@ -69,12 +71,12 @@ export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: 
                 }
                 upTo = item.created;
             }
-            fetchParams.cursor = page?.next_cursor || null;
+            cursor = page?.next_cursor || null;
 
             const remainingTime = context.getRemainingTimeInMillis();
             earlyExit = remainingTime < threshold;
 
-        } while (fetchParams.cursor && !earlyExit);
+        } while (cursor && !earlyExit);
 
         if (earlyExit) { logger.warn(`Early exit triggered.`) }
 
