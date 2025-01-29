@@ -8,8 +8,8 @@ import { storage } from './storage/resource';
 import { createActionFunction } from './function/create-action/resource';
 import { findExternalAccount } from './data/external-account/resource';
 import { truncateTableFunction } from './function/truncate-table/resource';
-import { fetchAccountsFunction, importAccountFunction } from './function/sync-account/resource';
-import { fetchItemsFunction, importItemFunction } from './function/import-item/resource';
+import { fetchAccountsFunction, importAccountFunction } from './function/import-accounts/resource';
+import { fetchItemsFunction, importItemFunction } from './function/import-items/resource';
 import { QueueLambdaIntegration } from './backend/queue.lambda.integration';
 import { resetDataFunction } from './function/reset-data/resource';
 
