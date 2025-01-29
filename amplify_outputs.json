@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "eu-central-1_E6TUGiCrg",
+    "user_pool_id": "eu-central-1_ZlEvvOk62",
     "aws_region": "eu-central-1",
-    "user_pool_client_id": "5akcd58h0advv7bjgc0n9lonl9",
-    "identity_pool_id": "eu-central-1:0074f262-97b0-44ce-869a-6b3959a90b1c",
+    "user_pool_client_id": "15v21ltvvu2qto2tu3ijt36iuv",
+    "identity_pool_id": "eu-central-1:86180a49-5b8d-4ea8-a638-9769d8c612e1",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -52,7 +52,7 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://hipxaq3eobbvfaghk6sqlk773q.appsync-api.eu-central-1.amazonaws.com/graphql",
+    "url": "https://edyex2faljfwxn6qjojoaq766m.appsync-api.eu-central-1.amazonaws.com/graphql",
     "aws_region": "eu-central-1",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
@@ -339,6 +339,13 @@
               "isRequired": false,
               "attributes": []
             },
+            "typeIndex": {
+              "name": "typeIndex",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
             "userId": {
               "name": "userId",
               "isArray": false,
@@ -406,6 +413,16 @@
                 "queryField": "listActionByRefId",
                 "fields": [
                   "refId"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "actionsByTypeIndex",
+                "queryField": "listActionByTypeIndex",
+                "fields": [
+                  "typeIndex"
                 ]
               }
             },
@@ -1021,6 +1038,16 @@
             {
               "type": "key",
               "properties": {
+                "name": "accountsByStatus",
+                "queryField": "listAccountByStatus",
+                "fields": [
+                  "status"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
                 "name": "accountsByDeletedAtAndNumberAndCreatedAtAndBalance",
                 "queryField": "listAccountByDeletedAtAndNumberAndCreatedAtAndBalance",
                 "fields": [
@@ -1441,13 +1468,6 @@
         "ItemCategory": {
           "name": "ItemCategory",
           "fields": {
-            "id": {
-              "name": "id",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
             "lastActivityBy": {
               "name": "lastActivityBy",
               "isArray": false,
@@ -1511,16 +1531,6 @@
                 "fields": [
                   "kind",
                   "name"
-                ]
-              }
-            },
-            {
-              "type": "key",
-              "properties": {
-                "name": "itemCategoriesById",
-                "queryField": "listItemCategoryById",
-                "fields": [
-                  "id"
                 ]
               }
             },
@@ -1609,10 +1619,24 @@
               "isRequired": false,
               "attributes": []
             },
+            "channel": {
+              "name": "channel",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
             "amount": {
               "name": "amount",
               "isArray": false,
               "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
+            "time": {
+              "name": "time",
+              "isArray": false,
+              "type": "AWSDateTime",
               "isRequired": true,
               "attributes": []
             },
@@ -1922,31 +1946,17 @@
               "isRequired": false
             }
           }
-        },
-        "truncateTable": {
-          "name": "truncateTable",
-          "isArray": false,
-          "type": "String",
-          "isRequired": false,
-          "arguments": {
-            "tablename": {
-              "name": "tablename",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false
-            }
-          }
         }
       }
     }
   },
   "storage": {
     "aws_region": "eu-central-1",
-    "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-bytx5kbmnzpr",
+    "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-zowwrajok9jd",
     "buckets": [
       {
         "name": "drive",
-        "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-bytx5kbmnzpr",
+        "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-zowwrajok9jd",
         "aws_region": "eu-central-1",
         "paths": {
           "data/${cognito-identity.amazonaws.com:sub}/*": {

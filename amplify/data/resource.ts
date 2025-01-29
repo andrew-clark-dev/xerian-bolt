@@ -1,10 +1,11 @@
 import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
-import { truncateTableFunction } from './truncate-table/resource';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
 import { findExternalAccount } from './external-account/resource';
 import { importAccountFunction } from '../function/sync-account/resource';
 import { findExternalItem } from './external-item/resource';
+import { fetchItemsFunction } from '../function/import-item/resource';
+import { importItemFunction } from '../function/import-item/resource';
 
 export const schema = a.schema({
 
@@ -51,12 +52,13 @@ export const schema = a.schema({
       modelName: a.string(),
       refId: a.id(), // Loose coupling for now
       type: a.enum(["Create", "Read", "Update", "Delete", "Search", "Import", "Export", "Increment", "Decrement", "Auth"]),
+      typeIndex: a.string().required(),
       userId: a.id(),
       createdBy: a.belongsTo('UserProfile', 'userId'),
       before: a.json(),
       after: a.json(),
     })
-    .secondaryIndexes((index) => [index("refId"), index("userId")]),
+    .secondaryIndexes((index) => [index("refId"), index("userId"), index("typeIndex")]),
 
   Comment: a
     .model({
@@ -131,6 +133,7 @@ export const schema = a.schema({
     .identifier(['number'])
     .secondaryIndexes((index) => [
       index("id"),
+      index("status"),
       index("deletedAt").sortKeys(["number", "createdAt", "balance"]),
     ]),
 
@@ -200,7 +203,6 @@ export const schema = a.schema({
 
   ItemCategory: a
     .model({
-      id: a.id().required(),
       lastActivityBy: a.id().required(),
       kind: a.string().required(),
       name: a.string().required(),
@@ -211,7 +213,6 @@ export const schema = a.schema({
     })
     .identifier(['kind', 'name'])
     .secondaryIndexes((index) => [
-      index("id"),
       index("matchNames"),
       index("kind"),
     ]),
@@ -221,7 +222,9 @@ export const schema = a.schema({
       lastActivityBy: a.id().required(),
       type: a.enum(["Sale", "Refund", "Payout", "Reversal"]),
       paymentType: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
+      channel: a.string(),
       amount: a.integer().required(),
+      time: a.datetime().required(),
       linkedTransaction: a.string(),  // for refund link to sale, or for a reversal link to original
       itemSku: a.string(),
       item: a.belongsTo("Item", "itemSku"),
@@ -235,25 +238,15 @@ export const schema = a.schema({
       index("accountNumber"),
     ]),
 
-  truncateTable: a
-    .mutation()
-    // arguments that this query accepts
-    .arguments({
-      tablename: a.string()
-    })
-    // return type of the query
-    .returns(a.string())
-    .handler(a.handler.function(truncateTableFunction)),
-
 }).authorization(allow => [
   allow.group('Employee'), // default to employee
   allow.resource(postConfirmation),
   allow.resource(createActionFunction),
-  // allow.resource(truncateTableFunction),
-  // allow.resource(fetchAccountUpdatesFunction),
   allow.resource(importAccountFunction),
   allow.resource(findExternalAccount),
   allow.resource(findExternalItem),
+  allow.resource(fetchItemsFunction),
+  allow.resource(importItemFunction),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

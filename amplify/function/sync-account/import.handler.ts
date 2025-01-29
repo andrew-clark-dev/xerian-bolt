@@ -45,6 +45,7 @@ export const handler: SQSHandler = async (event) => {
                     description: `Import of account`,
                     modelName: "Account",
                     type: "Import",
+                    typeIndex: "Import",
                     refId: exAccount.id,
                     userId: profile.id,
                 });
