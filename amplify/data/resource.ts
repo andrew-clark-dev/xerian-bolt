@@ -2,10 +2,10 @@ import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
 import { findExternalAccount } from './external-account/resource';
-import { importAccountFunction } from '../function/sync-account/resource';
+import { importAccountFunction } from '../function/import-accounts/resource';
 import { findExternalItem } from './external-item/resource';
-import { fetchItemsFunction } from '../function/import-item/resource';
-import { importItemFunction } from '../function/import-item/resource';
+import { fetchItemsFunction } from '../function/import-items/resource';
+import { importItemFunction } from '../function/import-items/resource';
 
 export const schema = a.schema({
 
@@ -16,13 +16,6 @@ export const schema = a.schema({
       value: a.string(),
     })
     .identifier(['name']),
-
-  SyncData: a
-    .model({
-      interface: a.string().required(),
-      lastSync: a.datetime(),
-    })
-    .identifier(['interface']),
 
   Counter: a
     .model({

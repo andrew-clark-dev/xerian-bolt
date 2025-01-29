@@ -5,7 +5,6 @@ export const fetchAccountsFunction = defineFunction({
     entry: "./fetch.handler.ts",
     resourceGroupName: "data",
     timeoutSeconds: 900,
-    schedule: "every day",
     environment: {  // environment variables
         API_KEY: secret('CC_API_KEY'),
         BASE_URL: 'https://api.consigncloud.com/api',
