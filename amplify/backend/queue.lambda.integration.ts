@@ -23,7 +23,7 @@ export class QueueLambdaIntegration extends Construct {
   }) {
     super(scope, id);
 
-    // Step 1: Create an SQS Queue
+    // Step 1: Create an SQS Queue with a Dead Letter Queue
     const q = new SqsWithDlq(this, `${id}QueueWithDlq`, {
       queueName: props.queueName,
 
