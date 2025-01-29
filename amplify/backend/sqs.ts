@@ -16,7 +16,7 @@ export class SqsWithDlq extends cdk.Stack {
         this.dlq = {
             maxReceiveCount: 5, // Number of processing attempts before moving to DLQ
             queue: new Queue(this, `${id}DeadLetterQueue`, {
-                queueName: `${props.queueName.toLowerCase()}dlq.fifo`,
+                queueName: `${props.queueName}-dlq.fifo`,
                 deliveryDelay: Duration.millis(0),
                 contentBasedDeduplication: true,
                 retentionPeriod: Duration.days(14),
@@ -25,7 +25,7 @@ export class SqsWithDlq extends cdk.Stack {
 
         // Define the Queue with the DLQ
         this.queue = new Queue(this, `${id}Queue`, {
-            queueName: `${props.queueName.toLowerCase()}.fifo`,
+            queueName: `${props.queueName}.fifo`,
             visibilityTimeout: cdk.Duration.seconds(30), // Lock for 30 seconds during processing
             contentBasedDeduplication: true,
             fifo: true,

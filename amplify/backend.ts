@@ -45,6 +45,8 @@ cfnUserPool.policies = {
   },
 };
 
+
+
 const { tables } = backend.data.resources
 
 const createActionLambda = backend.createActionFunction.resources.lambda
@@ -120,6 +122,7 @@ for (const key in tables) {
 
 // Set up import queues and integrate with Lambda functions
 const customStack = backend.createStack('CustomResources');
+const artifactId = backend.stack.artifactId.split('-').pop();
 
 // Get the Lambda function objects
 const fetchAccountsLambda = backend.fetchAccountsFunction.resources.lambda;
@@ -127,7 +130,7 @@ const importAccountLambda = backend.importAccountFunction.resources.lambda;
 
 // Create the Queue-Lambda integration construct
 new QueueLambdaIntegration(customStack, 'AccountImportIntegration', {
-  queueName: 'AccountImport',
+  queueName: 'AccountImport-' + artifactId,
   sendFunction: fetchAccountsLambda as LambdaFunction,
   receiveFunction: importAccountLambda as LambdaFunction,
   tables: [tables['Account'], tables['UserProfile'], tables['Action']],
@@ -139,7 +142,7 @@ const importItemLambda = backend.importItemFunction.resources.lambda;
 
 // Create the Queue-Lambda integration construct
 new QueueLambdaIntegration(customStack, 'ItemImportIntegration', {
-  queueName: 'ItemImport',
+  queueName: 'ItemImport-' + artifactId,
   sendFunction: fetchItemsLambda as LambdaFunction,
   receiveFunction: importItemLambda as LambdaFunction,
   tables: [tables['Item'], tables['UserProfile'], tables['Action']],
