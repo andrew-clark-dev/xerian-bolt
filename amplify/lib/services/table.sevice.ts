@@ -2,10 +2,21 @@ import { AttributeMap } from "aws-sdk/clients/dynamodb";
 import { Logger } from "@aws-lambda-powertools/logger";
 
 import * as AWS from 'aws-sdk';
+import { ExternalUser, provisionService } from "./user.external.sevice";
 
 const docClient = new AWS.DynamoDB.DocumentClient();
 
 const logger = new Logger({ serviceName: "table-service" });
+
+export const importUserId = 'f838ed77-7eec-4d85-85f8-ca022ff42a84';
+
+export const externalUserId = '0d1cd38e-551f-4c9e-b753-275d0e073bba';
+
+export const unknownExternalUser: ExternalUser = {
+    id: '0d1cd38e-551f-4c9e-b753-275d0e073bba',
+    name: 'UnknownExternalUser',
+    user_type: 'employee'
+};
 
 export const resetData = async (models: Map<string, string>) => {
     const counterTableName = process.env['COUNTER_TABLE']!;
@@ -15,6 +26,10 @@ export const resetData = async (models: Map<string, string>) => {
         await truncateTable(name, index);
         await resetCount(modelName, counterTableName);
     }
+
+    // Provision the service users.
+    await provisionService.provisionUser({ id: importUserId, nickname: 'ImportServiceUser', status: 'Active', role: 'Service' });
+    await provisionService.provisionUser({ id: unknownExternalUser.id, nickname: unknownExternalUser.name, status: 'Active', role: 'Service' });
 
 }
 
