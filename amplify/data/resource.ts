@@ -6,6 +6,7 @@ import { importAccountFunction } from '../function/import-accounts/resource';
 import { findExternalItem } from './external-item/resource';
 import { fetchItemsFunction } from '../function/import-items/resource';
 import { importItemFunction } from '../function/import-items/resource';
+import { resetDataFunction } from '../function/reset-data/resource';
 
 export const schema = a.schema({
 
@@ -240,6 +241,7 @@ export const schema = a.schema({
   allow.resource(findExternalItem),
   allow.resource(fetchItemsFunction),
   allow.resource(importItemFunction),
+  allow.resource(resetDataFunction),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

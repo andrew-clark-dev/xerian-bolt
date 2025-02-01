@@ -1,4 +1,6 @@
 import { RestClient, IRequestOptions, IRestResponse } from 'typed-rest-client/RestClient';
+import { Logger } from "@aws-lambda-powertools/logger";
+const logger = new Logger({ serviceName: "api-clist" });
 
 export const BASE_URL = process.env.BASE_URL || '/api';
 
@@ -17,6 +19,10 @@ export interface SearchResults<T> {
     document: T;
     entity_type: string;
   }[];
+}
+
+export interface ErrorWithCode {
+  code: string;
 }
 
 export class ApiClient<T> {
@@ -43,7 +49,7 @@ export class ApiClient<T> {
     const response: IRestResponse<T> = await this.client.get<T>(getPath, options);
 
     if (response.statusCode !== 200) {
-      console.error('GET request failed:', response.statusCode, response.result);
+      logger.error(`GET request failed: ${response.statusCode}`);
       throw new Error('GET request failed');
     }
 
@@ -56,25 +62,43 @@ export class ApiClient<T> {
 
   }
 
+
+
   private async page(path: string, params?: Params): Promise<Page<T>> {
 
-    const response: IRestResponse<Page<T>> = await this.client.get<Page<T>>(path, this.requestOptions(params));
+    try {
+      const response: IRestResponse<Page<T>> = await this.client.get<Page<T>>(path, this.requestOptions(params));
 
-    if (response.statusCode !== 200) {
-      console.error('GET request failed:', response.statusCode, response.result);
-      throw new Error('GET request failed');
+      if (response.statusCode == 429) {
+        console.warn('Too many requests, wait and try again');
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        return this.page(path, params);
+      }
+
+      if (response.statusCode !== 200) {
+        console.error('GET request failed:', response.statusCode, response.result);
+        throw new Error('GET request failed');
+      }
+
+      return response.result ?? { count: 0, data: [], next_cursor: null };
+    } catch (error) {
+
+      if (error instanceof Error && ('code' in error)) {
+        if (error.code === 'too_many_requests') {
+          logger.warn(`Too Many Requeste - wait and retry.`);
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          return this.page(path, params);
+        }
+      }
+      logger.error(`Error occurred during page request: ${error}`);
+      throw error;
     }
-
-    return response.result ?? { count: 0, data: [], next_cursor: null };
   }
 
   async fetch(params?: Params): Promise<Page<T>> {
     return this.page(this.path, params);
   }
 
-  async next(cursor: string): Promise<Page<T>> {
-    return this.page(this.path, { cursor: cursor });
-  }
 
   private requestOptions(params?: Params): IRequestOptions | undefined {
     return params ? { queryParameters: { params: params } } : undefined;
