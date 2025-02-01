@@ -3,9 +3,10 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { generateClient } from "aws-amplify/data";
 
 export type UserProfile = Schema['UserProfile']['type'];
+export type UserProfileUpdate = Partial<Omit<UserProfile, 'id' | 'comments' | 'actions' | 'createdAt' | 'updatedAt'>> & { id: string };
 
 const client = generateClient<Schema>();
-
+const logger = new Logger({ serviceName: "user-external-service" });
 
 export interface ExternalUser {
     id: string,
@@ -26,41 +27,56 @@ const initialSettings: UserSettings = {
     hasLogin: false,
 };
 
+export function userOf(exUser: ExternalUser): UserProfileUpdate {
+    return {
+        id: exUser.id,
+        status: "Pending",
+        role: "Employee",
+        nickname: exUser.name,
+        settings: JSON.stringify(initialSettings),
+    };
+}
 
-export async function provisionUser(id: string, name: string): Promise<UserProfile> {
+export class ProvisionService {
 
-    const logger = new Logger({ serviceName: "user-external-service" });
+    users: Map<string, UserProfile> = new Map();
 
-    const { data: userProfile } = await client.models.UserProfile.get({ id });
+    async provisionUser(user: UserProfileUpdate): Promise<UserProfile> {
 
-    if (userProfile) {
-        return userProfile;
-    } else {
-        logger.warn(`User not found - create : ${id}`);
-        const { errors: actionErrors } = await client.models.Action.create({
-            description: `Import of account creating a user profile`,
-            modelName: "UserProfile",
-            type: "Import",
-            typeIndex: "Import",
-            refId: id
-        });
+        const existingUser = this.users.get(user.id);
+        if (existingUser) { return existingUser; }
 
-        if (actionErrors) {
-            logger.error(`Failed to create import action - ${JSON.stringify(actionErrors)}`);
-        }
+        logger.info(`Provision user : ${user.id} - ${user.nickname}`);
 
-        const { data: newUserProfile, errors: errors } = await client.models.UserProfile.create({
-            id: id,
-            status: "Pending",
-            role: "Employee",
-            nickname: name,
-            settings: JSON.stringify(initialSettings),
-        });
+        const { data: userProfile } = await client.models.UserProfile.get({ id: user.id });
 
-        if (newUserProfile) {
-            return newUserProfile;
+        if (userProfile) {
+            this.users.set(userProfile.id, userProfile);
+            return userProfile;
         } else {
-            throw new Error(`Failed to create new user profile for userId: ${id} - ${JSON.stringify(errors)}`);
+            logger.warn(`User not found - create : ${user.id} - ${user.nickname}`);
+            const { errors: actionErrors } = await client.models.Action.create({
+                description: `Import creating a user profile`,
+                modelName: "UserProfile",
+                type: "Import",
+                typeIndex: "Import",
+                refId: user.id
+            });
+
+            if (actionErrors) {
+                logger.error(`Failed to create import action - ${JSON.stringify(actionErrors)}`);
+            }
+
+            const { data: newUserProfile, errors: errors } = await client.models.UserProfile.create(user);
+
+            if (newUserProfile) {
+                this.users.set(newUserProfile.id, newUserProfile);
+                return newUserProfile;
+            } else {
+                throw new Error(`Failed to create new user profile for userId: ${user.id} - ${JSON.stringify(errors)}`);
+            }
         }
     }
 }
+
+export const provisionService = new ProvisionService();

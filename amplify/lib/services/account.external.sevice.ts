@@ -32,17 +32,16 @@ export const accountParams: Params = {
     include: ['created_by', 'last_activity', 'last_settlement', 'default_split', 'last_item_entered'],
     expand: ['created_by'],
     sort_by: 'created',
+    limit: 100,
 }
 
 
 
 export const toAccount = (externalAccount: ExternalAccount): Account => {
     // Map external data to our Account type
-    const created_by_id = typeof externalAccount.created_by === "string" ? externalAccount.created_by : externalAccount.created_by.id;
-
     return {
         number: externalAccount.number,
-        lastActivityBy: created_by_id,
+        lastActivityBy: externalAccount.created_by.id,
         lastActivityAt: externalAccount.last_activity || new Date().toISOString(),
         lastItemAt: externalAccount.last_item_entered,
         lastSettlementAt: externalAccount.last_settlement,
@@ -77,11 +76,8 @@ export async function findFirst(query: string): Promise<Account | null> {
 }
 
 export async function paged(cursor?: string | null): Promise<Page<ExternalAccount>> {
-    if (cursor) {
-        return accountClient.next(cursor);
-    } else {
-        return accountClient.fetch(accountParams);
-    }
+    const params = cursor ? { ...accountParams, ...{ cursor: cursor } } : accountParams;
+    return accountClient.fetch(params);
 }
 
 /**

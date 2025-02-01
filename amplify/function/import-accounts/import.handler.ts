@@ -7,21 +7,16 @@ import { Amplify } from "aws-amplify";
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import { env } from "$amplify/env/import-account-function";
 import AWS from "aws-sdk";
-import { provisionUser } from "../../lib/services/user.external.sevice";
+import { ExternalUser, provisionService, userOf } from "../../lib/services/user.external.sevice";
 
-const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
-    env
-);
+const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
 
 Amplify.configure(resourceConfig, libraryOptions);
 
 const client = generateClient<Schema>();
 const sqs = new AWS.SQS();
 
-const logger = new Logger({
-    logLevel: "INFO",
-    serviceName: "import-account-function",
-});
+const logger = new Logger({ serviceName: "import-account-function" });
 
 
 export const handler: SQSHandler = async (event) => {
@@ -31,16 +26,19 @@ export const handler: SQSHandler = async (event) => {
         try {
             logger.info(`Processing record: ${JSON.stringify(record)}`);
             const body = JSON.parse(record.body);
-            const user = body.createdBy;
+            const user: ExternalUser = body.createdBy;
             const exAccount: ExternalAccount = body.account;
+            logger.info(`Get account by number: ${exAccount.number}`);
 
-            const { data: account } = await client.models.Account.get({ number: exAccount.number });
-
-            if (account) {
+            const responce = await client.models.Account.get({ number: exAccount.number });
+            if (responce.data) {
                 logger.info(`Account already exists: ${exAccount.number}`);
 
             } else {
-                const profile = await provisionUser(user.id, user.name);
+                logger.info(`Creating account: ${exAccount.number} - created by: ${user.name} - ${user.id}`);
+                const profile = await provisionService.provisionUser(userOf(user));
+
+                logger.info(`Creating account import action: ${exAccount.number}`);
                 const { errors: actionErrors } = await client.models.Action.create({
                     description: `Import of account`,
                     modelName: "Account",
@@ -54,7 +52,6 @@ export const handler: SQSHandler = async (event) => {
                     logger.error(`Failed to create import action - ${JSON.stringify(actionErrors)}`);
                 }
 
-                logger.info(`Creating account: ${exAccount.number}`);
 
                 const { errors } = await client.models.Account.create(toAccount(exAccount));
 
@@ -71,7 +68,12 @@ export const handler: SQSHandler = async (event) => {
             });
 
         } catch (error) {
-            logger.error(`Error processing record: ${JSON.stringify(error)}`);
+            if (error instanceof Error) {
+                logger.error(`Error processing record: ${error.message} - stack trace: ${error.stack}`);
+            } else {
+                logger.error(`Could not process record: ${error}`);
+            }
+            throw error;
         }
     }
 
