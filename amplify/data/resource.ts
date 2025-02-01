@@ -52,7 +52,7 @@ export const schema = a.schema({
       before: a.json(),
       after: a.json(),
     })
-    .secondaryIndexes((index) => [index("refId"), index("userId"), index("typeIndex")]),
+    .secondaryIndexes((index) => [index("refId"), index("userId"), index("typeIndex"), index("modelName")]),
 
   Comment: a
     .model({
