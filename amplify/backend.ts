@@ -48,6 +48,9 @@ cfnUserPool.policies = {
 
 
 const { tables } = backend.data.resources
+const region = backend.stack.region
+const accountId = backend.stack.account
+
 
 const createActionLambda = backend.createActionFunction.resources.lambda
 tables["Counter"].grantFullAccess(createActionLambda);
@@ -134,6 +137,7 @@ new QueueLambdaIntegration(customStack, 'AccountImportIntegration', {
   sendFunction: fetchAccountsLambda as LambdaFunction,
   receiveFunction: importAccountLambda as LambdaFunction,
   tables: [tables['Account'], tables['UserProfile'], tables['Action']],
+  fifo: true,
 });
 
 // Get the Lambda function objects
@@ -145,30 +149,16 @@ new QueueLambdaIntegration(customStack, 'ItemImportIntegration', {
   queueName: 'ItemImport-' + artifactId,
   sendFunction: fetchItemsLambda as LambdaFunction,
   receiveFunction: importItemLambda as LambdaFunction,
-  tables: [tables['Item'], tables['UserProfile'], tables['Action']],
+  tables: [tables['Item'], tables['UserProfile'], tables['Action'], tables['ItemGroup'], tables['Transaction'], tables['ItemCategory']],
+  fifo: false,
 });
 
 
-// const fetchAccountsLambda = backend.fetchAccountsFunction.resources.lambda;
-// const importAccountLambda = backend.importAccountFunction.resources.lambda;
+// Add SSM policy to fetchItemsLambda
+const ssmPolicy = new PolicyStatement({
+  sid: "AllowParameterStoreAccess",
+  actions: ["ssm:GetParameter", "ssm:PutParameter"],
+  resources: [`arn:aws:ssm:${region}:${accountId}:parameter/**`], // Replace with actual ARN
+});
 
-// backend.fetchAccountsFunction.addEnvironment(`QUEUE_URL`, queues.itemImportQueue.queueUrl);
-// queues.accountImportQueue.grantSendMessages(fetchAccountsLambda);
-// importAccountLambda.addEventSource(new SqsEventSource(queues.accountImportQueue));
-// queues.accountImportQueue.grantConsumeMessages(importAccountLambda);
-
-// tables['Account'].grantFullAccess(importAccountLambda);
-// tables['UserProfile'].grantFullAccess(importAccountLambda);
-// tables['Action'].grantFullAccess(importAccountLambda);
-
-// const fetchItemsLambda = backend.fetchItemsFunction.resources.lambda;
-// const importItemLambda = backend.importItemFunction.resources.lambda;
-
-// backend.fetchItemsFunction.addEnvironment(`QUEUE_URL`, queues.itemImportQueue.queueUrl);
-// queues.itemImportQueue.grantSendMessages(fetchItemsLambda);
-// importItemLambda.addEventSource(new SqsEventSource(queues.itemImportQueue));
-// queues.itemImportQueue.grantConsumeMessages(importItemLambda);
-
-// tables['Item'].grantFullAccess(importItemLambda);
-// tables['UserProfile'].grantFullAccess(importItemLambda);
-// tables['Action'].grantFullAccess(importItemLambda);
+fetchItemsLambda.addToRolePolicy(ssmPolicy)

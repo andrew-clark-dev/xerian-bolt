@@ -20,12 +20,14 @@ export class QueueLambdaIntegration extends Construct {
     sendFunction: lambda.Function;
     receiveFunction: lambda.Function;
     tables: ITable[];
+    fifo: boolean;
   }) {
     super(scope, id);
 
     // Step 1: Create an SQS Queue with a Dead Letter Queue
     const q = new SqsWithDlq(this, `${id}QueueWithDlq`, {
       queueName: props.queueName,
+      fifo: props.fifo,
 
     });
 

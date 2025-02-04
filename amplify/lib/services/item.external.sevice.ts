@@ -11,8 +11,6 @@ export type ItemCategory = Schema['ItemCategory']['type'];
 
 export const ITEM_URL = 'v1/items';
 
-export const importUserId = 'f838ed77-7eec-4d85-85f8-ca022ff42a84';
-
 export interface ExternalItemStatus {
     active: number,
     damaged: number,
@@ -64,7 +62,6 @@ export interface ExternalItem {
     tax_exempt?: boolean,
     terms: string | null,
     title: string | null,
-
 }
 
 export const toItem = (externalItem: ExternalItem): Item => {
@@ -88,6 +85,7 @@ export const toItem = (externalItem: ExternalItem): Item => {
         price: externalItem.tag_price,
         status: toStatus(externalItem),
         //        group: toGroup(externalItem),
+        sales: toSales(externalItem),
         printedAt: externalItem.printed,
         lastSoldAt: externalItem.last_sold,
         lastViewedAt: externalItem.last_viewed,
@@ -123,23 +121,24 @@ export async function findFirst(query: string): Promise<Item | null> {
 
 }
 
-export async function paged(cursor?: string | null): Promise<Page<ExternalItem>> {
-    if (cursor) {
-        return itemClient.next(cursor);
-    } else {
-        return itemClient.fetch(itemParams);
-    }
+export async function paged(cursor?: string | null, from?: string): Promise<Page<ExternalItem>> {
+    let params = cursor ? { ...itemParams, ...{ cursor: cursor } } : itemParams;
+    params = from ? { ...params, ...{ 'created:gte': from } } : params;
+    return itemClient.fetch(params);
 }
 
 export function toStatus(exItem: ExternalItem): ItemStatus {
-    if (exItem.status.sold > 0) return 'Sold'
+    if (toSales(exItem) > 0) return 'Sold'
     if (exItem.status.active > 0) return 'Active'
     if (exItem.status.donated > 0) return 'Donated'
     if (exItem.status.lost > 0) return 'Lost'
     if (exItem.status.parked > 0) return 'Parked'
-    if (exItem.status.sold_on_shopify > 0) return 'Sold'
     if (exItem.status.stolen > 0) return 'Stolen'
     return 'Unknown'
+}
+
+export function toSales(exItem: ExternalItem): number {
+    return (exItem.status.sold || 0) + (exItem.status.sold_on_shopify || 0) + (exItem.status.sold_on_square || 0) + (exItem.status.sold_on_third_party || 0) + (exItem.status.sold_on_legacy || 0);
 }
 
 export function toStatuses(exItem: ExternalItem): ItemStatus[] | null {

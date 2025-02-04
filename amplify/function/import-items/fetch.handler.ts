@@ -1,62 +1,49 @@
-import type { EventBridgeHandler } from "aws-lambda";
 import { Logger } from "@aws-lambda-powertools/logger";
 import { SQS } from 'aws-sdk';
-import { importUserId, paged } from "../../lib/services/item.external.sevice";
-import { type Schema } from "../../data/resource";
-import { generateClient } from "aws-amplify/data";
-import { Amplify } from "aws-amplify";
-import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
-import { env } from "$amplify/env/fetch-items-function";
-import { provisionUser } from "../../lib/services/user.external.sevice";
+import { paged } from "../../lib/services/item.external.sevice";
+import { Context } from 'aws-lambda';
+import { readParameter, writeParameter } from "../../lib/services/table.sevice";
+import { unknownExternalUser } from "../../lib/services/table.sevice";
 
-const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
-    env
-);
-
-Amplify.configure(resourceConfig, libraryOptions);
-const client = generateClient<Schema>();
-
-const APP_CONFIG_NAME = 'imported_items_up_to';
-
+const PARAMETER_NAME = 'imported_items_up_to';
+const BEGINING = new Date(2000, 1, 1).toISOString()
 const logger = new Logger({ serviceName: "fetch-external-items" });
 const sqs = new SQS();
 const queueUrl = process.env['QUEUE_URL']!;
-const messageGroupId = process.env['MESSAGE_GROUP_ID']!;
 
-// Threshold to exit early (e.g., 5000 ms = 5 seconds)
-const threshold = 5000;
+// Threshold to exit early (e.g., 5000 ms = 15 seconds)
+const threshold = 15000;
 let earlyExit = false;
 
-export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: number, body: string }> = async (event, context) => {
+
+export const handler = async (event: unknown, context: Context) => {
     logger.info("event", JSON.stringify(event, null, 2));
-    await provisionUser(importUserId, 'Import Item Function');
+    logger.info(`Get param: ${PARAMETER_NAME}`);
+
+    let upTo: string = await readParameter(PARAMETER_NAME, BEGINING) || BEGINING;
 
     try {
-        logger.info(`Get config: ${APP_CONFIG_NAME}`);
 
-        let { data: appConfig } = await client.models.AppConfig.get({ name: APP_CONFIG_NAME });
-
-        if (!appConfig) {
-            // Create AppConfig if it doesn't exist, initialized to 2000-01-01
-            logger.warn(`Config not found - creating : ${APP_CONFIG_NAME}`);
-            const { data } = await client.models.AppConfig.create({ name: APP_CONFIG_NAME, value: new Date(2000, 1, 1).toISOString() });
-            appConfig = data;
-            logger.info(`Config created : ${JSON.stringify(appConfig, null, 2)}`);
-        }
-        let upTo = appConfig!.value!;
+        const from = upTo;
         logger.info(`upTo: ${upTo}`);
+
         let cursor: string | null = null;
+        let pageNumer = 0;
 
         do {
-            const page = await paged(cursor);
+            const page = await paged(cursor, from);
+            logger.info(`Processing fetched page. ${++pageNumer} - total: ${page.count}, pagesize : ${page?.data.length || 'None'} `);
             for (const item of page?.data || []) {
-                const params = {
+                logger.info(`Send item: ${item.sku}, message to queue : ${queueUrl} - created by ${item.created_by?.name || 'undefined'} - ${item.created_by?.id || 'undefined'}`);
+                if (!item.created_by?.id) {
+                    logger.warn(`Account created by unknown user: ${item.sku}`);
+                    item.created_by = unknownExternalUser;
+                } const params = {
                     QueueUrl: queueUrl,
                     MessageBody: JSON.stringify({
                         createdBy: item.created_by,
                         item: item,
-                    }),
-                    MessageGroupId: messageGroupId
+                    })
                 };
                 try {
                     sqs.sendMessage(params, (err, data) => {
@@ -80,8 +67,8 @@ export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: 
 
         if (earlyExit) { logger.warn(`Early exit triggered.`) }
 
-        logger.info('Event processed successfully');
-        await client.models.AppConfig.update({ name: APP_CONFIG_NAME, value: upTo });
+        logger.info(`Writing upto : ${upTo} to parameter store`);
+        await writeParameter(PARAMETER_NAME, upTo);
 
         return {
             statusCode: 200,
@@ -91,11 +78,14 @@ export const handler: EventBridgeHandler<"Scheduled Event", null, { statusCode: 
         };
     } catch (error) {
 
-        logger.error(`Error fetching SyncData: ${JSON.stringify(error)}`);
+        logger.error(`Error fetching Items: ${JSON.stringify(error)}`);
+        logger.info(`Writing upto : ${upTo} to parameter store`);
+        await writeParameter(PARAMETER_NAME, upTo);
+
         return {
             statusCode: 500,
             body: JSON.stringify({
-                message: 'Error fetching SyncData',
+                message: 'Error fetching Items',
                 error: (error instanceof Error) ? error.message : 'Unknown error',
             }),
         };

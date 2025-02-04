@@ -163,6 +163,7 @@ export const schema = a.schema({
       price: a.integer(),
       status: a.ref('ItemStatus'), // this is the status of unique items.
       group: a.hasOne('ItemGroup', 'itemSku'), // this is the group of items that are the same. 
+      sales: a.integer().default(0),
       transactions: a.hasMany("Transaction", "itemSku"), // setup relationships between types
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
@@ -231,6 +232,53 @@ export const schema = a.schema({
       index("itemSku"),
       index("accountNumber"),
     ]),
+
+  // Item2: a
+  //   .customType({
+  //     sku: a.string().required(),
+  //     lastActivityBy: a.id().required(),
+  //     title: a.string(),
+  //     category: a.string(),
+  //     brand: a.string(),
+  //     color: a.string(),
+  //     size: a.string(),
+  //     description: a.string(),
+  //     details: a.string(),
+  //     images: a.url().array(), // fields can be arrays,
+  //     condition: a.enum(['AsNew', 'Good', 'Marked', 'Damaged', 'Unknown', 'NotSpecified']),
+  //     split: a.integer(),
+  //     price: a.integer(),
+  //     status: a.ref('ItemStatus'), // this is the status of unique items.
+  //     printedAt: a.datetime(),
+  //     lastSoldAt: a.datetime(),
+  //     lastViewedAt: a.datetime(),
+  //     createdAt: a.datetime(),
+  //     updatedAt: a.datetime(),
+  //     deletedAt: a.datetime(),
+  //   }),
+
+  // Transaction2: a
+  //   .model({
+  //     lastActivityBy: a.id().required(),
+  //     type: a.enum(["Sale", "Refund", "Payout", "Reversal"]),
+  //     paymentType: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
+  //     channel: a.string(),
+  //     amount: a.integer().required(),
+  //     time: a.datetime().required(),
+  //     linkedTransaction: a.string(),  // for refund link to sale, or for a reversal link to original
+  //     items: a.ref("Item2").array(),
+  //     accountNumber: a.string(),
+  //     payment: a.ref("Payment"),
+  //   }),
+
+  // Payment: a.customType({
+  //   createdAt: a.datetime(),
+  //   updatedAt: a.datetime(),
+  //   type: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
+  //   channel: a.string(),
+  //   amount: a.integer().required(),
+  //   status: a.enum(['Pending', 'Completed', 'Failed']),
+  // }),
 
 }).authorization(allow => [
   allow.group('Employee'), // default to employee

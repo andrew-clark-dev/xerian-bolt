@@ -332,6 +332,16 @@
             {
               "type": "key",
               "properties": {
+                "name": "actionsByModelName",
+                "queryField": "listActionByModelName",
+                "fields": [
+                  "modelName"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
                 "name": "actionsByRefId",
                 "queryField": "listActionByRefId",
                 "fields": [
@@ -1159,6 +1169,13 @@
                 ],
                 "targetNames": []
               }
+            },
+            "sales": {
+              "name": "sales",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
             },
             "transactions": {
               "name": "transactions",

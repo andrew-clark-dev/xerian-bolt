@@ -1,10 +1,13 @@
 import { AttributeMap } from "aws-sdk/clients/dynamodb";
 import { Logger } from "@aws-lambda-powertools/logger";
+import { SSMClient, GetParameterCommand, PutParameterCommand } from "@aws-sdk/client-ssm";
 
 import * as AWS from 'aws-sdk';
 import { ExternalUser, provisionService } from "./user.external.sevice";
 
 const docClient = new AWS.DynamoDB.DocumentClient();
+const ssmClient = new SSMClient();
+const lambdaName = process.env.AWS_LAMBDA_FUNCTION_NAME || "no_lambda";
 
 const logger = new Logger({ serviceName: "table-service" });
 
@@ -106,6 +109,41 @@ export const truncateTable = async (name: string, index: string) => {
 
 };
 
+// Function to read a parameter from Parameter Store with optional default value
+export const readParameter = async (paramName: string, defaultValue?: string) => {
+    const fullParamName = `/xerian/${lambdaName}/${paramName}`;
+    try {
+        const command = new GetParameterCommand({ Name: fullParamName, WithDecryption: true });
+        const response = await ssmClient.send(command);
+        console.log(`Parameter retrieved: ${response.Parameter?.Value}`);
+        return response.Parameter?.Value;
+    } catch (error) {
+        if (error instanceof Error && error.name === "ParameterNotFound" && defaultValue !== undefined) {
+            console.warn(`Parameter not found: ${fullParamName}, returning default value.`);
+            return defaultValue;
+        }
+        console.error("Error reading parameter:", error);
+        throw new Error(`Failed to read parameter: ${fullParamName}`);
+    }
+};
+
+// Function to write a parameter to Parameter Store
+export const writeParameter = async (paramName: string, paramValue: string) => {
+    const fullParamName = `/xerian/${lambdaName}/${paramName}`;
+    try {
+        const command = new PutParameterCommand({
+            Name: fullParamName,
+            Value: paramValue,
+            Type: "SecureString", // Use 'String' if not sensitive
+            Overwrite: true,
+        });
+        await ssmClient.send(command);
+        console.log(`Parameter written: ${fullParamName}`);
+    } catch (error) {
+        console.error("Error writing parameter:", error);
+        throw new Error(`Failed to write parameter: ${fullParamName}`);
+    }
+};
 
 /**
  *

@@ -7,8 +7,7 @@ import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtim
 import { env } from "$amplify/env/import-item-function";
 import { SQS } from 'aws-sdk';
 import { ExternalItem, toCategories, toGroup, toItem } from "../../lib/services/item.external.sevice";
-import { provisionUser } from "../../lib/services/user.external.sevice";
-import { getSales } from "../../lib/services/sale.external.sevice";
+import { ExternalUser, provisionService, userOf } from "../../lib/services/user.external.sevice";
 
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(
     env
@@ -29,16 +28,20 @@ export const handler: SQSHandler = async (event) => {
         try {
             logger.info(`Processing record: ${JSON.stringify(record)}`);
             const body = JSON.parse(record.body);
-            const user = body.createdBy;
+            const user: ExternalUser = body.createdBy;
             const exItem: ExternalItem = body.item;
+            logger.info(`Processing record: ${JSON.stringify(record)}`);
+            logger.info(`Get item by sku: ${exItem.sku}`);
 
-            const { data: item } = await client.models.Item.get({ sku: exItem.sku });
+            const repsonce = await client.models.Item.get({ sku: exItem.sku });
 
-            if (item) {
+            if (repsonce.data) {
                 logger.info(`Item already exists: ${exItem.sku}`);
 
             } else {
-                const profile = await provisionUser(user.id, user.name);
+                logger.info(`Creating item: ${exItem.sku}`);
+                const profile = await provisionService.provisionUser(userOf(user));
+
                 const { errors: actionErrors } = await client.models.Action.create({
                     description: `Import of item`,
                     modelName: "Item",
@@ -53,10 +56,10 @@ export const handler: SQSHandler = async (event) => {
                 }
 
                 logger.info(`Creating item: ${exItem.sku}`);
-
-                const { data: item, errors } = await client.models.Item.create(toItem(exItem));
+                const newItem = toItem(exItem);
+                const { data: item, errors } = await client.models.Item.create(newItem);
                 if (errors) {
-                    logger.error(`Errors in creating item : ${JSON.stringify(errors)}`);
+                    logger.error(`Errors in creating item : errors: ${JSON.stringify(errors)} - item: ${JSON.stringify(newItem)}`);
                     continue;
                 }
 
@@ -72,20 +75,13 @@ export const handler: SQSHandler = async (event) => {
                     continue;
                 }
 
-                if ((exItem.quantity ?? 0) > 0) {
+                if ((exItem.quantity ?? 0) > 1) {
                     logger.info(`Creating item group, quatity : ${exItem.quantity}`);
                     const { errors } = await client.models.ItemGroup.create(toGroup(exItem));
                     if (errors) {
                         logger.error(`Errors in creating item group : ${JSON.stringify(errors)}`);
                     }
                 }
-
-                (await getSales(exItem)).forEach(async (sale) => {
-                    const { errors } = await client.models.Transaction.create(sale);
-                    if (errors) {
-                        logger.error(`Errors in creating item sale transaction : ${JSON.stringify(errors)}`);
-                    }
-                });
             }
 
             // Delete the message from the queue upon successful processing
