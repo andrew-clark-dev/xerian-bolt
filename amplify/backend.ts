@@ -9,9 +9,9 @@ import { createActionFunction } from './function/create-action/resource';
 import { findExternalAccount } from './data/external-account/resource';
 import { truncateTableFunction } from './function/truncate-table/resource';
 import { resetDataFunction } from './function/reset-data/resource';
-import { importAccountsFunction } from './function/import-account/resource';
 import { EventType } from 'aws-cdk-lib/aws-s3';
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
+import { importReceiveFunction, importAccountFunction, importItemFunction, IMPORT_DIR, PROCESSING_DIR } from './data/import/resource';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -24,7 +24,9 @@ const backend = defineBackend({
   findExternalAccount,
   truncateTableFunction,
   resetDataFunction,
-  importAccountsFunction,
+  importAccountFunction,
+  importItemFunction,
+  importReceiveFunction,
 });
 
 // extract L1 CfnUserPool resources
@@ -121,44 +123,26 @@ for (const key in tables) {
 }
 
 // Set up import queues and integrate with Lambda functions
-const importAccountsLambda = backend.importAccountsFunction.resources.lambda;
-backend.importAccountsFunction
-// tables.Account.grantFullAccess(importAccountsLambda);
-// tables.UserProfile.grantFullAccess(importAccountsLambda);
-// bucket.grantReadWrite(importAccountsLambda);
+const importAccountLambda = backend.importAccountFunction.resources.lambda;
+const importItemLambda = backend.importItemFunction.resources.lambda;
+const importReceiveLambda = backend.importReceiveFunction.resources.lambda;
+
 bucket.addEventNotification(
   EventType.OBJECT_CREATED_PUT,
-  new LambdaDestination(importAccountsLambda),
-  {
-    prefix: 'import/',
-    suffix: '.csv',
-  }
+  new LambdaDestination(importReceiveLambda),
+  { prefix: IMPORT_DIR, suffix: '.csv' }
 );
 
-// Add S3 read policy for import
-const readS3Policy = new PolicyStatement({
-  sid: "AllowS3Access",
-  actions: ["s3:GetObject", "s3:ListBucket"],
-  resources: [`arn:aws:s3:::**`], // Replace with actual ARN
-});
+bucket.addEventNotification(
+  EventType.OBJECT_CREATED_PUT,
+  new LambdaDestination(importAccountLambda),
+  { prefix: PROCESSING_DIR + 'Account', suffix: '.csv' }
+);
 
-const allDdbPolicy = new PolicyStatement({
-  sid: "AllowDDBAccess",
-  actions: ["dynamodb:*"],
-  resources: [`arn:aws:dynamodb:*:*:table/*`], // Replace with actual ARN
-});
-
-const allIndexPolicy = new PolicyStatement({
-  sid: "AllowDDBIndexAccess",
-  actions: ["dynamodb:DescribeTable", "dynamodb:Query", "dynamodb:Scan"],
-  resources: ["arn:aws:dynamodb:*:*:table/*", "arn:aws:dynamodb:*:*:table/*/index/*"], // Replace with actual ARN
-});
-
-
-// Attach policy to allow access to all DynamoDB tables in the account
-importAccountsLambda.addToRolePolicy(allDdbPolicy);
-importAccountsLambda.addToRolePolicy(allIndexPolicy);
-importAccountsLambda.addToRolePolicy(readS3Policy);
-importAccountsLambda.addEnvironment("ACCOUNTS_TABLE_NAME", tables["Account"].tableName);
+bucket.addEventNotification(
+  EventType.OBJECT_CREATED_PUT,
+  new LambdaDestination(importItemLambda),
+  { prefix: PROCESSING_DIR + 'Item', suffix: '.csv' }
+);
 
 

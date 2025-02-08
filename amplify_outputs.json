@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "eu-central-1_HY0E4wia6",
+    "user_pool_id": "eu-central-1_BMqDiFyw6",
     "aws_region": "eu-central-1",
-    "user_pool_client_id": "39tm19nilfhigcjimmk9ovqhhd",
-    "identity_pool_id": "eu-central-1:a16d4e73-167b-4066-8047-48c81714962a",
+    "user_pool_client_id": "71ube3gju3kd4j3atea2ncqfd9",
+    "identity_pool_id": "eu-central-1:72e75aa8-1801-466f-8bde-0b7fe557b8cd",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -52,7 +52,7 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://23dbgsf2dvcolkqh2yxxbpu4zy.appsync-api.eu-central-1.amazonaws.com/graphql",
+    "url": "https://upbcwh7ywrdfdoemwv2mmpgv3a.appsync-api.eu-central-1.amazonaws.com/graphql",
     "aws_region": "eu-central-1",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
@@ -1174,15 +1174,60 @@
             {
               "type": "key",
               "properties": {
-                "name": "itemsByDeletedAtAndAccountNumberAndCategoryAndBrandAndColorAndSize",
-                "queryField": "listItemByDeletedAtAndAccountNumberAndCategoryAndBrandAndColorAndSize",
+                "name": "itemsByCategory",
+                "queryField": "listItemByCategory",
                 "fields": [
-                  "deletedAt",
-                  "accountNumber",
-                  "category",
-                  "brand",
-                  "color",
+                  "category"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "itemsByBrand",
+                "queryField": "listItemByBrand",
+                "fields": [
+                  "brand"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "itemsByColor",
+                "queryField": "listItemByColor",
+                "fields": [
+                  "color"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "itemsBySize",
+                "queryField": "listItemBySize",
+                "fields": [
                   "size"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "itemsByStatus",
+                "queryField": "listItemByStatus",
+                "fields": [
+                  "status"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "itemsByCreatedAt",
+                "queryField": "listItemByCreatedAt",
+                "fields": [
+                  "createdAt"
                 ]
               }
             },
@@ -1749,6 +1794,7 @@
             "Expired",
             "Lost",
             "Stolen",
+            "Multi",
             "Unknown"
           ]
         },
@@ -2014,11 +2060,11 @@
   },
   "storage": {
     "aws_region": "eu-central-1",
-    "bucket_name": "amplify-xeriandashboard-python-drivebucket92e67ee0-bdi84ffqc8vu",
+    "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-p93kqfrodanl",
     "buckets": [
       {
         "name": "drive",
-        "bucket_name": "amplify-xeriandashboard-python-drivebucket92e67ee0-bdi84ffqc8vu",
+        "bucket_name": "amplify-xeriandashboard-andrew-drivebucket92e67ee0-p93kqfrodanl",
         "aws_region": "eu-central-1",
         "paths": {
           "data/${cognito-identity.amazonaws.com:sub}/*": {
@@ -2028,7 +2074,8 @@
               "write",
               "delete"
             ]
-          }
+          },
+          "import/*": {}
         }
       }
     ]

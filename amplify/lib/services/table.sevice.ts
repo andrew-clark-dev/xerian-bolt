@@ -21,7 +21,7 @@ export const unknownExternalUser: ExternalUser = {
     user_type: 'employee'
 };
 
-export const resetData = async (models: Map<string, string>) => {
+export const resetData = async (models: Map<string, string[]>) => {
     const counterTableName = process.env['COUNTER_TABLE']!;
 
     for (const [modelName, index] of models) {
@@ -59,7 +59,7 @@ export const resetCount = async (modelName: string, counterTable: string) => {
     }
 }
 
-export const truncateTable = async (name: string, index: string) => {
+export const truncateTable = async (name: string, index: string[]) => {
     logger.info(`Truncate: ${name}`);
 
     const tableName = process.env[name]!;
@@ -93,7 +93,7 @@ export const truncateTable = async (name: string, index: string) => {
         for (const chunk of itemChunks) {
             const deleteRequests = chunk.map((item: AttributeMap) => ({
                 DeleteRequest: {
-                    Key: { [index]: item[index] },
+                    Key: Object.fromEntries(index.map(key => [key, item[key]]),),
                 },
             }));
 

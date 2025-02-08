@@ -5,6 +5,7 @@ import { findExternalAccount } from './external-account/resource';
 import { findExternalItem } from './external-item/resource';
 
 import { resetDataFunction } from '../function/reset-data/resource';
+import { importAccountFunction, importItemFunction } from './import/resource';
 
 export const schema = a.schema({
 
@@ -123,7 +124,7 @@ export const schema = a.schema({
       index("deletedAt").sortKeys(["number", "createdAt", "balance"]),
     ]),
 
-  ItemStatus: a.enum(['Created', 'Tagged', 'Active', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen', 'Unknown']),
+  ItemStatus: a.enum(['Created', 'Tagged', 'Active', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen', 'Multi', 'Unknown']),
 
   Item: a
     .model({
@@ -156,7 +157,12 @@ export const schema = a.schema({
     .identifier(['sku'])
     .secondaryIndexes((index) => [
       index("id"),
-      index("deletedAt").sortKeys(["accountNumber", "category", "brand", "color", "size"]),
+      index("createdAt"),
+      index("category"),
+      index("brand"),
+      index("color"),
+      index("size"),
+      index("status"),
     ]),
 
   ItemGroup: a
@@ -245,6 +251,8 @@ export const schema = a.schema({
   allow.resource(findExternalAccount),
   allow.resource(findExternalItem),
   allow.resource(resetDataFunction),
+  allow.resource(importAccountFunction),
+  allow.resource(importItemFunction),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

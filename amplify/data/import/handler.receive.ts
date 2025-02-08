@@ -1,0 +1,113 @@
+import { S3Handler } from "aws-lambda";
+import { CopyObjectCommand, DeleteObjectCommand, S3 } from "@aws-sdk/client-s3";
+import * as readline from "readline";
+import * as stream from "stream";
+import { Logger } from "@aws-lambda-powertools/logger";
+
+const s3 = new S3({ region: process.env.AWS_REGION });
+const logger = new Logger({ serviceName: "import-recieve-function" });
+
+// Read `MAX_LINES` and `OUTPUT_DIR` from environment variables
+const MAX_LINES = parseInt(process.env.MAX_LINES!, 10);
+const OUTPUT_DIR = process.env.OUTPUT_DIR!;
+const ARCHIVE_DIR = process.env.ARCHIVE_DIR!;
+
+/**
+ * Lambda Handler Function
+ */
+export const handler: S3Handler = async (event): Promise<void> => {
+    logger.info(`S3 event: ${JSON.stringify(event)}`);
+    const bucketName = event.Records[0].s3.bucket.name;
+    const objectKey = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));
+
+    try {
+        logger.info(`Processing file: s3://${bucketName}/${objectKey}`);
+
+        // Get object stream
+        const object = await s3.getObject({ Bucket: bucketName, Key: objectKey });
+        if (!object.Body) {
+            throw new Error("Empty file or unable to read object body.");
+        }
+
+        const rl = readline.createInterface({
+            input: object.Body as stream.Readable,
+            crlfDelay: Infinity,
+        });
+
+        let fileCounter = 0;
+        let lineCounter = 0;
+        let headers: string | null = null;
+        let batchLines: string[] = [];
+
+        for await (const line of rl) {
+            if (!headers) {
+                headers = line; // Store header row
+                continue;
+            }
+
+            batchLines.push(line);
+            lineCounter++;
+
+            if (lineCounter >= MAX_LINES) {
+                await uploadChunk(bucketName, headers, batchLines, ++fileCounter, objectKey);
+                batchLines = [];
+                lineCounter = 0;
+            }
+        }
+
+        // Upload remaining lines if any
+        if (batchLines.length > 0) {
+            await uploadChunk(bucketName, headers!, batchLines, ++fileCounter, objectKey);
+        }
+
+        logger.info(`Successfully split file into ${fileCounter} parts.`);
+
+        // Move the file to the archive folder 
+        await archFile(bucketName, objectKey);
+
+    } catch (error) {
+        logger.error(`Error processing file: ${error}`);
+        throw error; // Rethrow the error to ensure Lambda knows it failed
+    }
+};
+
+// Function to upload a chunk to S3
+async function uploadChunk(bucket: string, headers: string, lines: string[], partNumber: number, originalFileName: string) {
+    // Remove file extension (e.g., ".csv") to avoid duplication in the name
+    const baseName = originalFileName.replace(/\.[^/.]+$/, "");
+    const newFileKey = `${OUTPUT_DIR}${baseName}-part-${partNumber}.csv`;
+
+    const csvData = [headers, ...lines].join("\n");
+
+    await s3.putObject({
+        Bucket: bucket,
+        Key: newFileKey,
+        Body: csvData,
+        ContentType: "text/csv",
+    });
+
+    logger.info(`Uploaded: s3://${bucket}/${newFileKey}`);
+}
+
+export async function archFile(bucket: string, originalKey: string) {
+    try {
+        const destinationKey = `${ARCHIVE_DIR}/${originalKey.split('/').pop()}`;
+        // Copy the file to the new location
+        await s3.send(new CopyObjectCommand({
+            Bucket: bucket,
+            CopySource: `${bucket}/${originalKey}`,
+            Key: destinationKey,
+        }));
+
+        // Delete the original file
+        await s3.send(new DeleteObjectCommand({
+            Bucket: bucket,
+            Key: originalKey,
+        }));
+
+        logger.info(`Moved file from s3://${bucket}/${originalKey} to s3://${bucket}/${destinationKey}`);
+    } catch (error) {
+        logger.error(`Error moving file: ${error}`);
+        throw error; // Rethrow the error to ensure Lambda knows it failed
+    }
+}
