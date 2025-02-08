@@ -25,3 +25,6 @@ dist-ssr
 
 # amplify
 .amplify
+amplify/function/import-accounts/__pycache__/csv_parser.cpython-313.pyc
+amplify/function/import-accounts/__pycache__/test_csv_parser.cpython-313.pyc
+amplify/function/import-accounts/__pycache__/utils.cpython-313.pyc

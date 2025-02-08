@@ -72,18 +72,8 @@ fixed_attributes_account = {
     '__typename': 'Account',  # fixed attribute
 }
 
-def handler(event, context):
-    # Extract the S3 bucket name and object key from the event
-    bucket_name = event['Records'][0]['s3']['bucket']['name']
-    object_key = event['Records'][0]['s3']['object']['key']
-    
-    # Get the file from S3
-    try:
-        response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
-        csv_content = response['Body'].read()
-    except Exception as e:
-        return {'statusCode': 500, 'body': f'Error retrieving file from S3: {str(e)}'}
-    
+def import_account(csv_content):
+
     # Read CSV with pandas
     try:
         df = pd.read_csv(io.BytesIO(csv_content), converters={'Number': str})

@@ -1,18 +1,17 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { Stack } from 'aws-cdk-lib';
 import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
-import { StartingPosition, EventSourceMapping, Function as LambdaFunction } from "aws-cdk-lib/aws-lambda";
+import { StartingPosition, EventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { storage } from './storage/resource';
 import { createActionFunction } from './function/create-action/resource';
 import { findExternalAccount } from './data/external-account/resource';
 import { truncateTableFunction } from './function/truncate-table/resource';
-import { fetchAccountsFunction, importAccountFunction } from './function/import-accounts/resource';
-import { fetchItemsFunction, importItemFunction } from './function/import-items/resource';
-import { QueueLambdaIntegration } from './backend/queue.lambda.integration';
 import { resetDataFunction } from './function/reset-data/resource';
-
+import { importAccountsFunction } from './function/import-account/resource';
+import { EventType } from 'aws-cdk-lib/aws-s3';
+import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -25,10 +24,7 @@ const backend = defineBackend({
   findExternalAccount,
   truncateTableFunction,
   resetDataFunction,
-  fetchAccountsFunction,
-  importAccountFunction,
-  fetchItemsFunction,
-  importItemFunction,
+  importAccountsFunction,
 });
 
 // extract L1 CfnUserPool resources
@@ -48,8 +44,9 @@ cfnUserPool.policies = {
 
 
 const { tables } = backend.data.resources
-const region = backend.stack.region
-const accountId = backend.stack.account
+const { bucket } = backend.storage.resources
+// const region = backend.stack.region
+// const accountId = backend.stack.account
 
 
 const createActionLambda = backend.createActionFunction.resources.lambda
@@ -124,41 +121,44 @@ for (const key in tables) {
 }
 
 // Set up import queues and integrate with Lambda functions
-const customStack = backend.createStack('CustomResources');
-const artifactId = backend.stack.artifactId.split('-').pop();
+const importAccountsLambda = backend.importAccountsFunction.resources.lambda;
+backend.importAccountsFunction
+// tables.Account.grantFullAccess(importAccountsLambda);
+// tables.UserProfile.grantFullAccess(importAccountsLambda);
+// bucket.grantReadWrite(importAccountsLambda);
+bucket.addEventNotification(
+  EventType.OBJECT_CREATED_PUT,
+  new LambdaDestination(importAccountsLambda),
+  {
+    prefix: 'import/',
+    suffix: '.csv',
+  }
+);
 
-// Get the Lambda function objects
-const fetchAccountsLambda = backend.fetchAccountsFunction.resources.lambda;
-const importAccountLambda = backend.importAccountFunction.resources.lambda;
-
-// Create the Queue-Lambda integration construct
-new QueueLambdaIntegration(customStack, 'AccountImportIntegration', {
-  queueName: 'AccountImport-' + artifactId,
-  sendFunction: fetchAccountsLambda as LambdaFunction,
-  receiveFunction: importAccountLambda as LambdaFunction,
-  tables: [tables['Account'], tables['UserProfile'], tables['Action']],
-  fifo: true,
+// Add S3 read policy for import
+const readS3Policy = new PolicyStatement({
+  sid: "AllowS3Access",
+  actions: ["s3:GetObject", "s3:ListBucket"],
+  resources: [`arn:aws:s3:::**`], // Replace with actual ARN
 });
 
-// Get the Lambda function objects
-const fetchItemsLambda = backend.fetchItemsFunction.resources.lambda;
-const importItemLambda = backend.importItemFunction.resources.lambda;
+const allDdbPolicy = new PolicyStatement({
+  sid: "AllowDDBAccess",
+  actions: ["dynamodb:*"],
+  resources: [`arn:aws:dynamodb:*:*:table/*`], // Replace with actual ARN
+});
 
-// Create the Queue-Lambda integration construct
-new QueueLambdaIntegration(customStack, 'ItemImportIntegration', {
-  queueName: 'ItemImport-' + artifactId,
-  sendFunction: fetchItemsLambda as LambdaFunction,
-  receiveFunction: importItemLambda as LambdaFunction,
-  tables: [tables['Item'], tables['UserProfile'], tables['Action'], tables['ItemGroup'], tables['Transaction'], tables['ItemCategory']],
-  fifo: false,
+const allIndexPolicy = new PolicyStatement({
+  sid: "AllowDDBIndexAccess",
+  actions: ["dynamodb:DescribeTable", "dynamodb:Query", "dynamodb:Scan"],
+  resources: ["arn:aws:dynamodb:*:*:table/*", "arn:aws:dynamodb:*:*:table/*/index/*"], // Replace with actual ARN
 });
 
 
-// Add SSM policy to fetchItemsLambda
-const ssmPolicy = new PolicyStatement({
-  sid: "AllowParameterStoreAccess",
-  actions: ["ssm:GetParameter", "ssm:PutParameter"],
-  resources: [`arn:aws:ssm:${region}:${accountId}:parameter/**`], // Replace with actual ARN
-});
+// Attach policy to allow access to all DynamoDB tables in the account
+importAccountsLambda.addToRolePolicy(allDdbPolicy);
+importAccountsLambda.addToRolePolicy(allIndexPolicy);
+importAccountsLambda.addToRolePolicy(readS3Policy);
+importAccountsLambda.addEnvironment("ACCOUNTS_TABLE_NAME", tables["Account"].tableName);
 
-fetchItemsLambda.addToRolePolicy(ssmPolicy)
+

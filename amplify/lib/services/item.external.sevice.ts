@@ -85,7 +85,6 @@ export const toItem = (externalItem: ExternalItem): Item => {
         price: externalItem.tag_price,
         status: toStatus(externalItem),
         //        group: toGroup(externalItem),
-        sales: toSales(externalItem),
         printedAt: externalItem.printed,
         lastSoldAt: externalItem.last_sold,
         lastViewedAt: externalItem.last_viewed,

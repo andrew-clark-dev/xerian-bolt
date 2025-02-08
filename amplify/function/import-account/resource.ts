@@ -13,6 +13,7 @@ export const importAccountsFunction = defineFunction(
             handler: "index.handler",
             runtime: Runtime.PYTHON_3_13, // or any other python version
             timeout: Duration.seconds(20), //  default is 3 seconds
+            environment: {},
             code: Code.fromAsset(functionDir, {
                 bundling: {
                     image: DockerImage.fromRegistry("public.ecr.aws/lambda/python:3.13"), // replace with desired image from AWS ECR Public Gallery
