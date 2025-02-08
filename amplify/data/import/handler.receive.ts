@@ -72,7 +72,8 @@ export const handler: S3Handler = async (event): Promise<void> => {
 };
 
 // Function to upload a chunk to S3
-async function uploadChunk(bucket: string, headers: string, lines: string[], partNumber: number, originalFileName: string) {
+async function uploadChunk(bucket: string, headers: string, lines: string[], partNumber: number, key: string) {
+    const originalFileName = key.split("/").pop()!;
     // Remove file extension (e.g., ".csv") to avoid duplication in the name
     const baseName = originalFileName.replace(/\.[^/.]+$/, "");
     const newFileKey = `${OUTPUT_DIR}${baseName}-part-${partNumber}.csv`;
@@ -91,7 +92,7 @@ async function uploadChunk(bucket: string, headers: string, lines: string[], par
 
 export async function archFile(bucket: string, originalKey: string) {
     try {
-        const destinationKey = `${ARCHIVE_DIR}/${originalKey.split('/').pop()}`;
+        const destinationKey = `${ARCHIVE_DIR}${originalKey.split('/').pop()}`;
         // Copy the file to the new location
         await s3.send(new CopyObjectCommand({
             Bucket: bucket,

@@ -1,6 +1,6 @@
 import { defineFunction } from "@aws-amplify/backend";
 
-export const IMPORT_DIR = 'import/'
+export const IMPORT_DIR = 'import/in/'
 export const PROCESSING_DIR = 'import/processing/'
 export const ARCHIVE_DIR = 'import/archive/'
 

@@ -10,17 +10,18 @@ export const storage = defineStorage({
             allow.entity('identity').to(['read', 'write', 'delete'])
         ],
 
-        'import/*': [
+        'import/in/*': [
             allow.resource(importReceiveFunction).to(['read', 'write', 'delete']),
         ],
         'import/processing/*': [
+            allow.resource(importReceiveFunction).to(['write']),
             allow.resource(importAccountFunction).to(['read', 'write', 'delete']),
             allow.resource(importItemFunction).to(['read', 'write', 'delete']),
         ],
         'import/archive/*': [
-            allow.resource(importReceiveFunction).to(['read', 'write', 'delete']),
-            allow.resource(importAccountFunction).to(['read', 'write', 'delete']),
-            allow.resource(importItemFunction).to(['read', 'write', 'delete']),
+            allow.resource(importReceiveFunction).to(['write']),
+            allow.resource(importAccountFunction).to(['write']),
+            allow.resource(importItemFunction).to(['write']),
         ]
     })
 });
