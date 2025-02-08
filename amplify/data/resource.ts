@@ -2,22 +2,13 @@ import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
 import { findExternalAccount } from './external-account/resource';
-import { importAccountFunction } from '../function/import-accounts/resource';
 import { findExternalItem } from './external-item/resource';
-import { fetchItemsFunction } from '../function/import-items/resource';
-import { importItemFunction } from '../function/import-items/resource';
+
 import { resetDataFunction } from '../function/reset-data/resource';
 
 export const schema = a.schema({
 
   // Models
-  AppConfig: a
-    .model({
-      name: a.string().required(),
-      value: a.string(),
-    })
-    .identifier(['name']),
-
   Counter: a
     .model({
       name: a.string().required(),
@@ -85,6 +76,7 @@ export const schema = a.schema({
     })
     .secondaryIndexes((index) => [
       index("cognitoName"),
+      index("nickname"),
       index("email"),
     ])
     .authorization((allow) => [
@@ -112,7 +104,7 @@ export const schema = a.schema({
       kind: a.enum(["Standard", "VIP", "Vender", "Employee", "Customer", "Owner"]),
       defaultSplit: a.integer(),
       items: a.hasMany("Item", "accountNumber"), // setup relationships between main types
-      transactions: a.hasMany("Transaction", "accountNumber"), // setup relationships between types
+      transactions: a.string().array(), // this is the list of transaction ids that this item has been involved in.
       balance: a.integer().default(0),
       noSales: a.integer().default(0),
       noItems: a.integer().default(0),
@@ -130,16 +122,6 @@ export const schema = a.schema({
       index("status"),
       index("deletedAt").sortKeys(["number", "createdAt", "balance"]),
     ]),
-
-  findExternalAccount: a
-    .query()
-    // arguments that this query accepts
-    .arguments({
-      query: a.string().required()
-    })
-    // return type of the query
-    .returns(a.ref('Account'))
-    .handler(a.handler.function(findExternalAccount)),
 
   ItemStatus: a.enum(['Created', 'Tagged', 'Active', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen', 'Unknown']),
 
@@ -163,8 +145,7 @@ export const schema = a.schema({
       price: a.integer(),
       status: a.ref('ItemStatus'), // this is the status of unique items.
       group: a.hasOne('ItemGroup', 'itemSku'), // this is the group of items that are the same. 
-      sales: a.integer().default(0),
-      transactions: a.hasMany("Transaction", "itemSku"), // setup relationships between types
+      transactions: a.string().array(), // this is the list of transaction ids that this item has been involved in.
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
       lastViewedAt: a.datetime(),
@@ -177,16 +158,6 @@ export const schema = a.schema({
       index("id"),
       index("deletedAt").sortKeys(["accountNumber", "category", "brand", "color", "size"]),
     ]),
-
-  findExternalItem: a
-    .query()
-    // arguments that this query accepts
-    .arguments({
-      query: a.string().required()
-    })
-    // return type of the query
-    .returns(a.ref('Item'))
-    .handler(a.handler.function(findExternalItem)),
 
   ItemGroup: a
     .model({
@@ -212,83 +183,67 @@ export const schema = a.schema({
       index("kind"),
     ]),
 
+  TransactionItem: a
+    .customType({
+      sku: a.string().required(),
+      title: a.string(),
+      category: a.string(),
+      brand: a.string(),
+      color: a.string(),
+      size: a.string(),
+      description: a.string(),
+      details: a.string(),
+      images: a.url().array(), // fields can be arrays,
+      condition: a.enum(['AsNew', 'Good', 'Marked', 'Damaged', 'Unknown', 'NotSpecified']),
+      split: a.integer(),
+      price: a.integer(),
+    }),
+
   Transaction: a
     .model({
+      id: a.id().required(),
       lastActivityBy: a.id().required(),
+      cashier: a.string(), // user profile nickname
       type: a.enum(["Sale", "Refund", "Payout", "Reversal"]),
-      paymentType: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
       channel: a.string(),
       amount: a.integer().required(),
       time: a.datetime().required(),
       linkedTransaction: a.string(),  // for refund link to sale, or for a reversal link to original
-      itemSku: a.string(),
-      item: a.belongsTo("Item", "itemSku"),
+      items: a.ref('TransactionItem').array(),
       accountNumber: a.string(),
-      account: a.belongsTo("Account", "accountNumber"),
+      payment: a.hasOne("Payment", "id"),
     })
     .secondaryIndexes((index) => [
       index("type"),
-      index("paymentType"),
-      index("itemSku"),
       index("accountNumber"),
     ]),
 
-  // Item2: a
-  //   .customType({
-  //     sku: a.string().required(),
-  //     lastActivityBy: a.id().required(),
-  //     title: a.string(),
-  //     category: a.string(),
-  //     brand: a.string(),
-  //     color: a.string(),
-  //     size: a.string(),
-  //     description: a.string(),
-  //     details: a.string(),
-  //     images: a.url().array(), // fields can be arrays,
-  //     condition: a.enum(['AsNew', 'Good', 'Marked', 'Damaged', 'Unknown', 'NotSpecified']),
-  //     split: a.integer(),
-  //     price: a.integer(),
-  //     status: a.ref('ItemStatus'), // this is the status of unique items.
-  //     printedAt: a.datetime(),
-  //     lastSoldAt: a.datetime(),
-  //     lastViewedAt: a.datetime(),
-  //     createdAt: a.datetime(),
-  //     updatedAt: a.datetime(),
-  //     deletedAt: a.datetime(),
-  //   }),
+  Payment: a.model({
+    id: a.id().required(),
+    createdAt: a.datetime(),
+    updatedAt: a.datetime(),
+    type: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
+    channel: a.string(),
+    amount: a.integer().required(),
+    status: a.enum(['Pending', 'Completed', 'Failed']),
+    tranaction: a.belongsTo('Transaction', 'id'),
+  })
+    .secondaryIndexes((index) => [
+      index("type"),
+    ]),
 
-  // Transaction2: a
-  //   .model({
-  //     lastActivityBy: a.id().required(),
-  //     type: a.enum(["Sale", "Refund", "Payout", "Reversal"]),
-  //     paymentType: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
-  //     channel: a.string(),
-  //     amount: a.integer().required(),
-  //     time: a.datetime().required(),
-  //     linkedTransaction: a.string(),  // for refund link to sale, or for a reversal link to original
-  //     items: a.ref("Item2").array(),
-  //     accountNumber: a.string(),
-  //     payment: a.ref("Payment"),
-  //   }),
+  findExternalAccount: a.query().arguments({ query: a.string().required() }).returns(a.ref('Account'))
+    .handler(a.handler.function(findExternalAccount)),
 
-  // Payment: a.customType({
-  //   createdAt: a.datetime(),
-  //   updatedAt: a.datetime(),
-  //   type: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
-  //   channel: a.string(),
-  //   amount: a.integer().required(),
-  //   status: a.enum(['Pending', 'Completed', 'Failed']),
-  // }),
+  findExternalItem: a.query().arguments({ query: a.string().required() }).returns(a.ref('Item'))
+    .handler(a.handler.function(findExternalItem)),
 
 }).authorization(allow => [
   allow.group('Employee'), // default to employee
   allow.resource(postConfirmation),
   allow.resource(createActionFunction),
-  allow.resource(importAccountFunction),
   allow.resource(findExternalAccount),
   allow.resource(findExternalItem),
-  allow.resource(fetchItemsFunction),
-  allow.resource(importItemFunction),
   allow.resource(resetDataFunction),
 ]);
 
