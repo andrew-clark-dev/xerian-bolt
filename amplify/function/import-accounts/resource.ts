@@ -1,20 +1,34 @@
-import { defineFunction, secret } from "@aws-amplify/backend";
+import { execSync } from "node:child_process";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineFunction } from "@aws-amplify/backend";
+import { DockerImage, Duration } from "aws-cdk-lib";
+import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
 
-export const fetchAccountsFunction = defineFunction({
-    name: "fetch-account-function",
-    entry: "./fetch.handler.ts",
-    resourceGroupName: "data",
-    timeoutSeconds: 900,
-    environment: {  // environment variables
-        API_KEY: secret('CC_API_KEY'),
-        BASE_URL: 'https://api.consigncloud.com/api',
-        MESSAGE_GROUP_ID: 'account-fetch-group',
-    },
-});
+const functionDir = path.dirname(fileURLToPath(import.meta.url));
 
-export const importAccountFunction = defineFunction({
-    name: "import-account-function",
-    entry: "./import.handler.ts",
-    resourceGroupName: "data",
-    timeoutSeconds: 5,
-});
+export const importAccountsFunction = defineFunction(
+    (scope) =>
+        new Function(scope, "import-accounts-function", {
+            handler: "index.handler",
+            runtime: Runtime.PYTHON_3_13, // or any other python version
+            timeout: Duration.seconds(20), //  default is 3 seconds
+            code: Code.fromAsset(functionDir, {
+                bundling: {
+                    image: DockerImage.fromRegistry("public.ecr.aws/lambda/python:3.13"), // replace with desired image from AWS ECR Public Gallery
+                    local: {
+                        tryBundle(outputDir: string) {
+                            execSync(
+                                `python3 -m pip install -r ${path.join(functionDir, "requirements.txt")} -t ${path.join(outputDir)} --platform manylinux2014_x86_64 --only-binary=:all:`
+                            );
+                            execSync(`cp -r ${functionDir}/* ${path.join(outputDir)}`);
+                            return true;
+                        },
+                    },
+                },
+            }),
+        }),
+    // {
+    //     resourceGroupName: "auth" // Optional: Groups this function with auth resource
+    // }
+);
