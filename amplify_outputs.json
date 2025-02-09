@@ -2077,7 +2077,8 @@
           },
           "import/in/*": {},
           "import/processing/*": {},
-          "import/archive/*": {}
+          "import/archive/*": {},
+          "import/error/*": {}
         }
       }
     ]

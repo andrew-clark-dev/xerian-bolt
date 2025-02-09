@@ -1,16 +1,21 @@
 import { defineFunction } from "@aws-amplify/backend";
 
-export const IMPORT_DIR = 'import/in/'
-export const PROCESSING_DIR = 'import/processing/'
-export const ARCHIVE_DIR = 'import/archive/'
+
+export const IMPORT_DIRS = {
+    IN_DIR: 'import/in/',
+    PROCESSING_DIR: 'import/processing/',
+    ARCHIVE_DIR: 'import/archive/',
+    ERROR_DIR: 'import/error/',
+}
 
 export const importAccountFunction = defineFunction({
     name: "import-account-function",
     entry: "./handler.account.ts",
     resourceGroupName: "data",
     timeoutSeconds: 900,
-    environment: {  // Environment variables are passed to the function 
-        ARCHIVE_DIR: ARCHIVE_DIR,
+    environment: {
+        ...IMPORT_DIRS,
+        SERVICE_NAME: "import-account-function"
     },
 });
 
@@ -19,8 +24,9 @@ export const importItemFunction = defineFunction({
     entry: "./handler.item.ts",
     resourceGroupName: "data",
     timeoutSeconds: 900,
-    environment: {  // Environment variables are passed to the function 
-        ARCHIVE_DIR: ARCHIVE_DIR,
+    environment: {
+        ...IMPORT_DIRS,
+        SERVICE_NAME: "import-item-function"
     },
 });
 
@@ -29,9 +35,9 @@ export const importReceiveFunction = defineFunction({
     entry: "./handler.receive.ts",
     resourceGroupName: "data",
     timeoutSeconds: 120,
-    environment: {  // Environment variables are passed to the function 
+    environment: {
+        ...IMPORT_DIRS,
         MAX_LINES: "1000",
-        OUTPUT_DIR: PROCESSING_DIR,
-        ARCHIVE_DIR: ARCHIVE_DIR,
+        SERVICE_NAME: "import-receive-function"
     },
 });

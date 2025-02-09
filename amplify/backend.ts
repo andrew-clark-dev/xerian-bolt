@@ -11,7 +11,7 @@ import { truncateTableFunction } from './function/truncate-table/resource';
 import { resetDataFunction } from './function/reset-data/resource';
 import { EventType } from 'aws-cdk-lib/aws-s3';
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
-import { importReceiveFunction, importAccountFunction, importItemFunction, IMPORT_DIR, PROCESSING_DIR } from './data/import/resource';
+import { importReceiveFunction, importAccountFunction, importItemFunction, IMPORT_DIRS } from './data/import/resource';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -130,19 +130,19 @@ const importReceiveLambda = backend.importReceiveFunction.resources.lambda;
 bucket.addEventNotification(
   EventType.OBJECT_CREATED_PUT,
   new LambdaDestination(importReceiveLambda),
-  { prefix: IMPORT_DIR, suffix: '.csv' }
+  { prefix: IMPORT_DIRS.IN_DIR, suffix: '.csv' }
 );
 
 bucket.addEventNotification(
   EventType.OBJECT_CREATED_PUT,
   new LambdaDestination(importAccountLambda),
-  { prefix: PROCESSING_DIR + 'Account', suffix: '.csv' }
+  { prefix: IMPORT_DIRS.PROCESSING_DIR + 'Account', suffix: '.csv' }
 );
 
 bucket.addEventNotification(
   EventType.OBJECT_CREATED_PUT,
   new LambdaDestination(importItemLambda),
-  { prefix: PROCESSING_DIR + 'Item', suffix: '.csv' }
+  { prefix: IMPORT_DIRS.PROCESSING_DIR + 'Item', suffix: '.csv' }
 );
 
 

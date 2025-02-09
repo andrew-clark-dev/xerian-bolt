@@ -9,7 +9,7 @@ import AWS from "aws-sdk";
 import Papa from "papaparse";
 import { provisionService } from "../../lib/services/user.external.sevice";
 import { importUserId } from "../../lib/services/table.sevice";
-import { archFile } from "./handler.receive";
+import { archiveFile } from "./handler.receive";
 export type Account = Schema['Account']['type']
 export type AccountStatus = Schema['Account']['type']['status'];
 export type AccountKind = Schema['Account']['type']['kind'];
@@ -142,7 +142,7 @@ export const handler: S3Handler = async (event): Promise<void> => {
         logger.info(`Successfully inserted ${data.length} accounts into DynamoDB`);
 
         // Move the file to the archive folder 
-        await archFile(bucket, key);
+        await archiveFile(bucket, key);
 
     } catch (error) {
         logger.info((`Error processing CSV: ${JSON.stringify(error)}`));

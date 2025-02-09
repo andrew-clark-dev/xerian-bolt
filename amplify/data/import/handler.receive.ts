@@ -1,5 +1,5 @@
 import { S3Handler } from "aws-lambda";
-import { CopyObjectCommand, DeleteObjectCommand, S3 } from "@aws-sdk/client-s3";
+import { CopyObjectCommand, DeleteObjectCommand, PutObjectCommand, S3 } from "@aws-sdk/client-s3";
 import * as readline from "readline";
 import * as stream from "stream";
 import { Logger } from "@aws-lambda-powertools/logger";
@@ -9,14 +9,16 @@ const logger = new Logger({ serviceName: "import-recieve-function" });
 
 // Read `MAX_LINES` and `OUTPUT_DIR` from environment variables
 const MAX_LINES = parseInt(process.env.MAX_LINES!, 10);
-const OUTPUT_DIR = process.env.OUTPUT_DIR!;
+const PROCESSING_DIR = process.env.PROCESSING_DIR!;
 const ARCHIVE_DIR = process.env.ARCHIVE_DIR!;
-
+const ERROR_DIR = process.env.ERROR_DIR!;
 /**
  * Lambda Handler Function
  */
 export const handler: S3Handler = async (event): Promise<void> => {
     logger.info(`S3 event: ${JSON.stringify(event)}`);
+    logger.info('Lambda Environment Variables:', { environmentVariables: process.env });
+
     const bucketName = event.Records[0].s3.bucket.name;
     const objectKey = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));
 
@@ -63,7 +65,7 @@ export const handler: S3Handler = async (event): Promise<void> => {
         logger.info(`Successfully split file into ${fileCounter} parts.`);
 
         // Move the file to the archive folder 
-        await archFile(bucketName, objectKey);
+        await archiveFile(bucketName, objectKey);
 
     } catch (error) {
         logger.error(`Error processing file: ${error}`);
@@ -76,21 +78,22 @@ async function uploadChunk(bucket: string, headers: string, lines: string[], par
     const originalFileName = key.split("/").pop()!;
     // Remove file extension (e.g., ".csv") to avoid duplication in the name
     const baseName = originalFileName.replace(/\.[^/.]+$/, "");
-    const newFileKey = `${OUTPUT_DIR}${baseName}-part-${partNumber}.csv`;
+    const newFileKey = `${PROCESSING_DIR}${baseName}-part-${partNumber}.csv`;
 
     const csvData = [headers, ...lines].join("\n");
 
-    await s3.putObject({
+    // Send the command using s3Client
+    await s3.send(new PutObjectCommand({
         Bucket: bucket,
         Key: newFileKey,
         Body: csvData,
-        ContentType: "text/csv",
-    });
+        ContentType: 'text/csv'
+    }));
 
     logger.info(`Uploaded: s3://${bucket}/${newFileKey}`);
 }
 
-export async function archFile(bucket: string, originalKey: string) {
+export async function archiveFile(bucket: string, originalKey: string) {
     try {
         const destinationKey = `${ARCHIVE_DIR}${originalKey.split('/').pop()}`;
         // Copy the file to the new location
@@ -111,4 +114,25 @@ export async function archFile(bucket: string, originalKey: string) {
         logger.error(`Error moving file: ${error}`);
         throw error; // Rethrow the error to ensure Lambda knows it failed
     }
+}
+
+export async function errorFile(bucket: string, originalKey: string, errorMessage: string, error: Error) {
+    try {
+        const destinationKey = `${ERROR_DIR}${originalKey.split('/').pop()}-${new Date().toISOString()}-error.log`;
+        const body = `Error: ${errorMessage}\n\nMessage:${error.message}\n\nStack:\n${error.stack}`;
+
+        // Send the command using s3Client
+        await s3.send(new PutObjectCommand({
+            Bucket: bucket,
+            Key: destinationKey,
+            Body: body,
+            ContentType: 'text/plain'
+        }));
+
+        logger.info(`Created error log s3://${bucket}/${destinationKey}`);
+    } catch (error) {
+        logger.error(`Error moving file: ${error}`);
+        throw error; // Rethrow the error to ensure Lambda knows it failed
+    }
+
 }

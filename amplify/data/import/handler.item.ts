@@ -1,7 +1,6 @@
 import type { S3Handler } from "aws-lambda";
 import { type Schema } from "../resource";
 import { generateClient } from "aws-amplify/data";
-import { Logger } from "@aws-lambda-powertools/logger";
 import { Amplify } from "aws-amplify";
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import { env } from "$amplify/env/import-item-function";
@@ -10,21 +9,21 @@ import Papa from "papaparse";
 import { provisionService } from "../../lib/services/user.external.sevice";
 import { ItemStatus } from "../../lib/services/item.external.sevice";
 import { importUserId } from "../../lib/services/table.sevice";
-import { archFile } from "./handler.receive";
+import { archiveFile, errorFile } from "./handler.receive";
+import { logger } from "../../lib/logger";
+import { toISO } from "../../lib/util";
 export type Item = Schema['Item']['type']
 
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
 
 Amplify.configure(resourceConfig, libraryOptions);
 
-const logger = new Logger({ serviceName: "import-account-function" });
-
 const client = generateClient<Schema>();
 
 // Initialize AWS clients
 const s3 = new AWS.S3();
 
-interface Header {
+interface Row {
     'SKU': string,
     'Created': string,
     'Created By': string,
@@ -82,7 +81,7 @@ interface Header {
  * Lambda Handler Function
  */
 export const handler: S3Handler = async (event): Promise<void> => {
-    logger.info(`S3 event: ${JSON.stringify(event)}`);
+    logger.info('S3 event:', event);
     try {
         const bucket = event.Records[0].s3.bucket.name;
         const key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
@@ -96,36 +95,40 @@ export const handler: S3Handler = async (event): Promise<void> => {
 
         // Parse CSV data
         const csvContent = s3Object.Body.toString("utf-8");
-        const { data } = Papa.parse<Header>(csvContent, { header: true });
+        const { data } = Papa.parse<Row>(csvContent, { header: true });
 
         // Insert data into DynamoDB
+        let errorCount = 0;
+        let added = 0;
+        let skipped = 0;
         for (const row of data) {
             const nickname = row['Created By']
             const profile = await provisionService.provisionUserByName(nickname);
-            logger.info(`Process: ${JSON.stringify(row)}`);
-            await createItem(row, profile.id);
+            try {
+                const processed = await createItem(row, profile.id);
+                added += processed;
+                skipped += (1 - processed);
+            } catch (error) {
+                logger.error('Error creating item', error);
+                errorCount++;
+                const message = `Error processing row: ${JSON.stringify(row)} - with profile id: ${profile.id}`;
+                if (error instanceof Error) {
+                    errorFile(bucket, key, message, error);
+                }
+            }
         }
 
-        logger.info(`Successfully inserted ${data.length} accounts into DynamoDB`);
+        logger.info(`Successfully processed ${data.length} items, ${added} added, ${skipped} skipped, with ${errorCount} errors`);
 
         // Move the file to the archive folder 
-        await archFile(bucket, key);
+        await archiveFile(bucket, key);
 
     } catch (error) {
-        logger.error((`Error processing CSV: ${JSON.stringify(error)}`));
-        throw error;
+        logger.ifErrorThrow(`Error processing CSV `, error);
     }
 };
 
-
-export function dateOf(datestring?: string | null): string | null {
-    if (datestring) {
-        return new Date(datestring).toISOString();
-    }
-    return null;
-
-}
-async function createGroup(row: Header) {
+async function createGroup(row: Row) {
     const quantity = parseInt(row['Quantity'] || '1');
     if (quantity > 1) {
         logger.info(`Creating item group: ${row['SKU']}`);
@@ -135,18 +138,17 @@ async function createGroup(row: Header) {
             statuses: toStatuses(row['Status']),
 
         });
-        if (groupErrors) {
-            throw new Error(`Failed to create item group: ${JSON.stringify(groupErrors)}`);
-        }
-        logger.info(`Created item group: ${JSON.stringify(groupData!)}`);
+        logger.ifErrorThrow('Failed to create item group', groupErrors);
+        logger.info(`Created item group`, groupData);
     }
 }
 
-async function createItem(row: Header, id: string) {
+async function createItem(row: Row, id: string): Promise<number> {
+    logger.info('Process', row);
     const item = await client.models.Item.get({ sku: row['SKU'] });
     if (item.data) {
-        logger.info(`Item already exists: ${JSON.stringify(item.data)}`);
-        return;
+        logger.info(`Item already exists:`, item.data);
+        return 0;
     }
 
     await createGroup(row);
@@ -166,22 +168,21 @@ async function createItem(row: Header, id: string) {
         split: parseInt(row['Split'].replace('%', '')),
         price: parseInt(row['Tag Price']),
         status: toStatus(row['Status']),
-        printedAt: dateOf(row['Printed']),
-        lastSoldAt: dateOf(row['Last Sold']),
-        lastViewedAt: dateOf(row['Last Viewed']),
-        createdAt: dateOf(row['Created']),
-        updatedAt: dateOf(new Date().toISOString()),
-        deletedAt: dateOf(row['Deleted']),
+        printedAt: toISO(row['Printed']),
+        lastSoldAt: toISO(row['Last Sold']),
+        lastViewedAt: toISO(row['Last Viewed']),
+        createdAt: toISO(row['Created']),
+        updatedAt: new Date().toISOString(),
+        deletedAt: toISO(row['Deleted']),
     }
 
     logger.info(`Creating item : ${JSON.stringify(newItem)}`);
 
     const { data, errors } = await client.models.Item.create(newItem);
 
-    if (errors) {
-        throw new Error(`Failed to create item: ${JSON.stringify(errors)}`);
-    }
-    logger.info(`Created item: ${JSON.stringify(data!)}`);
+    logger.ifErrorThrow('Failed to create item ', errors);
+
+    logger.info('Created item', data);
 
     logger.info(`Creating item import action: ${data?.sku}`);
     const { errors: actionErrors } = await client.models.Action.create({
@@ -192,14 +193,14 @@ async function createItem(row: Header, id: string) {
         refId: data?.id,
         userId: importUserId,
     });
-    if (actionErrors) {
-        throw new Error(`Failed to create account action:  ${JSON.stringify(errors)}`);
-    }
+    logger.ifErrorThrow('Failed to create item action', actionErrors);
+
     await createCategory('category', row['Category']);
     await createCategory('brand', row['Brand']);
     await createCategory('color', row['Color']);
     await createCategory('size', row['Size']);
 
+    return 1;
 }
 
 
@@ -207,30 +208,35 @@ const categories: string[] = [];
 
 async function createCategory(kind: string, value?: string | null) {
 
-    if (value) {
-        if (categories.includes(kind + value)) {
-            logger.info(`Category found in cach : ${kind} - ${value}`);
-            return;
-        }
-        const category = await client.models.ItemCategory.get({ kind, name: value });
-        if (category.data) {
-            logger.info(`Category already exists: ${JSON.stringify(category.data)}`);
-        } else {
-            logger.info(`Creating ${kind}: ${value}`);
-            const category = await client.models.ItemCategory.create({
-                lastActivityBy: importUserId,
-                kind: kind,
-                name: value,
-                matchNames: value,
-
-            });
-            if (category.errors) {
-                logger.warn(`Failed to create category: ${kind}: ${value}`); // this is probably a race condition.
+    try {
+        if (value) {
+            logger.info(`Create category : ${kind} - ${value}`);
+            if (categories.includes(kind + value)) {
+                logger.info(`Category found in cach, do nothing`);
                 return;
             }
-            logger.info(`Created category: ${JSON.stringify(category.data)}`);
+            const category = await client.models.ItemCategory.get({ kind, name: value });
+            if (category.data) {
+                logger.info('Category already exists', category.data);
+            } else {
+                logger.info(`Creating ${kind}: ${value}`);
+                const category = await client.models.ItemCategory.create({
+                    lastActivityBy: importUserId,
+                    kind: kind,
+                    name: value,
+                    matchNames: value,
+                });
+                if (category.errors) {
+                    logger.warn(`Failed to create category: ${kind}: ${value}`); // this is probably a race condition.
+                    return;
+                }
+                logger.info('Created category', category.data);
+            }
+            // cache the category
+            categories.push(kind + value);
         }
-        categories.push(kind + value);
+    } catch (error) {
+        logger.ifErrorThrow(`Error creating category: ${kind}: ${value}`, error);
     }
 }
 

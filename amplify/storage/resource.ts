@@ -1,8 +1,12 @@
 import { defineStorage } from '@aws-amplify/backend';
-import { importAccountFunction, importItemFunction, importReceiveFunction } from '../data/import/resource';
+import { IMPORT_DIRS, importAccountFunction, importItemFunction, importReceiveFunction } from '../data/import/resource';
+
+
 
 export const storage = defineStorage({
     name: 'drive',
+
+    versioned: true,
 
     access: (allow) => ({
         'data/{entity_id}/*': [
@@ -10,15 +14,20 @@ export const storage = defineStorage({
             allow.entity('identity').to(['read', 'write', 'delete'])
         ],
 
-        'import/in/*': [
+        [IMPORT_DIRS.IN_DIR + '*']: [
             allow.resource(importReceiveFunction).to(['read', 'write', 'delete']),
         ],
-        'import/processing/*': [
-            allow.resource(importReceiveFunction).to(['write']),
+        [IMPORT_DIRS.PROCESSING_DIR + '*']: [
+            allow.resource(importReceiveFunction).to(['read', 'write', 'delete']),
             allow.resource(importAccountFunction).to(['read', 'write', 'delete']),
             allow.resource(importItemFunction).to(['read', 'write', 'delete']),
         ],
-        'import/archive/*': [
+        [IMPORT_DIRS.ARCHIVE_DIR + '*']: [
+            allow.resource(importReceiveFunction).to(['write']),
+            allow.resource(importAccountFunction).to(['write']),
+            allow.resource(importItemFunction).to(['write']),
+        ],
+        [IMPORT_DIRS.ERROR_DIR + '*']: [
             allow.resource(importReceiveFunction).to(['write']),
             allow.resource(importAccountFunction).to(['write']),
             allow.resource(importItemFunction).to(['write']),
