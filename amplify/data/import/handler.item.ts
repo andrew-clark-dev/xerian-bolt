@@ -9,7 +9,7 @@ import Papa from "papaparse";
 import { provisionService } from "../../lib/services/user.external.sevice";
 import { ItemStatus } from "../../lib/services/item.external.sevice";
 import { importUserId } from "../../lib/services/table.sevice";
-import { archiveFile, errorFile } from "./handler.receive";
+import { archiveFile, writeErrorFile } from "./handler.receive";
 import { logger } from "../../lib/logger";
 import { toISO } from "../../lib/util";
 export type Item = Schema['Item']['type']
@@ -111,10 +111,8 @@ export const handler: S3Handler = async (event): Promise<void> => {
             } catch (error) {
                 logger.error('Error creating item', error);
                 errorCount++;
-                const message = `Error processing row: ${JSON.stringify(row)} - with profile id: ${profile.id}`;
-                if (error instanceof Error) {
-                    errorFile(bucket, key, message, error);
-                }
+                writeErrorFile(bucket, key, row, profile.id, error);
+
             }
         }
 

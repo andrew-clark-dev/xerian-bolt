@@ -116,10 +116,12 @@ export async function archiveFile(bucket: string, originalKey: string) {
     }
 }
 
-export async function errorFile(bucket: string, originalKey: string, errorMessage: string, error: Error) {
+export async function writeErrorFile(bucket: string, originalKey: string, row: unknown, id: string, error: unknown) {
     try {
         const destinationKey = `${ERROR_DIR}${originalKey.split('/').pop()}-${new Date().toISOString()}-error.log`;
-        const body = `Error: ${errorMessage}\n\nMessage:${error.message}\n\nStack:\n${error.stack}`;
+        const message = `Error processing row: ${JSON.stringify(row)} - with profile id: ${id}`;
+
+        const body = (error instanceof Error) ? `${message}\n\nMessage:${error.message}\n\nStack:\n${error.stack}` : `${message}\n\n${JSON.stringify(error)}`;
 
         // Send the command using s3Client
         await s3.send(new PutObjectCommand({
