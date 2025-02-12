@@ -55,6 +55,7 @@ export const schema = a.schema({
       createdBy: a.belongsTo('UserProfile', 'userId'),
       updatedAt: a.datetime(),
     })
+    .secondaryIndexes((index) => [index("refId"), index("userId")])
     .authorization(allow => [allow.owner(), allow.group('Admin'), allow.authenticated().to(['read'])]),
 
   UserProfile: a
@@ -84,6 +85,21 @@ export const schema = a.schema({
       allow.ownerDefinedIn("profileOwner"),
       allow.group('Admin')
     ]),
+
+  Customer: a
+    .model({
+      email: a.email().required(),
+      name: a.string(),
+      sales: a.string().array(), // Sales ids
+    })
+    .secondaryIndexes((index) => [
+      index("email"),
+    ])
+    .authorization((allow) => [
+      allow.ownerDefinedIn("profileOwner"),
+      allow.group('Admin')
+    ]),
+
 
   Account: a
     .model({
@@ -146,7 +162,7 @@ export const schema = a.schema({
       price: a.integer(),
       status: a.ref('ItemStatus'), // this is the status of unique items.
       group: a.hasOne('ItemGroup', 'itemSku'), // this is the group of items that are the same. 
-      transactions: a.string().array(), // this is the list of transaction ids that this item has been involved in.
+      sales: a.hasMany('SaleItem', 'itemSku'),
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
       lastViewedAt: a.datetime(),
@@ -189,54 +205,74 @@ export const schema = a.schema({
       index("kind"),
     ]),
 
-  TransactionItem: a
+
+  Sale: a
+    .model({
+      id: a.id().required(),
+      number: a.string().required(),
+      lastActivityBy: a.id().required(),
+      customerEmail: a.string(),
+      accoutNumber: a.string(), // the account number of the customer if exists     
+      status: a.enum(['Pending', 'Finalized', 'Parked', 'Voided']),
+      gross: a.integer().required(),
+      subTotal: a.integer().required(),
+      total: a.integer().required(),
+      change: a.integer(),
+      accountTotal: a.integer().required(),
+      storeTotal: a.integer().required(),
+      transaction: a.string().required(), // tranction id
+      items: a.hasMany('SaleItem', 'saleNumber'),
+      refunds: a.hasMany('Refund', 'saleNumber'),
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
+    })
+    .identifier(['number'])
+    .secondaryIndexes((index) => [
+      index("transaction"),
+    ]),
+
+
+  SaleItem: a
+    .model({
+      itemSku: a.string().required(),
+      saleNumber: a.string().required(),
+      item: a.belongsTo('Item', 'itemSku'),
+      tag: a.belongsTo('Sale', 'saleNumber'),
+    }),
+
+
+  RefundItem: a
     .customType({
       sku: a.string().required(),
-      title: a.string(),
-      category: a.string(),
-      brand: a.string(),
-      color: a.string(),
-      size: a.string(),
-      description: a.string(),
-      details: a.string(),
-      images: a.url().array(), // fields can be arrays,
-      condition: a.enum(['AsNew', 'Good', 'Marked', 'Damaged', 'Unknown', 'NotSpecified']),
-      split: a.integer(),
-      price: a.integer(),
+      title: a.string().required(),
+      price: a.integer().required(),
+    }),
+
+  Refund: a
+    .model({
+      lastActivityBy: a.id().required(),
+      transaction: a.string().required(), // tranction id
+      saleNumber: a.string(),
+      sale: a.belongsTo('Sale', 'saleNumber'),
+      items: a.ref('RefundItem').array(),
     }),
 
   Transaction: a
     .model({
-      id: a.id().required(),
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
       lastActivityBy: a.id().required(),
-      cashier: a.string(), // user profile nickname
-      type: a.enum(["Sale", "Refund", "Payout", "Reversal"]),
-      channel: a.string(),
+      paymentType: a.enum(["Cash", "Card", "GiftCard", "StoreCredit", "Other"]),
+      type: a.enum(["Sale", "Refund", "Payout", "Reversal", "Other"]),
       amount: a.integer().required(),
-      time: a.datetime().required(),
-      linkedTransaction: a.string(),  // for refund link to sale, or for a reversal link to original
-      items: a.ref('TransactionItem').array(),
-      accountNumber: a.string(),
-      payment: a.hasOne("Payment", "id"),
+      status: a.enum(['Pending', 'Completed', 'Failed']),
+      linked: a.string(),  // for refund link to sale, or for a reversal link to original
+
     })
     .secondaryIndexes((index) => [
       index("type"),
-      index("accountNumber"),
     ]),
 
-  Payment: a.model({
-    id: a.id().required(),
-    createdAt: a.datetime(),
-    updatedAt: a.datetime(),
-    type: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
-    channel: a.string(),
-    amount: a.integer().required(),
-    status: a.enum(['Pending', 'Completed', 'Failed']),
-    tranaction: a.belongsTo('Transaction', 'id'),
-  })
-    .secondaryIndexes((index) => [
-      index("type"),
-    ]),
 
   findExternalAccount: a.query().arguments({ query: a.string().required() }).returns(a.ref('Account'))
     .handler(a.handler.function(findExternalAccount)),
