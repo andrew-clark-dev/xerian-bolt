@@ -164,7 +164,7 @@ async function createItem(row: Row, id: string): Promise<number> {
         details: row['Details'],
         condition: 'NotSpecified' as const,
         split: parseInt(row['Split'].replace('%', '')),
-        price: parseInt(row['Tag Price']),
+        price: Math.round(parseFloat(row['Tag Price'] || '0') * 100),
         status: toStatus(row['Status']),
         printedAt: toISO(row['Printed']),
         lastSoldAt: toISO(row['Last Sold']),
