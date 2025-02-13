@@ -9,30 +9,44 @@ export class SqsWithDlq extends cdk.Stack {
 
     constructor(scope: Construct, id: string, props: {
         queueName: string;
+        fifo: boolean;
     }) {
         super(scope, id);
 
         // Define the Dead Letter Queue
-        this.dlq = {
+        this.dlq = props.fifo ? {
             maxReceiveCount: 5, // Number of processing attempts before moving to DLQ
             queue: new Queue(this, `${id}DeadLetterQueue`, {
                 queueName: `${props.queueName}-dlq.fifo`,
-                deliveryDelay: Duration.millis(0),
                 contentBasedDeduplication: true,
                 retentionPeriod: Duration.days(14),
-            }),
+                fifo: true,
+            })
+        } : {
+            maxReceiveCount: 5, // Number of processing attempts before moving to DLQ
+            queue: new Queue(this, `${id}DeadLetterQueue`, {
+                queueName: `${props.queueName}-dlq`,
+                deliveryDelay: Duration.millis(0),
+                retentionPeriod: Duration.days(14),
+                fifo: false,
+            })
         };
 
+
         // Define the Queue with the DLQ
-        this.queue = new Queue(this, `${id}Queue`, {
-            queueName: `${props.queueName}.fifo`,
-            visibilityTimeout: cdk.Duration.seconds(30), // Lock for 30 seconds during processing
-            contentBasedDeduplication: true,
-            fifo: true,
-            deadLetterQueue: this.dlq,
-        });
-
-
+        this.queue = props.fifo ?
+            new Queue(this, `${id}Queue`, {
+                queueName: `${props.queueName}.fifo`,
+                visibilityTimeout: cdk.Duration.seconds(20), // Lock for 30 seconds during processing
+                contentBasedDeduplication: true,
+                fifo: true,
+                deadLetterQueue: this.dlq,
+            }) : new Queue(this, `${id}Queue`, {
+                queueName: `${props.queueName}`,
+                visibilityTimeout: cdk.Duration.seconds(20), // Lock for 30 seconds during processing
+                fifo: false,
+                deadLetterQueue: this.dlq,
+            });
 
         // Outputs for debugging and integration
         new cdk.CfnOutput(this, 'DeadLetterQueueURL', {

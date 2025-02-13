@@ -2,22 +2,14 @@ import { a, defineData, type ClientSchema } from '@aws-amplify/backend';
 import { postConfirmation } from '../auth/post-confirmation/resource';
 import { createActionFunction } from '../function/create-action/resource';
 import { findExternalAccount } from './external-account/resource';
-import { importAccountFunction } from '../function/import-accounts/resource';
 import { findExternalItem } from './external-item/resource';
-import { fetchItemsFunction } from '../function/import-items/resource';
-import { importItemFunction } from '../function/import-items/resource';
+
 import { resetDataFunction } from '../function/reset-data/resource';
+import { importAccountFunction, importItemFunction } from './import/resource';
 
 export const schema = a.schema({
 
   // Models
-  AppConfig: a
-    .model({
-      name: a.string().required(),
-      value: a.string(),
-    })
-    .identifier(['name']),
-
   Counter: a
     .model({
       name: a.string().required(),
@@ -52,7 +44,7 @@ export const schema = a.schema({
       before: a.json(),
       after: a.json(),
     })
-    .secondaryIndexes((index) => [index("refId"), index("userId"), index("typeIndex")]),
+    .secondaryIndexes((index) => [index("refId"), index("userId"), index("typeIndex"), index("modelName")]),
 
   Comment: a
     .model({
@@ -63,6 +55,7 @@ export const schema = a.schema({
       createdBy: a.belongsTo('UserProfile', 'userId'),
       updatedAt: a.datetime(),
     })
+    .secondaryIndexes((index) => [index("refId"), index("userId")])
     .authorization(allow => [allow.owner(), allow.group('Admin'), allow.authenticated().to(['read'])]),
 
   UserProfile: a
@@ -85,12 +78,28 @@ export const schema = a.schema({
     })
     .secondaryIndexes((index) => [
       index("cognitoName"),
+      index("nickname"),
       index("email"),
     ])
     .authorization((allow) => [
       allow.ownerDefinedIn("profileOwner"),
       allow.group('Admin')
     ]),
+
+  Customer: a
+    .model({
+      email: a.email().required(),
+      name: a.string(),
+      sales: a.string().array(), // Sales ids
+    })
+    .secondaryIndexes((index) => [
+      index("email"),
+    ])
+    .authorization((allow) => [
+      allow.ownerDefinedIn("profileOwner"),
+      allow.group('Admin')
+    ]),
+
 
   Account: a
     .model({
@@ -112,7 +121,7 @@ export const schema = a.schema({
       kind: a.enum(["Standard", "VIP", "Vender", "Employee", "Customer", "Owner"]),
       defaultSplit: a.integer(),
       items: a.hasMany("Item", "accountNumber"), // setup relationships between main types
-      transactions: a.hasMany("Transaction", "accountNumber"), // setup relationships between types
+      transactions: a.string().array(), // this is the list of transaction ids that this item has been involved in.
       balance: a.integer().default(0),
       noSales: a.integer().default(0),
       noItems: a.integer().default(0),
@@ -131,17 +140,7 @@ export const schema = a.schema({
       index("deletedAt").sortKeys(["number", "createdAt", "balance"]),
     ]),
 
-  findExternalAccount: a
-    .query()
-    // arguments that this query accepts
-    .arguments({
-      query: a.string().required()
-    })
-    // return type of the query
-    .returns(a.ref('Account'))
-    .handler(a.handler.function(findExternalAccount)),
-
-  ItemStatus: a.enum(['Created', 'Tagged', 'Active', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen', 'Unknown']),
+  ItemStatus: a.enum(['Created', 'Tagged', 'Active', 'Sold', 'ToDonate', 'Donated', 'Parked', 'Returned', 'Expired', 'Lost', 'Stolen', 'Multi', 'Unknown']),
 
   Item: a
     .model({
@@ -163,7 +162,7 @@ export const schema = a.schema({
       price: a.integer(),
       status: a.ref('ItemStatus'), // this is the status of unique items.
       group: a.hasOne('ItemGroup', 'itemSku'), // this is the group of items that are the same. 
-      transactions: a.hasMany("Transaction", "itemSku"), // setup relationships between types
+      sales: a.hasMany('SaleItem', 'itemSku'),
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
       lastViewedAt: a.datetime(),
@@ -174,18 +173,13 @@ export const schema = a.schema({
     .identifier(['sku'])
     .secondaryIndexes((index) => [
       index("id"),
-      index("deletedAt").sortKeys(["accountNumber", "category", "brand", "color", "size"]),
+      index("createdAt"),
+      index("category"),
+      index("brand"),
+      index("color"),
+      index("size"),
+      index("status"),
     ]),
-
-  findExternalItem: a
-    .query()
-    // arguments that this query accepts
-    .arguments({
-      query: a.string().required()
-    })
-    // return type of the query
-    .returns(a.ref('Item'))
-    .handler(a.handler.function(findExternalItem)),
 
   ItemGroup: a
     .model({
@@ -211,37 +205,90 @@ export const schema = a.schema({
       index("kind"),
     ]),
 
-  Transaction: a
+
+  Sale: a
+    .model({
+      id: a.id().required(),
+      number: a.string().required(),
+      lastActivityBy: a.id().required(),
+      customerEmail: a.string(),
+      accoutNumber: a.string(), // the account number of the customer if exists     
+      status: a.enum(['Pending', 'Finalized', 'Parked', 'Voided']),
+      gross: a.integer().required(),
+      subTotal: a.integer().required(),
+      total: a.integer().required(),
+      change: a.integer(),
+      accountTotal: a.integer().required(),
+      storeTotal: a.integer().required(),
+      transaction: a.string().required(), // tranction id
+      items: a.hasMany('SaleItem', 'saleNumber'),
+      refunds: a.hasMany('Refund', 'saleNumber'),
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
+    })
+    .identifier(['number'])
+    .secondaryIndexes((index) => [
+      index("transaction"),
+    ]),
+
+
+  SaleItem: a
+    .model({
+      itemSku: a.string().required(),
+      saleNumber: a.string().required(),
+      item: a.belongsTo('Item', 'itemSku'),
+      tag: a.belongsTo('Sale', 'saleNumber'),
+    }),
+
+
+  RefundItem: a
+    .customType({
+      sku: a.string().required(),
+      title: a.string().required(),
+      price: a.integer().required(),
+    }),
+
+  Refund: a
     .model({
       lastActivityBy: a.id().required(),
-      type: a.enum(["Sale", "Refund", "Payout", "Reversal"]),
-      paymentType: a.enum(["Cash", "Card", "GiftCard", "Account", "Other"]),
-      channel: a.string(),
+      transaction: a.string().required(), // tranction id
+      saleNumber: a.string(),
+      sale: a.belongsTo('Sale', 'saleNumber'),
+      items: a.ref('RefundItem').array(),
+    }),
+
+  Transaction: a
+    .model({
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
+      lastActivityBy: a.id().required(),
+      paymentType: a.enum(["Cash", "Card", "GiftCard", "StoreCredit", "Other"]),
+      type: a.enum(["Sale", "Refund", "Payout", "Reversal", "Other"]),
       amount: a.integer().required(),
-      time: a.datetime().required(),
-      linkedTransaction: a.string(),  // for refund link to sale, or for a reversal link to original
-      itemSku: a.string(),
-      item: a.belongsTo("Item", "itemSku"),
-      accountNumber: a.string(),
-      account: a.belongsTo("Account", "accountNumber"),
+      status: a.enum(['Pending', 'Completed', 'Failed']),
+      linked: a.string(),  // for refund link to sale, or for a reversal link to original
+
     })
     .secondaryIndexes((index) => [
       index("type"),
-      index("paymentType"),
-      index("itemSku"),
-      index("accountNumber"),
     ]),
+
+
+  findExternalAccount: a.query().arguments({ query: a.string().required() }).returns(a.ref('Account'))
+    .handler(a.handler.function(findExternalAccount)),
+
+  findExternalItem: a.query().arguments({ query: a.string().required() }).returns(a.ref('Item'))
+    .handler(a.handler.function(findExternalItem)),
 
 }).authorization(allow => [
   allow.group('Employee'), // default to employee
   allow.resource(postConfirmation),
   allow.resource(createActionFunction),
-  allow.resource(importAccountFunction),
   allow.resource(findExternalAccount),
   allow.resource(findExternalItem),
-  allow.resource(fetchItemsFunction),
-  allow.resource(importItemFunction),
   allow.resource(resetDataFunction),
+  allow.resource(importAccountFunction),
+  allow.resource(importItemFunction),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

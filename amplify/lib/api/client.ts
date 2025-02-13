@@ -1,6 +1,6 @@
 import { RestClient, IRequestOptions, IRestResponse } from 'typed-rest-client/RestClient';
 import { Logger } from "@aws-lambda-powertools/logger";
-const logger = new Logger({ serviceName: "api-clist" });
+const logger = new Logger({ serviceName: "api-clist", });
 
 export const BASE_URL = process.env.BASE_URL || '/api';
 
@@ -82,21 +82,31 @@ export class ApiClient<T> {
 
       return response.result ?? { count: 0, data: [], next_cursor: null };
     } catch (error) {
-
-      if (error instanceof Error && ('code' in error)) {
-        if (error.code === 'too_many_requests') {
-          logger.warn(`Too Many Requeste - wait and retry.`);
-          await new Promise(resolve => setTimeout(resolve, 5000));
-          return this.page(path, params);
-        }
+      if ((error as { statusCode?: number }).statusCode == 429) {
+        logger.warn(`Too Many Requeste - wait and retry.`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        return this.page(path, params);
+      } else {
+        logger.error(`Error in fetch: ${error} - path : ${path} : params : ${JSON.stringify(params)}`);
+        throw error;
       }
-      logger.error(`Error occurred during page request: ${error}`);
-      throw error;
+
     }
   }
 
   async fetch(params?: Params): Promise<Page<T>> {
     return this.page(this.path, params);
+  }
+  async fetchForEntity(id: string, params?: Params): Promise<Page<T>> {
+    const pathWithId = this.path.replace('{id}', id);
+    logger.debug(`Fetching from : ${pathWithId}`);
+
+    try {
+      return this.page(pathWithId, params);
+    } catch (error) {
+      logger.error(`Could not access path : ${pathWithId}`);
+      throw error;
+    }
   }
 
 

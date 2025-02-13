@@ -1,18 +1,17 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { Stack } from 'aws-cdk-lib';
 import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
-import { StartingPosition, EventSourceMapping, Function as LambdaFunction } from "aws-cdk-lib/aws-lambda";
+import { StartingPosition, EventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { storage } from './storage/resource';
 import { createActionFunction } from './function/create-action/resource';
 import { findExternalAccount } from './data/external-account/resource';
 import { truncateTableFunction } from './function/truncate-table/resource';
-import { fetchAccountsFunction, importAccountFunction } from './function/import-accounts/resource';
-import { fetchItemsFunction, importItemFunction } from './function/import-items/resource';
-import { QueueLambdaIntegration } from './backend/queue.lambda.integration';
 import { resetDataFunction } from './function/reset-data/resource';
-
+import { EventType } from 'aws-cdk-lib/aws-s3';
+import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
+import { importReceiveFunction, importAccountFunction, importItemFunction, IMPORT_DIRS } from './data/import/resource';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -25,10 +24,9 @@ const backend = defineBackend({
   findExternalAccount,
   truncateTableFunction,
   resetDataFunction,
-  fetchAccountsFunction,
   importAccountFunction,
-  fetchItemsFunction,
   importItemFunction,
+  importReceiveFunction,
 });
 
 // extract L1 CfnUserPool resources
@@ -48,6 +46,10 @@ cfnUserPool.policies = {
 
 
 const { tables } = backend.data.resources
+const { bucket } = backend.storage.resources
+// const region = backend.stack.region
+// const accountId = backend.stack.account
+
 
 const createActionLambda = backend.createActionFunction.resources.lambda
 tables["Counter"].grantFullAccess(createActionLambda);
@@ -121,54 +123,26 @@ for (const key in tables) {
 }
 
 // Set up import queues and integrate with Lambda functions
-const customStack = backend.createStack('CustomResources');
-const artifactId = backend.stack.artifactId.split('-').pop();
-
-// Get the Lambda function objects
-const fetchAccountsLambda = backend.fetchAccountsFunction.resources.lambda;
 const importAccountLambda = backend.importAccountFunction.resources.lambda;
-
-// Create the Queue-Lambda integration construct
-new QueueLambdaIntegration(customStack, 'AccountImportIntegration', {
-  queueName: 'AccountImport-' + artifactId,
-  sendFunction: fetchAccountsLambda as LambdaFunction,
-  receiveFunction: importAccountLambda as LambdaFunction,
-  tables: [tables['Account'], tables['UserProfile'], tables['Action']],
-});
-
-// Get the Lambda function objects
-const fetchItemsLambda = backend.fetchItemsFunction.resources.lambda;
 const importItemLambda = backend.importItemFunction.resources.lambda;
+const importReceiveLambda = backend.importReceiveFunction.resources.lambda;
 
-// Create the Queue-Lambda integration construct
-new QueueLambdaIntegration(customStack, 'ItemImportIntegration', {
-  queueName: 'ItemImport-' + artifactId,
-  sendFunction: fetchItemsLambda as LambdaFunction,
-  receiveFunction: importItemLambda as LambdaFunction,
-  tables: [tables['Item'], tables['UserProfile'], tables['Action']],
-});
+bucket.addEventNotification(
+  EventType.OBJECT_CREATED_PUT,
+  new LambdaDestination(importReceiveLambda),
+  { prefix: IMPORT_DIRS.IN_DIR, suffix: '.csv' }
+);
+
+bucket.addEventNotification(
+  EventType.OBJECT_CREATED_PUT,
+  new LambdaDestination(importAccountLambda),
+  { prefix: IMPORT_DIRS.PROCESSING_DIR + 'Account', suffix: '.csv' }
+);
+
+bucket.addEventNotification(
+  EventType.OBJECT_CREATED_PUT,
+  new LambdaDestination(importItemLambda),
+  { prefix: IMPORT_DIRS.PROCESSING_DIR + 'Item', suffix: '.csv' }
+);
 
 
-// const fetchAccountsLambda = backend.fetchAccountsFunction.resources.lambda;
-// const importAccountLambda = backend.importAccountFunction.resources.lambda;
-
-// backend.fetchAccountsFunction.addEnvironment(`QUEUE_URL`, queues.itemImportQueue.queueUrl);
-// queues.accountImportQueue.grantSendMessages(fetchAccountsLambda);
-// importAccountLambda.addEventSource(new SqsEventSource(queues.accountImportQueue));
-// queues.accountImportQueue.grantConsumeMessages(importAccountLambda);
-
-// tables['Account'].grantFullAccess(importAccountLambda);
-// tables['UserProfile'].grantFullAccess(importAccountLambda);
-// tables['Action'].grantFullAccess(importAccountLambda);
-
-// const fetchItemsLambda = backend.fetchItemsFunction.resources.lambda;
-// const importItemLambda = backend.importItemFunction.resources.lambda;
-
-// backend.fetchItemsFunction.addEnvironment(`QUEUE_URL`, queues.itemImportQueue.queueUrl);
-// queues.itemImportQueue.grantSendMessages(fetchItemsLambda);
-// importItemLambda.addEventSource(new SqsEventSource(queues.itemImportQueue));
-// queues.itemImportQueue.grantConsumeMessages(importItemLambda);
-
-// tables['Item'].grantFullAccess(importItemLambda);
-// tables['UserProfile'].grantFullAccess(importItemLambda);
-// tables['Action'].grantFullAccess(importItemLambda);
