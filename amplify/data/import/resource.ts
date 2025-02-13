@@ -30,6 +30,17 @@ export const importItemFunction = defineFunction({
     },
 });
 
+export const importSaleFunction = defineFunction({
+    name: "import-sale-function",
+    entry: "./handler.sale.ts",
+    resourceGroupName: "data",
+    timeoutSeconds: 900,
+    environment: {
+        ...IMPORT_DIRS,
+        SERVICE_NAME: "import-sale-function"
+    },
+});
+
 export const importReceiveFunction = defineFunction({
     name: "import-receive-function",
     entry: "./handler.receive.ts",

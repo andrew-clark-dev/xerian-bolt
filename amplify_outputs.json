@@ -1660,6 +1660,13 @@
               "isRequired": false,
               "attributes": []
             },
+            "discount": {
+              "name": "discount",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
             "gross": {
               "name": "gross",
               "isArray": false,
@@ -1681,8 +1688,22 @@
               "isRequired": true,
               "attributes": []
             },
+            "tax": {
+              "name": "tax",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
             "change": {
               "name": "change",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "refund": {
+              "name": "refund",
               "isArray": false,
               "type": "Int",
               "isRequired": false,
@@ -1725,21 +1746,12 @@
                 ]
               }
             },
-            "refunds": {
-              "name": "refunds",
-              "isArray": true,
-              "type": {
-                "model": "Refund"
-              },
+            "refundedSale": {
+              "name": "refundedSale",
+              "isArray": false,
+              "type": "String",
               "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true,
-              "association": {
-                "connectionType": "HAS_MANY",
-                "associatedWith": [
-                  "saleNumber"
-                ]
-              }
+              "attributes": []
             },
             "createdAt": {
               "name": "createdAt",
@@ -1778,6 +1790,16 @@
                 "queryField": "listSaleByTransaction",
                 "fields": [
                   "transaction"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "salesByRefundedSale",
+                "queryField": "listSaleByRefundedSale",
+                "fields": [
+                  "refundedSale"
                 ]
               }
             },
@@ -1915,114 +1937,6 @@
             "sortKeyFieldNames": []
           }
         },
-        "Refund": {
-          "name": "Refund",
-          "fields": {
-            "id": {
-              "name": "id",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
-            "lastActivityBy": {
-              "name": "lastActivityBy",
-              "isArray": false,
-              "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
-            "transaction": {
-              "name": "transaction",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            },
-            "saleNumber": {
-              "name": "saleNumber",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
-              "attributes": []
-            },
-            "sale": {
-              "name": "sale",
-              "isArray": false,
-              "type": {
-                "model": "Sale"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "association": {
-                "connectionType": "BELONGS_TO",
-                "targetNames": [
-                  "saleNumber"
-                ]
-              }
-            },
-            "items": {
-              "name": "items",
-              "isArray": true,
-              "type": {
-                "nonModel": "RefundItem"
-              },
-              "isRequired": false,
-              "attributes": [],
-              "isArrayNullable": true
-            },
-            "createdAt": {
-              "name": "createdAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": [],
-              "isReadOnly": true
-            },
-            "updatedAt": {
-              "name": "updatedAt",
-              "isArray": false,
-              "type": "AWSDateTime",
-              "isRequired": false,
-              "attributes": [],
-              "isReadOnly": true
-            }
-          },
-          "syncable": true,
-          "pluralName": "Refunds",
-          "attributes": [
-            {
-              "type": "model",
-              "properties": {}
-            },
-            {
-              "type": "auth",
-              "properties": {
-                "rules": [
-                  {
-                    "groupClaim": "cognito:groups",
-                    "provider": "userPools",
-                    "allow": "groups",
-                    "groups": [
-                      "Employee"
-                    ],
-                    "operations": [
-                      "create",
-                      "update",
-                      "delete",
-                      "read"
-                    ]
-                  }
-                ]
-              }
-            }
-          ],
-          "primaryKeyInfo": {
-            "isCustomPrimaryKey": false,
-            "primaryKeyFieldName": "id",
-            "sortKeyFieldNames": []
-          }
-        },
         "Transaction": {
           "name": "Transaction",
           "fields": {
@@ -2074,6 +1988,13 @@
             },
             "amount": {
               "name": "amount",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            },
+            "tax": {
+              "name": "tax",
               "isArray": false,
               "type": "Int",
               "isRequired": true,
@@ -2260,7 +2181,8 @@
             "Refund",
             "Payout",
             "Reversal",
-            "Other"
+            "TransferIn",
+            "TransferOut"
           ]
         },
         "TransactionStatus": {
@@ -2272,34 +2194,7 @@
           ]
         }
       },
-      "nonModels": {
-        "RefundItem": {
-          "name": "RefundItem",
-          "fields": {
-            "sku": {
-              "name": "sku",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            },
-            "title": {
-              "name": "title",
-              "isArray": false,
-              "type": "String",
-              "isRequired": true,
-              "attributes": []
-            },
-            "price": {
-              "name": "price",
-              "isArray": false,
-              "type": "Int",
-              "isRequired": true,
-              "attributes": []
-            }
-          }
-        }
-      },
+      "nonModels": {},
       "queries": {
         "findExternalAccount": {
           "name": "findExternalAccount",
