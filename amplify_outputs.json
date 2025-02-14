@@ -1664,7 +1664,7 @@
               "name": "discount",
               "isArray": false,
               "type": {
-                "nonModel": "SaleDiscount"
+                "nonModel": "Discount"
               },
               "isRequired": false,
               "attributes": []
@@ -2197,21 +2197,21 @@
         }
       },
       "nonModels": {
-        "SaleDiscount": {
-          "name": "SaleDiscount",
+        "Discount": {
+          "name": "Discount",
           "fields": {
             "label": {
               "name": "label",
               "isArray": false,
               "type": "String",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             },
             "value": {
               "name": "value",
               "isArray": false,
               "type": "Int",
-              "isRequired": true,
+              "isRequired": false,
               "attributes": []
             }
           }

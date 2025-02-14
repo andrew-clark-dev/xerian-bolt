@@ -9,6 +9,15 @@ interface ItemFormProps {
 }
 
 export function ItemForm({ formData, isLoading, onChange }: ItemFormProps) {
+  // Convert cents to CHF for display
+  const priceInCHF = formData.price ? (formData.price / 100).toFixed(2) : '0.00';
+
+  const handlePriceChange = (value: string) => {
+    // Convert CHF to cents for storage
+    const priceInCents = Math.round(parseFloat(value) * 100);
+    onChange('price', priceInCents);
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -210,15 +219,15 @@ export function ItemForm({ formData, isLoading, onChange }: ItemFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price (in cents)
+              Price (CHF)
             </label>
             <Input
               type="number"
-              value={formData.price || 0}
-              onChange={(e) => onChange('price', parseInt(e.target.value))}
+              value={priceInCHF}
+              onChange={(e) => handlePriceChange(e.target.value)}
               disabled={isLoading}
               min="0"
-              step="1"
+              step="0.01"
             />
           </div>
 

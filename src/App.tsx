@@ -11,6 +11,9 @@ import { UpdateAccount } from './pages/UpdateAccount';
 import { Items } from './pages/Items';
 import { NewItem } from './pages/NewItem';
 import { UpdateItem } from './pages/UpdateItem';
+import { Sales } from './pages/Sales';
+import { NewSale } from './pages/NewSale';
+import { UpdateSale } from './pages/UpdateSale';
 import { Users } from './pages/Users';
 import { NewUser } from './pages/NewUser';
 import { UpdateUserProfile } from './pages/UpdateUser';
@@ -35,6 +38,9 @@ export default function App() {
                 <Route path="items" element={<Items />} />
                 <Route path="items/new" element={<NewItem />} />
                 <Route path="items/:sku" element={<UpdateItem />} />
+                <Route path="sales" element={<Sales />} />
+                <Route path="sales/new" element={<NewSale />} />
+                <Route path="sales/:number" element={<UpdateSale />} />
                 <Route path="users" element={<Users />} />
                 <Route path="users/new" element={<NewUser />} />
                 <Route path="users/:email" element={<UpdateUserProfile />} />

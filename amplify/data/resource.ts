@@ -214,10 +214,7 @@ export const schema = a.schema({
       customerEmail: a.string(),
       accountNumber: a.string(), // the account number of the customer if exists     
       status: a.enum(['Pending', 'Finalized', 'Parked', 'Voided']),
-      discount: a.customType({
-        label: a.string().required(),
-        value: a.integer().required(),
-      }),
+      discount: a.ref('Discount'),
       gross: a.integer().required(),
       subTotal: a.integer().required(),
       total: a.integer().required(),
@@ -238,6 +235,11 @@ export const schema = a.schema({
       index("refundedSale"),
     ]),
 
+  Discount: a
+    .customType({
+      label: a.string(),
+      value: a.integer(),
+    }),
 
   SaleItem: a
     .model({

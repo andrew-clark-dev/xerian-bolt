@@ -31,8 +31,8 @@ export const getStatusColor = (status: Item['status']) => {
 };
 
 export const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('de-CH', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'CHF',
   }).format(price / 100);
 };

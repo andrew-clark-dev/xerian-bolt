@@ -1,4 +1,4 @@
-import { Home, LayoutDashboard, Settings, Users, FileSpreadsheet, ShoppingBag, Wrench } from 'lucide-react';
+import { Home, LayoutDashboard, Settings, Users, FileSpreadsheet, ShoppingBag, Receipt, Wrench } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export function Sidebar() {
@@ -8,6 +8,7 @@ export function Sidebar() {
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Accounts', href: '/accounts', icon: FileSpreadsheet },
     { name: 'Items', href: '/items', icon: ShoppingBag },
+    { name: 'Sales', href: '/sales', icon: Receipt },
     { name: 'Users', href: '/users', icon: Users },
     { name: 'Maintenance', href: '/maintenance', icon: Wrench },
     { name: 'Profile', href: '/profile', icon: Users },
