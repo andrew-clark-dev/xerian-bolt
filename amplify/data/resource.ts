@@ -212,9 +212,12 @@ export const schema = a.schema({
       number: a.string().required(),
       lastActivityBy: a.id().required(),
       customerEmail: a.string(),
-      accoutNumber: a.string(), // the account number of the customer if exists     
+      accountNumber: a.string(), // the account number of the customer if exists     
       status: a.enum(['Pending', 'Finalized', 'Parked', 'Voided']),
-      discount: a.integer(),
+      discount: a.customType({
+        label: a.string().required(),
+        value: a.integer().required(),
+      }),
       gross: a.integer().required(),
       subTotal: a.integer().required(),
       total: a.integer().required(),

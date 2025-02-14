@@ -101,6 +101,18 @@ const itemMapping = new EventSourceMapping(
 
 itemMapping.node.addDependency(policy);
 
+const saleMapping = new EventSourceMapping(
+  Stack.of(tables["Sale"]),
+  "createActionSaleEventStreamMapping",
+  {
+    target: createActionLambda,
+    eventSourceArn: tables["Sale"].tableStreamArn,
+    startingPosition: StartingPosition.LATEST,
+  }
+);
+
+saleMapping.node.addDependency(policy);
+
 const transactionMapping = new EventSourceMapping(
   Stack.of(tables["Transaction"]),
   "createActionTransactionEventStreamMapping",

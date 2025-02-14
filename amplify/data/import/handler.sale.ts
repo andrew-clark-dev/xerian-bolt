@@ -52,6 +52,20 @@ interface Row {
     'Manual Payments': string,
     'Refund Amount': string,
     'SKUs': string,
+    '100000 (deleted 18 Feb 2020)': string,
+    'Staff Discount': string,
+    '25% Vitrine discount (deleted 17 Aug 2020)': string,
+    '50%': string,
+    'Summer Sale (deleted 17 Aug 2020)': string,
+    '50%  Alte Kleider Sale (deleted 19 Jul 2022)': string,
+    'Markenkleider (deleted 17 Aug 2020)': string,
+    '10 % sale (deleted 21 Feb 2022)': string,
+    'sale 25% (deleted 17 Mar 2022)': string,
+    '50% (deleted 25 Feb 2022)': string
+    'Petit Etoile 20% (deleted 17 Mar 2022)': string,
+    'Markenkleider SALE': string,
+    'Alte Markenschue': string,
+    'Wollbefinden (deleted 2 Feb 2023)': string,
     'MWST': string,
 }
 
@@ -140,6 +154,7 @@ async function createSale(row: Row, id: string): Promise<number> {
         number: row['Number'],
         lastActivityBy: id,
         status: 'Finalized' as const,
+        discount: discount(row),
         gross: money(row['Gross']),
         subTotal: money(row['Subtotal']),
         total: money(row['Total']),
@@ -160,16 +175,17 @@ async function createSale(row: Row, id: string): Promise<number> {
 
     logger.info('Created sale', data);
 
-    row['SKUs'].split(',').forEach(async (sku) => {
+    const skus = row.SKUs.includes(',') ? row.SKUs.split(',') : []; // being safe about empty strings
+    skus.forEach(async (sku) => {
         logger.info(`Creating item link : ${sku}`);
 
-        const { data: conectData, errors: connectErrors } = await client.models.SaleItem.create({
+        const { data: linkData, errors: linkErrors } = await client.models.SaleItem.create({
             itemSku: sku,
             saleNumber: data!.number,
         });
 
-        logger.ifErrorThrow('Failed to create item link ', connectErrors);
-        logger.info('Created item link', conectData);
+        logger.ifErrorThrow('Failed to create item link ', linkErrors);
+        logger.info('Created item link', linkData);
     });
 
 
@@ -201,3 +217,30 @@ function paymentType(row: Row): PaymentType {
     if (money(row["Gift Card Payments"]) > 0) { return "GiftCard"; }
     return 'Other'
 }
+
+function discount(row: Row): { label: string, value: number } | null {
+
+    ['100000 (deleted 18 Feb 2020)',
+        'Staff Discount',
+        '25% Vitrine discount (deleted 17 Aug 2020)',
+        '50%',
+        'Summer Sale (deleted 17 Aug 2020)',
+        '50%  Alte Kleider Sale (deleted 19 Jul 2022)',
+        'Markenkleider (deleted 17 Aug 2020)',
+        '10 % sale (deleted 21 Feb 2022)',
+        'sale 25% (deleted 17 Mar 2022)',
+        '50% (deleted 25 Feb 2022)',
+        'Petit Etoile 20% (deleted 17 Mar 2022)',
+        'Markenkleider SALE',
+        'Alte Markenschue',
+        'Wollbefinden (deleted 2 Feb 2023)'].forEach((key) => {
+            const label = key as keyof Row;
+            const value = money(row[label]?.replace('CHF', ''));
+            if (value > 0) {
+                logger.info(`Discount found: ${label} - ${value}`)
+                return { label, value }
+            }
+        });
+    return null;
+}
+

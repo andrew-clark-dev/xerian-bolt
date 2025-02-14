@@ -1644,8 +1644,8 @@
               "isRequired": false,
               "attributes": []
             },
-            "accoutNumber": {
-              "name": "accoutNumber",
+            "accountNumber": {
+              "name": "accountNumber",
               "isArray": false,
               "type": "String",
               "isRequired": false,
@@ -1663,7 +1663,9 @@
             "discount": {
               "name": "discount",
               "isArray": false,
-              "type": "Int",
+              "type": {
+                "nonModel": "SaleDiscount"
+              },
               "isRequired": false,
               "attributes": []
             },
@@ -2194,7 +2196,27 @@
           ]
         }
       },
-      "nonModels": {},
+      "nonModels": {
+        "SaleDiscount": {
+          "name": "SaleDiscount",
+          "fields": {
+            "label": {
+              "name": "label",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "value": {
+              "name": "value",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
+        }
+      },
       "queries": {
         "findExternalAccount": {
           "name": "findExternalAccount",
