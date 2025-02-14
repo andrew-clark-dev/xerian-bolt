@@ -138,3 +138,12 @@ export async function writeErrorFile(bucket: string, originalKey: string, row: u
     }
 
 }
+
+export function money(text?: string | null): number {
+    if (!text) {
+        return 0;
+    }
+    // handle the case where CHF is in the text
+    const cleanText = text.trim().replace('CHF', '');
+    return Math.round(parseFloat(cleanText) * 100);
+}

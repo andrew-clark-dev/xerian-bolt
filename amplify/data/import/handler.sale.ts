@@ -8,7 +8,7 @@ import AWS from "aws-sdk";
 import Papa from "papaparse";
 import { provisionService } from "../../lib/services/user.external.sevice";
 import { importUserId } from "../../lib/services/table.sevice";
-import { archiveFile, writeErrorFile } from "./handler.receive";
+import { archiveFile, money, writeErrorFile } from "./handler.receive";
 import { logger } from "../../lib/logger";
 import { toISO } from "../../lib/util";
 import { v4 as uuidv4 } from 'uuid';
@@ -203,12 +203,7 @@ async function createSale(row: Row, id: string): Promise<number> {
     return 1;
 }
 
-function money(text?: string | null): number {
-    if (!text) {
-        return 0;
-    }
-    return Math.round(parseFloat(text) * 100);
-}
+
 
 function paymentType(row: Row): PaymentType {
     if (money(row["Cash Payments"]) > 0) { return "Cash"; }
@@ -235,7 +230,7 @@ function discount(row: Row): { label: string, value: number } | null {
         'Alte Markenschue',
         'Wollbefinden (deleted 2 Feb 2023)'].forEach((key) => {
             const label = key as keyof Row;
-            const value = money(row[label]?.replace('CHF', ''));
+            const value = money(row[label]);
             if (value > 0) {
                 logger.info(`Discount found: ${label} - ${value}`)
                 return { label, value }

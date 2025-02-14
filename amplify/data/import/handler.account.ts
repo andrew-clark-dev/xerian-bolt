@@ -9,7 +9,7 @@ import AWS from "aws-sdk";
 import Papa from "papaparse";
 import { provisionService } from "../../lib/services/user.external.sevice";
 import { importUserId } from "../../lib/services/table.sevice";
-import { archiveFile } from "./handler.receive";
+import { archiveFile, money } from "./handler.receive";
 export type Account = Schema['Account']['type']
 export type AccountStatus = Schema['Account']['type']['status'];
 export type AccountKind = Schema['Account']['type']['kind'];
@@ -93,7 +93,7 @@ export const handler: S3Handler = async (event): Promise<void> => {
                     number: row['Number'],
                     addressLine1: row['Address Line 1'],
                     addressLine2: row['Address Line 2'],
-                    balance: parseInt(row['Balance']),
+                    balance: money(row['Balance']),
                     city: row['City'],
                     createdAt: dateOf(row['Created']),
                     email: row['Email'],
@@ -102,8 +102,8 @@ export const handler: S3Handler = async (event): Promise<void> => {
                     lastItemAt: dateOf(row['Last Item Entered']),
                     lastName: row['Last Name'],
                     lastSettlementAt: dateOf(row['Last Settlement']),
-                    noItems: parseInt(row['Number Of Items'], 0),
-                    noSales: parseInt(row['Number Of Sales'], 10),
+                    noItems: parseInt(row['Number Of Items']),
+                    noSales: parseInt(row['Number Of Sales']),
                     phoneNumber: row['Phone'],
                     postcode: row['Zip'],
                     state: row['State'],
