@@ -93,6 +93,12 @@ export function ItemList({
                     {item.brand || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {item.size || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {item.color || '-'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                     {formatPrice(item.price)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -103,9 +109,6 @@ export function ItemList({
                     >
                       {item.status}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {item.quantity}
                   </td>
                 </tr>
               ))

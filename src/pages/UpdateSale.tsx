@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { saleService, type Sale } from '../services/sale.service';
 import { SaleForm } from '../components/sales/SaleForm';
+import { SaleItemList } from '../components/sales/SaleItemList';
 import { Button } from '../components/ui/Button';
 import { theme } from '../theme';
 
@@ -109,6 +110,15 @@ export function UpdateSale() {
             </Button>
           </div>
         </form>
+      </div>
+
+      <div className={`${theme.surface()} ${theme.border()} rounded-lg shadow-sm`}>
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className={`text-lg font-medium ${theme.text()}`}>Sale Items</h2>
+        </div>
+        <div className="p-4">
+          <SaleItemList items={formData.items || []} />
+        </div>
       </div>
     </div>
   );

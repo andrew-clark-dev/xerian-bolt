@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { ArrowLeft, Import } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { itemService, type Item } from '../services/item.service';
 import { ItemForm } from '../components/items/ItemForm';
 import { Button } from '../components/ui/Button';
 import { theme } from '../theme';
-import { errorMessage } from '../services/utils/error.utils';
 
 type ItemFormData = Omit<Item, 'id' | 'account' | 'transactions' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>;
 
@@ -64,27 +63,6 @@ export function NewItem() {
     }
   };
 
-  const handleImport = async () => {
-    if (!formData.sku) return;
-
-    setError('');
-    setIsLoading(true);
-
-    try {
-      const importedItem = await itemService.findFirstExternalItem(formData.sku);
-      if (importedItem) {
-        setFormData({
-          ...importedItem,
-        });
-      }
-    } catch (error) {
-      console.error('Failed to import item:', error);
-      setError(errorMessage(error, 'Failed to import item. Please try again.'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -118,16 +96,6 @@ export function NewItem() {
             >
               Cancel
             </Link>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleImport}
-              disabled={!formData.sku || isLoading}
-              className="inline-flex items-center gap-2"
-            >
-              <Import className="w-4 h-4" />
-              Import
-            </Button>
             <Button
               type="submit"
               disabled={isLoading}

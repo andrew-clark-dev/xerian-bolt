@@ -2,7 +2,7 @@ import { TableHeader } from '../ui/table/TableHeader';
 import { Pagination } from '../ui/table/Pagination';
 import { Sale } from '../../services/sale.service';
 import { useNavigate } from 'react-router-dom';
-import { columns, getStatusColor, formatAmount, RECORDS_PER_PAGE_OPTIONS } from './SaleColumns';
+import { columns, getStatusColor, formatPrice, RECORDS_PER_PAGE_OPTIONS } from './SaleColumns';
 
 interface SaleListProps {
   sales: Sale[];
@@ -78,34 +78,31 @@ export function SaleList({
                 <tr
                   key={sale.id}
                   onClick={() => navigate(`/sales/${sale.number}`)}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                  className={`hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
+                    sale.refund > 0 ? 'bg-red-50 dark:bg-red-900/20' : ''
+                  }`}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                     {sale.number}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {sale.customerEmail || '-'}
+                    {formatPrice(sale.total)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {formatPrice(sale.tax)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {sale.transaction}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                        sale.status
+                        sale.status,
+                        sale.refund
                       )}`}
                     >
-                      {sale.status}
+                      {sale.refund > 0 ? 'Refund' : sale.status}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {formatAmount(sale.total)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {formatAmount(sale.accountTotal)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {formatAmount(sale.storeTotal)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(sale.createdAt).toLocaleString()}
                   </td>
                 </tr>
               ))

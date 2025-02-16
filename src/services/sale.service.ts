@@ -7,6 +7,7 @@ import { checkedFutureResponse, checkedNotNullFutureResponse, checkedResponse } 
 const client = generateClient<Schema>();
 
 export type Sale = Schema['Sale']['type'];
+export type SaleItem = Schema['SaleItem']['type'];
 export type SaleCreate = Omit<Sale, 'id' | 'items' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>;
 export type SaleUpdate = Partial<Omit<Sale, 'number' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>> & { number: string };
 export type SaleStatus = Schema['Sale']['type']['status'];
@@ -22,11 +23,43 @@ interface ListSalesOptions {
 
 class SaleService {
   async findSale(number: string): Promise<Sale | null> {
-    return await checkedFutureResponse(client.models.Sale.get({ number })) as Sale;
+    const response = await client.models.Sale.get({ number });
+    const sale = await checkedFutureResponse(response) as Sale;
+    
+    if (sale) {
+      // Fetch items for the sale
+      const itemsResponse = await client.models.SaleItem.list({
+        filter: { saleNumber: { eq: number } }
+      });
+      const items = checkedResponse(itemsResponse) as SaleItem[];
+      
+      // For each item, fetch the full item details
+      const itemsWithDetails = await Promise.all(
+        items.map(async (item) => {
+          const itemResponse = await client.models.Item.get({ sku: item.itemSku });
+          const itemDetails = await checkedFutureResponse(itemResponse);
+          return {
+            ...item,
+            item: itemDetails
+          };
+        })
+      );
+
+      return {
+        ...sale,
+        items: itemsWithDetails
+      };
+    }
+
+    return null;
   }
 
   async getSale(number: string): Promise<Sale> {
-    return await checkedNotNullFutureResponse(client.models.Sale.get({ number })) as Sale;
+    const sale = await this.findSale(number);
+    if (!sale) {
+      throw new Error('Sale not found');
+    }
+    return sale;
   }
 
   async createSale(sale: SaleCreate): Promise<Sale> {
