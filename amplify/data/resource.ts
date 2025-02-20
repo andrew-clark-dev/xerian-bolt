@@ -162,7 +162,7 @@ export const schema = a.schema({
       price: a.integer(),
       status: a.ref('ItemStatus'), // this is the status of unique items.
       group: a.hasOne('ItemGroup', 'itemSku'), // this is the group of items that are the same. 
-      sales: a.hasMany('SaleItem', 'itemSku'),
+      sales: a.string().array(),
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
       lastViewedAt: a.datetime(),
@@ -205,6 +205,20 @@ export const schema = a.schema({
       index("kind"),
     ]),
 
+  SaleItem: a
+    .customType({
+      sku: a.string().required(),
+      title: a.string(),
+      category: a.string(),
+      brand: a.string(),
+      color: a.string(),
+      size: a.string(),
+      description: a.string(),
+      details: a.string(),
+      condition: a.enum(['AsNew', 'Good', 'Marked', 'Damaged', 'Unknown', 'NotSpecified']),
+      split: a.integer(),
+      price: a.integer(),
+    }),
 
   Sale: a
     .model({
@@ -223,8 +237,8 @@ export const schema = a.schema({
       refund: a.integer(),
       accountTotal: a.integer().required(),
       storeTotal: a.integer().required(),
-      transaction: a.string().required(), // tranction id
-      items: a.hasMany('SaleItem', 'saleNumber'),
+      transaction: a.id().required(), // tranction id
+      items: a.ref('SaleItem').array().required(),
       refundedSale: a.string(),
       createdAt: a.datetime(),
       updatedAt: a.datetime(),
@@ -239,14 +253,6 @@ export const schema = a.schema({
     .customType({
       label: a.string(),
       value: a.integer(),
-    }),
-
-  SaleItem: a
-    .model({
-      itemSku: a.string().required(),
-      saleNumber: a.string().required(),
-      item: a.belongsTo('Item', 'itemSku'),
-      tag: a.belongsTo('Sale', 'saleNumber'),
     }),
 
   Transaction: a

@@ -12,7 +12,9 @@ import { archiveFile, money, writeErrorFile } from "./handler.receive";
 import { logger } from "../../lib/logger";
 import { toISO } from "../../lib/util";
 import { v4 as uuidv4 } from 'uuid';
+import { toSaleItem } from "../../lib/services/item.external.sevice";
 export type Sale = Schema['Sale']['type']
+export type SaleItem = Schema['SaleItem']['type']
 export type Transaction = Schema['Transaction']['type']
 export type PaymentType = Schema['Transaction']['type']['paymentType'];
 
@@ -149,6 +151,31 @@ async function createSale(row: Row, id: string): Promise<number> {
 
     logger.info('Created transaction', transaction);
 
+    logger.info('Get sale items');
+
+    const saleItems: SaleItem[] = await Promise.all(row['SKUs'].split(',').map(async (sku) => {
+        const item = await client.models.Item.get({ sku });
+        if (!item.data) {
+            logger.error(`Item not found: ${sku}`);
+            return null;
+        }
+        logger.info(`Update item with sale: ${sku}`);
+        const sales = new Set(item.data.sales || []); // Use a set to stop duplicates during import
+        sales.add(row['Number']);
+
+        const { errors: updateErrors } = await client.models.Item.update({
+            ...item.data,
+            sales: Array.from(sales),
+            lastSoldAt: toISO(row['Finalized']),
+        });
+
+        logger.ifErrorThrow('Failed to update item', updateErrors);
+
+        return toSaleItem(item.data);
+    })).then(items => items.filter(item => item !== null) as SaleItem[]);
+
+    logger.info('Sale Items retrieved', saleItems);
+
     const newSale = {
         id: uuidv4(),
         number: row['Number'],
@@ -165,6 +192,7 @@ async function createSale(row: Row, id: string): Promise<number> {
         createdAt: toISO(row['Created']),
         updatedAt: toISO(row['Finalized']),
         tax: money(row['MWST'].replace('CHF', '')), // Add tax property
+        items: saleItems,
     }
 
     logger.info(`Creating sale : ${JSON.stringify(newSale)}`);
@@ -174,19 +202,6 @@ async function createSale(row: Row, id: string): Promise<number> {
     logger.ifErrorThrow('Failed to create sale ', errors);
 
     logger.info('Created sale', data);
-
-    const skus = row.SKUs.includes(',') ? row.SKUs.split(',') : []; // being safe about empty strings
-    skus.forEach(async (sku) => {
-        logger.info(`Creating item link : ${sku}`);
-
-        const { data: linkData, errors: linkErrors } = await client.models.SaleItem.create({
-            itemSku: sku,
-            saleNumber: data!.number,
-        });
-
-        logger.ifErrorThrow('Failed to create item link ', linkErrors);
-        logger.info('Created item link', linkData);
-    });
 
 
     logger.info(`Creating sale import action: ${data?.number}`);
@@ -202,8 +217,6 @@ async function createSale(row: Row, id: string): Promise<number> {
 
     return 1;
 }
-
-
 
 function paymentType(row: Row): PaymentType {
     if (money(row["Cash Payments"]) > 0) { return "Cash"; }
