@@ -2,10 +2,12 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { currentUserId } from './profile.service';
 import { checkedFutureResponse, checkedNotNullFutureResponse, checkedResponse } from './utils/error.utils';
-// import { findFirstItem } from '../../amplify';
+import { Sale, saleService } from './sale.service';
+
 const client = generateClient<Schema>();
 
 export type Item = Schema['Item']['type'];
+export type SaleItem = Schema['SaleItem']['type'];
 export type ItemCreate = Omit<Item, 'id' | 'transactions' | 'account' | 'createdAt' | 'updatedAt' | 'lastActivityBy'> & { quantity: number };
 export type ItemUpdate = Partial<Omit<ItemCreate, 'sku'>> & { sku: string };
 export type ItemStatus = Schema['Item']['type']['status'];
@@ -44,9 +46,7 @@ class ItemService {
   }
 
   async updateItem(update: ItemUpdate): Promise<Item> {
-
     const response = await client.models.Item.update({ ...update, lastActivityBy: await currentUserId() });
-
     return checkedResponse(response) as Item;
   }
 
@@ -60,11 +60,34 @@ class ItemService {
   }
 
   async findFirstExternalItem(query: string): Promise<Item | null> {
-    //    return findFirstItem(query);
     const response = await client.queries.findExternalItem({ query });
     return checkedResponse(response) as Item;
   }
 
+  async getSales(item: Item): Promise<Sale[]> {
+    try {
+
+      if (!item.sales || item.sales.length === 0) {
+        return [];
+      }
+
+      // Fetch all sales in parallel using Promise.all
+      const salesPromises = item.sales.map(saleNumber =>
+        saleService.findSale(saleNumber!)
+      );
+
+      // Wait for all sales to be fetched and filter out any null results
+      const sales = (await Promise.all(salesPromises)).filter((sale): sale is Sale => sale !== null);
+
+      // Sort sales by date (newest first)
+      return sales.sort((a, b) =>
+        new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+      );
+    } catch (error) {
+      console.error('Failed to get sales for item:', error);
+      throw new Error(`Failed to get sales for item ${item.sku}`);
+    }
+  }
 }
 
 export const itemService = new ItemService();

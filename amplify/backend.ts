@@ -11,7 +11,7 @@ import { truncateTableFunction } from './function/truncate-table/resource';
 import { resetDataFunction } from './function/reset-data/resource';
 import { EventType } from 'aws-cdk-lib/aws-s3';
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
-import { importReceiveFunction, importAccountFunction, importItemFunction, IMPORT_DIRS } from './data/import/resource';
+import { importReceiveFunction, importAccountFunction, importItemFunction, IMPORT_DIRS, importSaleFunction } from './data/import/resource';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -27,6 +27,7 @@ const backend = defineBackend({
   importAccountFunction,
   importItemFunction,
   importReceiveFunction,
+  importSaleFunction,
 });
 
 // extract L1 CfnUserPool resources
@@ -100,6 +101,18 @@ const itemMapping = new EventSourceMapping(
 
 itemMapping.node.addDependency(policy);
 
+const saleMapping = new EventSourceMapping(
+  Stack.of(tables["Sale"]),
+  "createActionSaleEventStreamMapping",
+  {
+    target: createActionLambda,
+    eventSourceArn: tables["Sale"].tableStreamArn,
+    startingPosition: StartingPosition.LATEST,
+  }
+);
+
+saleMapping.node.addDependency(policy);
+
 const transactionMapping = new EventSourceMapping(
   Stack.of(tables["Transaction"]),
   "createActionTransactionEventStreamMapping",
@@ -126,6 +139,7 @@ for (const key in tables) {
 const importAccountLambda = backend.importAccountFunction.resources.lambda;
 const importItemLambda = backend.importItemFunction.resources.lambda;
 const importReceiveLambda = backend.importReceiveFunction.resources.lambda;
+const imporSaleLambda = backend.importSaleFunction.resources.lambda;
 
 bucket.addEventNotification(
   EventType.OBJECT_CREATED_PUT,
@@ -145,4 +159,9 @@ bucket.addEventNotification(
   { prefix: IMPORT_DIRS.PROCESSING_DIR + 'Item', suffix: '.csv' }
 );
 
+bucket.addEventNotification(
+  EventType.OBJECT_CREATED_PUT,
+  new LambdaDestination(imporSaleLambda),
+  { prefix: IMPORT_DIRS.PROCESSING_DIR + 'Sale', suffix: '.csv' }
+);
 

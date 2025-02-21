@@ -9,6 +9,15 @@ interface AccountFormProps {
 }
 
 export function AccountForm({ formData, isLoading, onChange }: AccountFormProps) {
+  // Convert cents to CHF for display
+  const balanceInCHF = formData.balance ? (formData.balance / 100).toFixed(2) : '0.00';
+
+  const handleBalanceChange = (value: string) => {
+    // Convert CHF to cents for storage
+    const balanceInCents = Math.round(parseFloat(value) * 100);
+    onChange('balance', balanceInCents);
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -225,19 +234,20 @@ export function AccountForm({ formData, isLoading, onChange }: AccountFormProps)
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Balance
+              Balance (CHF)
             </label>
             <Input
               type="number"
-              value={formData.balance || 0}
-              onChange={(e) => onChange('balance', parseInt(e.target.value))}
+              value={balanceInCHF}
+              onChange={(e) => handleBalanceChange(e.target.value)}
               disabled={isLoading}
+              step="0.01"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Default Split
+              Default Split (%)
             </label>
             <Input
               type="number"

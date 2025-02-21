@@ -9,7 +9,7 @@ import Papa from "papaparse";
 import { provisionService } from "../../lib/services/user.external.sevice";
 import { ItemStatus } from "../../lib/services/item.external.sevice";
 import { importUserId } from "../../lib/services/table.sevice";
-import { archiveFile, writeErrorFile } from "./handler.receive";
+import { archiveFile, money, writeErrorFile } from "./handler.receive";
 import { logger } from "../../lib/logger";
 import { toISO } from "../../lib/util";
 export type Item = Schema['Item']['type']
@@ -164,7 +164,7 @@ async function createItem(row: Row, id: string): Promise<number> {
         details: row['Details'],
         condition: 'NotSpecified' as const,
         split: parseInt(row['Split'].replace('%', '')),
-        price: parseInt(row['Tag Price']),
+        price: money(row['Tag Price']),
         status: toStatus(row['Status']),
         printedAt: toISO(row['Printed']),
         lastSoldAt: toISO(row['Last Sold']),

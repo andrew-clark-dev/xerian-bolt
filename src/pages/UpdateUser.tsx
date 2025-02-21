@@ -7,7 +7,7 @@ import { PasswordDialog } from '../components/PasswordDialog';
 
 export function UpdateUserProfile() {
   const navigate = useNavigate();
-  const { email } = useParams();
+  const { nickname } = useParams();
   const [formData, setFormData] = useState<{
     username: string;
     email: string;
@@ -27,21 +27,21 @@ export function UpdateUserProfile() {
 
   useEffect(() => {
     const loadUserProfile = async () => {
-      if (!email) {
+      if (!nickname) {
         navigate('/users');
         return;
       }
 
       try {
-        const user = await profileService.findUserProfileByEmail(email);
+        const user = await profileService.findUserProfileByNickname(nickname);
         if (!user) {
           navigate('/users');
           return;
         }
 
         setFormData({
-          username: user.username || '',
-          email: user.email,
+          username: user.nickname || '',
+          email: user.email || '',
           phoneNumber: user.phoneNumber || '',
           status: user.status,
           role: user.role,
@@ -53,7 +53,7 @@ export function UpdateUserProfile() {
     };
 
     loadUserProfile();
-  }, [email, navigate]);
+  }, [nickname, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,15 +61,16 @@ export function UpdateUserProfile() {
     setIsLoading(true);
 
     try {
-      if (!email) return;
+      if (!nickname) return;
 
-      const user = await profileService.findUserProfileByEmail(email);
+      const user = await profileService.findUserProfileByNickname(nickname);
       if (!user) {
         throw new Error('UserProfile not found');
       }
 
-      await profileService.updateUserProfile(user.id, {
-        username: formData.username,
+      await profileService.updateUserProfile({
+        id: user.id,
+        nickname: formData.username,
         phoneNumber: formData.phoneNumber,
         role: formData.role,
       });

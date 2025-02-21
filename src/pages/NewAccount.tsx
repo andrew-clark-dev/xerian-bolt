@@ -1,13 +1,10 @@
 import { useState } from 'react';
-import { ArrowLeft, Import } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { accountService, type Account } from '../services/account.service';
-import { profileService } from '../services/profile.service';
 import { AccountForm } from '../components/accounts/AccountForm';
 import { Button } from '../components/ui/Button';
 import { theme } from '../theme';
-import { errorMessage } from '../services/utils/error.utils';
-// import { findFirst } from '@/amplify';
 
 type AccountFormData = Omit<Account, 'id' | 'items' | 'transactions' | 'createdAt' | 'updatedAt' | 'tags' | 'userId'>;
 
@@ -59,37 +56,11 @@ export function NewAccount() {
         return;
       }
 
-      const currentUserProfile = await profileService.getCurrentUserProfile();
-      await accountService.createAccount({
-        ...formData,
-      });
-
+      await accountService.createAccount(formData);
       navigate('/accounts');
     } catch (error) {
       console.error('Failed to create account:', error);
       setError('Failed to create account. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleImport = async () => {
-    if (!formData.number) return;
-
-    setError('');
-    setIsLoading(true);
-
-    try {
-      const importedAccount = await accountService.findFirstExternalAccount(formData.number);
-      if (importedAccount) {
-        setFormData({
-          ...importedAccount,
-          lastActivityBy: '',
-        });
-      }
-    } catch (error) {
-      console.error('Failed to import account:', error);
-      setError(errorMessage(error, 'Failed to import account. Please try again.'));
     } finally {
       setIsLoading(false);
     }
@@ -128,16 +99,6 @@ export function NewAccount() {
             >
               Cancel
             </Link>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleImport}
-              disabled={!formData.number || isLoading}
-              className="inline-flex items-center gap-2"
-            >
-              <Import className="w-4 h-4" />
-              Import
-            </Button>
             <Button
               type="submit"
               disabled={isLoading}

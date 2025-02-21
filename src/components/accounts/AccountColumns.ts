@@ -32,8 +32,8 @@ export const getKindColor = (kind: Account['kind']) => {
 };
 
 export const formatBalance = (balance: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('de-CH', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'CHF',
   }).format(balance / 100);
 };

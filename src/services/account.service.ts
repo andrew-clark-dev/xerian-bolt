@@ -2,6 +2,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { currentUserId } from './profile.service';
 import { checkedFutureResponse, checkedNotNullFutureResponse, checkedResponse } from './utils/error.utils';
+import { Item } from './item.service';
 
 const client = generateClient<Schema>();
 
@@ -20,6 +21,10 @@ interface ListAccountsOptions {
   };
 }
 
+interface accountWithItems {
+  id: string;
+  items: Item[];
+}
 
 class AccountService {
 
@@ -64,6 +69,16 @@ class AccountService {
     const response = await client.queries.findExternalAccount({ query: query });
 
     return checkedResponse(response) as Account;
+
+  }
+
+  async getItems(number: string): Promise<Item[] | null> {
+    const response = await client.models.Account.get(
+      { number },
+      { selectionSet: ["id", "items.*"] },
+    );
+    const accountWithItems = checkedResponse(response) as accountWithItems;
+    return accountWithItems.items;
 
   }
 

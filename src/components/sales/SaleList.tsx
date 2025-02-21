@@ -1,24 +1,24 @@
 import { TableHeader } from '../ui/table/TableHeader';
 import { Pagination } from '../ui/table/Pagination';
-import { Item } from '../../services/item.service';
+import { Sale } from '../../services/sale.service';
 import { useNavigate } from 'react-router-dom';
-import { columns, getStatusColor, formatPrice, RECORDS_PER_PAGE_OPTIONS } from './ItemColumns';
+import { columns, getStatusColor, formatPrice, RECORDS_PER_PAGE_OPTIONS } from './SaleColumns';
 
-interface ItemListProps {
-  items: Item[];
+interface SaleListProps {
+  sales: Sale[];
   isLoading: boolean;
   currentPage: number;
   totalPages: number;
-  sortColumn: keyof Item;
+  sortColumn: keyof Sale;
   sortDirection: 'asc' | 'desc';
   recordsPerPage: number;
-  onSort: (column: keyof Item) => void;
+  onSort: (column: keyof Sale) => void;
   onPageChange: (page: number) => void;
   onRecordsPerPageChange: (value: number) => void;
 }
 
-export function ItemList({
-  items,
+export function SaleList({
+  sales,
   isLoading,
   currentPage,
   totalPages,
@@ -28,7 +28,7 @@ export function ItemList({
   onSort,
   onPageChange,
   onRecordsPerPageChange,
-}: ItemListProps) {
+}: SaleListProps) {
   const navigate = useNavigate();
 
   return (
@@ -67,47 +67,41 @@ export function ItemList({
                   Loading...
                 </td>
               </tr>
-            ) : items.length === 0 ? (
+            ) : sales.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                  No items found
+                  No sales found
                 </td>
               </tr>
             ) : (
-              items.map((item) => (
+              sales.map((sale) => (
                 <tr
-                  key={item.id}
-                  onClick={() => navigate(`/items/${item.sku}`)}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                  key={sale.id}
+                  onClick={() => navigate(`/sales/${sale.number}`)}
+                  className={`hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
+                    sale.refund > 0 ? 'bg-red-50 dark:bg-red-900/20' : ''
+                  }`}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                    {item.sku}
+                    {sale.number}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {item.title || '-'}
+                    {formatPrice(sale.total)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {item.category}
+                    {formatPrice(sale.tax)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {item.brand || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {item.size || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {item.color || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {formatPrice(item.price)}
+                    {sale.transaction}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                        item.status
+                        sale.status,
+                        sale.refund
                       )}`}
                     >
-                      {item.status}
+                      {sale.refund > 0 ? 'Refund' : sale.status}
                     </span>
                   </td>
                 </tr>

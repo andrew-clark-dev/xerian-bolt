@@ -5,7 +5,7 @@ import { findExternalAccount } from './external-account/resource';
 import { findExternalItem } from './external-item/resource';
 
 import { resetDataFunction } from '../function/reset-data/resource';
-import { importAccountFunction, importItemFunction } from './import/resource';
+import { importAccountFunction, importItemFunction, importSaleFunction } from './import/resource';
 
 export const schema = a.schema({
 
@@ -162,7 +162,7 @@ export const schema = a.schema({
       price: a.integer(),
       status: a.ref('ItemStatus'), // this is the status of unique items.
       group: a.hasOne('ItemGroup', 'itemSku'), // this is the group of items that are the same. 
-      sales: a.hasMany('SaleItem', 'itemSku'),
+      sales: a.string().array(),
       printedAt: a.datetime(),
       lastSoldAt: a.datetime(),
       lastViewedAt: a.datetime(),
@@ -205,6 +205,20 @@ export const schema = a.schema({
       index("kind"),
     ]),
 
+  SaleItem: a
+    .customType({
+      sku: a.string().required(),
+      title: a.string(),
+      category: a.string(),
+      brand: a.string(),
+      color: a.string(),
+      size: a.string(),
+      description: a.string(),
+      details: a.string(),
+      condition: a.enum(['AsNew', 'Good', 'Marked', 'Damaged', 'Unknown', 'NotSpecified']),
+      split: a.integer(),
+      price: a.integer(),
+    }),
 
   Sale: a
     .model({
@@ -212,49 +226,33 @@ export const schema = a.schema({
       number: a.string().required(),
       lastActivityBy: a.id().required(),
       customerEmail: a.string(),
-      accoutNumber: a.string(), // the account number of the customer if exists     
+      accountNumber: a.string(), // the account number of the customer if exists     
       status: a.enum(['Pending', 'Finalized', 'Parked', 'Voided']),
+      discount: a.ref('Discount'),
       gross: a.integer().required(),
       subTotal: a.integer().required(),
       total: a.integer().required(),
+      tax: a.integer().required(), // we only track MWST
       change: a.integer(),
+      refund: a.integer(),
       accountTotal: a.integer().required(),
       storeTotal: a.integer().required(),
-      transaction: a.string().required(), // tranction id
-      items: a.hasMany('SaleItem', 'saleNumber'),
-      refunds: a.hasMany('Refund', 'saleNumber'),
+      transaction: a.id().required(), // tranction id
+      items: a.ref('SaleItem').array().required(),
+      refundedSale: a.string(),
       createdAt: a.datetime(),
       updatedAt: a.datetime(),
     })
     .identifier(['number'])
     .secondaryIndexes((index) => [
       index("transaction"),
+      index("refundedSale"),
     ]),
 
-
-  SaleItem: a
-    .model({
-      itemSku: a.string().required(),
-      saleNumber: a.string().required(),
-      item: a.belongsTo('Item', 'itemSku'),
-      tag: a.belongsTo('Sale', 'saleNumber'),
-    }),
-
-
-  RefundItem: a
+  Discount: a
     .customType({
-      sku: a.string().required(),
-      title: a.string().required(),
-      price: a.integer().required(),
-    }),
-
-  Refund: a
-    .model({
-      lastActivityBy: a.id().required(),
-      transaction: a.string().required(), // tranction id
-      saleNumber: a.string(),
-      sale: a.belongsTo('Sale', 'saleNumber'),
-      items: a.ref('RefundItem').array(),
+      label: a.string(),
+      value: a.integer(),
     }),
 
   Transaction: a
@@ -263,10 +261,11 @@ export const schema = a.schema({
       updatedAt: a.datetime(),
       lastActivityBy: a.id().required(),
       paymentType: a.enum(["Cash", "Card", "GiftCard", "StoreCredit", "Other"]),
-      type: a.enum(["Sale", "Refund", "Payout", "Reversal", "Other"]),
+      type: a.enum(["Sale", "Refund", "Payout", "Reversal", "TransferIn", "TransferOut"]),
       amount: a.integer().required(),
+      tax: a.integer().required(),
       status: a.enum(['Pending', 'Completed', 'Failed']),
-      linked: a.string(),  // for refund link to sale, or for a reversal link to original
+      linked: a.string(),  // not currently used
 
     })
     .secondaryIndexes((index) => [
@@ -289,6 +288,7 @@ export const schema = a.schema({
   allow.resource(resetDataFunction),
   allow.resource(importAccountFunction),
   allow.resource(importItemFunction),
+  allow.resource(importSaleFunction),
 ]);
 
 // Used for code completion / highlighting when making requests from frontend

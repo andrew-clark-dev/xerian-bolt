@@ -1,3 +1,4 @@
+import { SaleItem } from "../../data/import/handler.sale";
 import { Schema } from "../../data/resource";
 import { ApiClient, Params, Page } from "../api/client";
 import { ExternalUser } from "./user.external.sevice";
@@ -91,6 +92,24 @@ export const toItem = (externalItem: ExternalItem): Item => {
         createdAt: externalItem.created,
         deletedAt: externalItem.deleted,
     } as Item;
+}
+
+
+export const toSaleItem = (item: Item): SaleItem => {
+    // Map item to sale item 
+    return {
+        sku: item.sku,
+        title: item.title,
+        category: item.category ?? 'NotSpecified',
+        brand: item.brand ?? 'NotSpecified',
+        color: item.color ?? 'NotSpecified',
+        size: item.size ?? 'NotSpecified',
+        description: item.description,
+        details: item.details,
+        condition: 'NotSpecified',
+        split: Math.trunc((item.split ?? 0) * 100),
+        price: item.price,
+    } as SaleItem;
 }
 
 export const toCategories = (item: Item): { category: ItemCategory, brand: ItemCategory, color: ItemCategory, size: ItemCategory } => {
