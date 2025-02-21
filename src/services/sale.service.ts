@@ -2,15 +2,16 @@ import { generateClient } from 'aws-amplify/data';
 import { v4 as uuidv4 } from 'uuid';
 import type { Schema } from '../../amplify/data/resource';
 import { currentUserId } from './profile.service';
-import { checkedFutureResponse, checkedNotNullFutureResponse, checkedResponse } from './utils/error.utils';
+import { checkedFutureResponse, checkedResponse } from './utils/error.utils';
 
 const client = generateClient<Schema>();
 
 export type Sale = Schema['Sale']['type'];
 export type SaleItem = Schema['SaleItem']['type'];
-export type SaleCreate = Omit<Sale, 'id' | 'items' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>;
+export type SaleCreate = Omit<Sale, 'id' | 'createdAt' | 'updatedAt' | 'lastActivityBy' | 'status'>;
 export type SaleUpdate = Partial<Omit<Sale, 'number' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>> & { number: string };
 export type SaleStatus = Schema['Sale']['type']['status'];
+
 
 interface ListSalesOptions {
   limit?: number;
@@ -22,36 +23,14 @@ interface ListSalesOptions {
 }
 
 class SaleService {
+
+
+
   async findSale(number: string): Promise<Sale | null> {
-    const response = await client.models.Sale.get({ number });
+    const response = client.models.Sale.get({ number });
     const sale = await checkedFutureResponse(response) as Sale;
-    
-    if (sale) {
-      // Fetch items for the sale
-      const itemsResponse = await client.models.SaleItem.list({
-        filter: { saleNumber: { eq: number } }
-      });
-      const items = checkedResponse(itemsResponse) as SaleItem[];
-      
-      // For each item, fetch the full item details
-      const itemsWithDetails = await Promise.all(
-        items.map(async (item) => {
-          const itemResponse = await client.models.Item.get({ sku: item.itemSku });
-          const itemDetails = await checkedFutureResponse(itemResponse);
-          return {
-            ...item,
-            item: itemDetails
-          };
-        })
-      );
+    return sale;
 
-      return {
-        ...sale,
-        items: itemsWithDetails
-      };
-    }
-
-    return null;
   }
 
   async getSale(number: string): Promise<Sale> {
@@ -67,10 +46,7 @@ class SaleService {
       ...sale,
       id: uuidv4(),
       lastActivityBy: await currentUserId(),
-      status: sale.status || 'Pending',
-      tax: sale.tax || 0,
-      change: sale.change || 0,
-      refund: sale.refund || 0,
+      status: 'Pending',
     });
 
     return checkedResponse(response) as Sale;

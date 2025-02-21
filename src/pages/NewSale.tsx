@@ -6,16 +6,16 @@ import { SaleForm } from '../components/sales/SaleForm';
 import { Button } from '../components/ui/Button';
 import { theme } from '../theme';
 
-type SaleFormData = Omit<Sale, 'id' | 'items' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>;
+type SaleFormData = Omit<Sale, 'id' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>;
 
 export function NewSale() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<SaleFormData>({
     number: '',
     customerEmail: '',
-    accoutNumber: '',
+    accountNumber: '',
     status: 'Pending',
-    discount: 0,
+    discount: null,
     gross: 0,
     subTotal: 0,
     total: 0,
@@ -26,6 +26,7 @@ export function NewSale() {
     storeTotal: 0,
     transaction: '',
     refundedSale: null,
+    items: [],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');

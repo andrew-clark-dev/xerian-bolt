@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { theme } from '../../theme';
-import type { SaleItem } from '../../services/sale.service';
 import { formatPrice } from '../../utils/format';
+import { SaleItem } from '@/src/services/item.service';
 
 interface SaleItemListProps {
   items: SaleItem[];
@@ -37,18 +37,18 @@ export function SaleItemList({ items }: SaleItemListProps) {
         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
           {items.map((item) => (
             <tr
-              key={item.itemSku}
-              onClick={() => navigate(`/items/${item.itemSku}`)}
+              key={item.sku}
+              onClick={() => navigate(`/items/${item.sku}`)}
               className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
             >
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                {item.itemSku}
+                {item.sku}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                {item.item?.title || '-'}
+                {item.title || '-'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                {item.item ? formatPrice(item.item.price) : '-'}
+                {item.price ? formatPrice(item.price) : '-'}
               </td>
             </tr>
           ))}

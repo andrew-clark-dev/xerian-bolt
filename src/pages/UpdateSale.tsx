@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { saleService, type Sale } from '../services/sale.service';
@@ -117,7 +117,7 @@ export function UpdateSale() {
           <h2 className={`text-lg font-medium ${theme.text()}`}>Sale Items</h2>
         </div>
         <div className="p-4">
-          <SaleItemList items={formData.items || []} />
+          <SaleItemList items={(formData.items || []).filter(item => item !== null && item !== undefined)} />
         </div>
       </div>
     </div>

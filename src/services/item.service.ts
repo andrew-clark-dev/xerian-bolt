@@ -6,6 +6,7 @@ import { checkedFutureResponse, checkedNotNullFutureResponse, checkedResponse } 
 const client = generateClient<Schema>();
 
 export type Item = Schema['Item']['type'];
+export type SaleItem = Schema['SaleItem']['type'];
 export type ItemCreate = Omit<Item, 'id' | 'transactions' | 'account' | 'createdAt' | 'updatedAt' | 'lastActivityBy'> & { quantity: number };
 export type ItemUpdate = Partial<Omit<ItemCreate, 'sku'>> & { sku: string };
 export type ItemStatus = Schema['Item']['type']['status'];

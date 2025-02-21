@@ -8,10 +8,11 @@ interface SaleFormProps {
   onChange: (field: keyof Sale, value: string | number | null) => void;
 }
 
+
 export function SaleForm({ formData, isLoading, onChange }: SaleFormProps) {
   // Convert cents to CHF for display
   const grossInCHF = formData.gross ? (formData.gross / 100).toFixed(2) : '0.00';
-  const discountInCHF = formData.discount ? (formData.discount / 100).toFixed(2) : '0.00';
+  const discountInCHF = formData.discount?.value ? (formData.discount.value / 100).toFixed(2) : '0.00';
   const taxInCHF = formData.tax ? (formData.tax / 100).toFixed(2) : '0.00';
   const totalInCHF = formData.total ? (formData.total / 100).toFixed(2) : '0.00';
   const accountTotalInCHF = formData.accountTotal ? (formData.accountTotal / 100).toFixed(2) : '0.00';
@@ -61,8 +62,8 @@ export function SaleForm({ formData, isLoading, onChange }: SaleFormProps) {
             </label>
             <Input
               type="text"
-              value={formData.accoutNumber || ''}
-              onChange={(e) => onChange('accoutNumber', e.target.value)}
+              value={formData.accountNumber || ''}
+              onChange={(e) => onChange('accountNumber', e.target.value)}
               disabled={isLoading}
             />
           </div>

@@ -42,6 +42,15 @@ class ProfileService {
     return await checkedFutureResponse(client.models.UserProfile.get({ id })) as UserProfile;
   }
 
+  async findUserProfileByNickname(nickname: string): Promise<UserProfile | null> {
+    const response = client.models.UserProfile.listUserProfileByNickname({ nickname });
+    const list = await checkedNotNullFutureResponse(response) as UserProfile[];
+    if (list.length === 0) {
+      return null;
+    }
+    return list[0];
+  }
+
   async getUserProfile(id: string): Promise<UserProfile> {
     return await checkedNotNullFutureResponse(client.models.UserProfile.get({ id })) as UserProfile;
   }

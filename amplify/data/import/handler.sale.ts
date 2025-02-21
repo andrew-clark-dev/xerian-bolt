@@ -123,7 +123,8 @@ export const handler: S3Handler = async (event): Promise<void> => {
 
 async function createSale(row: Row, id: string): Promise<number> {
     logger.info('Process', row);
-    const sale = await client.models.Sale.get({ number: row['Number'] });
+    const number = row['Number'];
+    const sale = await client.models.Sale.get({ number });
     if (sale.data) {
         logger.info(`Sale already exists:`, sale.data);
         return 0;
@@ -153,26 +154,34 @@ async function createSale(row: Row, id: string): Promise<number> {
 
     logger.info('Get sale items');
 
-    const saleItems: SaleItem[] = await Promise.all(row['SKUs'].split(',').map(async (sku) => {
-        const item = await client.models.Item.get({ sku });
-        if (!item.data) {
-            logger.error(`Item not found: ${sku}`);
-            return null;
+    const saleItems: SaleItem[] = [];
+
+    await Promise.all(row['SKUs'].split(',').map(async (skuElement) => {
+        const sku = skuElement.trim();
+        if (sku === '') {
+            return;
         }
-        logger.info(`Update item with sale: ${sku}`);
-        const sales = new Set(item.data.sales || []); // Use a set to stop duplicates during import
-        sales.add(row['Number']);
+        logger.info(`Get item: '${sku}'`);
+        const { data: item, errors } = await client.models.Item.get({ sku });
+        logger.ifErrorThrow('Failed to get item', errors);
+        if (item) {
+            logger.info(`Update sale with item - sale number: ${number}`);
+            saleItems.push(toSaleItem(item));
+            logger.info(`Update item with sale - item sku: ${sku}`);
 
-        const { errors: updateErrors } = await client.models.Item.update({
-            ...item.data,
-            sales: Array.from(sales),
-            lastSoldAt: toISO(row['Finalized']),
-        });
+            const sales = new Set(item.sales || []);
+            sales.add(number); // Use a set to stop duplicates during import
 
-        logger.ifErrorThrow('Failed to update item', updateErrors);
+            const { errors: updateErrors } = await client.models.Item.update({
+                ...item,
+                sales: Array.from(sales),
+                lastSoldAt: toISO(row['Finalized']),
+            });
 
-        return toSaleItem(item.data);
-    })).then(items => items.filter(item => item !== null) as SaleItem[]);
+            logger.ifErrorThrow('Failed to update item', updateErrors);
+
+        }
+    }));
 
     logger.info('Sale Items retrieved', saleItems);
 
