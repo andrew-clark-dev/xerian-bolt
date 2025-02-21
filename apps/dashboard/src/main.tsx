@@ -6,7 +6,7 @@ import App from './App';
 import { ErrorProvider } from './components/ErrorDisplay';
 import { authenticatorTheme } from './theme/authenticator';
 import './index.css';
-import outputs from '../amplify_outputs.json';
+import outputs from '../../backend/amplify_outputs.json';
 
 // Global error handler
 window.onerror = (message, source, lineno, colno, error) => {

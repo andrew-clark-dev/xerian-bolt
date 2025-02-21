@@ -1,6 +1,6 @@
 import { generateClient } from 'aws-amplify/data';
 import { v4 as uuidv4 } from 'uuid';
-import type { Schema } from '../../amplify/data/resource';
+import type { Schema } from '../../../backend/amplify/data/resource';
 import { currentUserId } from './profile.service';
 import { checkedFutureResponse, checkedResponse } from './utils/error.utils';
 
@@ -11,6 +11,9 @@ export type SaleItem = Schema['SaleItem']['type'];
 export type SaleCreate = Omit<Sale, 'id' | 'createdAt' | 'updatedAt' | 'lastActivityBy' | 'status'>;
 export type SaleUpdate = Partial<Omit<Sale, 'number' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>> & { number: string };
 export type SaleStatus = Schema['Sale']['type']['status'];
+
+export type Transaction = Schema['Transaction']['type'];
+
 
 
 interface ListSalesOptions {
@@ -68,6 +71,15 @@ class SaleService {
     });
 
     return { sales: checkedResponse(response) as Sale[], nextToken: response.nextToken ?? null };
+  }
+
+
+  async getTransaction(sale: Sale): Promise<Transaction> {
+    if (!sale.transaction) {
+      throw new Error('Transaction not found');
+    }
+    const response = await client.models.Transaction.get({ id: sale.transaction });
+    return checkedResponse(response) as Transaction;
   }
 }
 
