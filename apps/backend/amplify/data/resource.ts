@@ -194,7 +194,8 @@ export const schema = a.schema({
   ItemCategory: a
     .model({
       lastActivityBy: a.id().required(),
-      kind: a.ref('ItemCategoryKind'),
+      categoryKind: a.ref('ItemCategoryKind').required(),
+      kind: a.string().required(),
       name: a.string().required(),
       matchNames: a.string().required(),
       createdAt: a.datetime(),

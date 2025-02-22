@@ -8,6 +8,7 @@ export type Item = Schema['Item']['type'];
 export type ItemStatus = Schema['Item']['type']['status'];
 export type ItemGroup = Schema['ItemGroup']['type'];
 export type ItemCategory = Schema['ItemCategory']['type'];
+export type ItemCategoryKind = Schema['ItemCategoryKind']['type'];
 
 
 export const ITEM_URL = 'v1/items';
@@ -114,10 +115,10 @@ export const toSaleItem = (item: Item): SaleItem => {
 
 export const toCategories = (item: Item): { category: ItemCategory, brand: ItemCategory, color: ItemCategory, size: ItemCategory } => {
     return {
-        category: { name: item.category, lastActivityBy: item.lastActivityBy, kind: 'category', matchNames: item.category } as ItemCategory,
-        brand: { name: item.brand, lastActivityBy: item.lastActivityBy, kind: 'brand', matchNames: item.brand } as ItemCategory,
-        color: { name: item.color, lastActivityBy: item.lastActivityBy, kind: 'color', matchNames: item.color } as ItemCategory,
-        size: { name: item.size, lastActivityBy: item.lastActivityBy, kind: 'size', matchNames: item.size } as ItemCategory,
+        category: { name: item.category, lastActivityBy: item.lastActivityBy, kind: 'Category', matchNames: item.category } as ItemCategory,
+        brand: { name: item.brand, lastActivityBy: item.lastActivityBy, kind: 'Brand', matchNames: item.brand } as ItemCategory,
+        color: { name: item.color, lastActivityBy: item.lastActivityBy, kind: 'Color', matchNames: item.color } as ItemCategory,
+        size: { name: item.size, lastActivityBy: item.lastActivityBy, kind: 'Size', matchNames: item.size } as ItemCategory,
     } as const;
 
 }

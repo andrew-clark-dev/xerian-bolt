@@ -7,7 +7,7 @@ import { env } from "$amplify/env/import-item-function";
 import AWS from "aws-sdk";
 import Papa from "papaparse";
 import { provisionService } from "../../lib/services/user.external.sevice";
-import { ItemStatus } from "../../lib/services/item.external.sevice";
+import { ItemStatus, ItemCategoryKind } from "../../lib/services/item.external.sevice";
 import { importUserId } from "../../lib/services/table.sevice";
 import { archiveFile, money, writeErrorFile } from "./handler.receive";
 import { logger } from "../../lib/logger";
@@ -193,10 +193,10 @@ async function createItem(row: Row, id: string): Promise<number> {
     });
     logger.ifErrorThrow('Failed to create item action', actionErrors);
 
-    await createCategory('category', row['Category']);
-    await createCategory('brand', row['Brand']);
-    await createCategory('color', row['Color']);
-    await createCategory('size', row['Size']);
+    await createCategory('Category', row['Category']);
+    await createCategory('Brand', row['Brand']);
+    await createCategory('Color', row['Color']);
+    await createCategory('Size', row['Size']);
 
     return 1;
 }
@@ -204,7 +204,7 @@ async function createItem(row: Row, id: string): Promise<number> {
 
 const categories: string[] = [];
 
-async function createCategory(kind: string, value?: string | null) {
+async function createCategory(kind: ItemCategoryKind, value?: string | null) {
 
     try {
         if (value) {
@@ -220,6 +220,7 @@ async function createCategory(kind: string, value?: string | null) {
                 logger.info(`Creating ${kind}: ${value}`);
                 const category = await client.models.ItemCategory.create({
                     lastActivityBy: importUserId,
+                    categoryKind: kind,
                     kind: kind,
                     name: value,
                     matchNames: value,
