@@ -13,7 +13,6 @@ export const resetDataFunction = defineFunction({
             ['Item', ['sku']],
             ['Transaction', ['id']],
             ['ItemCategory', ['kind', 'name']],
-            ['ItemGroup', ['id']],
         ])
     }
 });

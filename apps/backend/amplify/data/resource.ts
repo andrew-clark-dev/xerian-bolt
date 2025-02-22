@@ -48,6 +48,7 @@ export const schema = a.schema({
 
   Comment: a
     .model({
+      lastActivityBy: a.id().required(),
       text: a.string().required(),
       refId: a.id().required(), // Lose coupling for now
       createdAt: a.datetime(),
