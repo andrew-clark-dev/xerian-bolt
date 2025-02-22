@@ -54,7 +54,10 @@ export function checkErrors(errors?: GraphQLFormattedError[]): void {
 
 type Reponse = { data: unknown, errors?: GraphQLFormattedError[] };
 
-export function checkedResponse(response: Reponse): unknown {
+export function checkedResponse(response: Reponse | null): unknown {
+  if (!response) {
+    throw new ServiceError('No response');
+  }
   if (response.errors) {
     for (const err of response.errors) {
       console.error(`Error ${err.message} in ${callerName()} : `, err);
@@ -66,7 +69,7 @@ export function checkedResponse(response: Reponse): unknown {
 
 }
 
-export async function checkedFutureResponse(response: Promise<Reponse>): Promise<unknown> {
+export async function checkedFutureResponse(response: Promise<Reponse> | null): Promise<unknown> {
   return checkedResponse(await response);
 }
 

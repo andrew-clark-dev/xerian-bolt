@@ -189,10 +189,12 @@ export const schema = a.schema({
       item: a.belongsTo('Item', 'itemSku'),
     }),
 
+  ItemCategoryKind: a.enum(['Category', 'Brand', 'Color', 'Size']),
+
   ItemCategory: a
     .model({
       lastActivityBy: a.id().required(),
-      kind: a.string().required(),
+      kind: a.ref('ItemCategoryKind'),
       name: a.string().required(),
       matchNames: a.string().required(),
       createdAt: a.datetime(),
