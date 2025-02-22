@@ -1,18 +1,18 @@
 [
     {
         "type": "File",
-        "name": "/Users/andrew/Development/git/xerian-bolt/apps/backend/amplify/data/resource.ts",
+        "name": "/Users/andrew/Development/git/xerian-bolt/packages/backend/amplify/data/resource.ts",
         "parent_id": null,
         "workspaceRoot": "/Users/andrew/Development/git/xerian-bolt",
-        "workspacePath": "apps/backend/amplify/data/resource.ts",
-        "id": "HS97wqEKOWNyfGsx"
+        "workspacePath": "packages/backend/amplify/data/resource.ts",
+        "id": "6ZuVyvHdT0A29UGM"
     },
     {
         "type": "File",
-        "name": "/Users/andrew/Development/git/xerian-bolt/apps/backend/amplify/backend.ts",
+        "name": "/Users/andrew/Development/git/xerian-bolt/packages/backend/amplify/backend.ts",
         "parent_id": null,
         "workspaceRoot": "/Users/andrew/Development/git/xerian-bolt",
-        "workspacePath": "apps/backend/amplify/backend.ts",
-        "id": "uvRdgT7mxK0e2bEC"
+        "workspacePath": "packages/backend/amplify/backend.ts",
+        "id": "crQVamJWvDCy6RAi"
     }
 ]

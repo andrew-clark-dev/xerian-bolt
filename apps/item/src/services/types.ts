@@ -1,4 +1,4 @@
-import type { Schema } from '../../../backend/amplify/data/resource';
+import type { Schema } from '../../../../packages/backend/amplify/data/resource';
 
 // Use Amplify Schema type for Account DAO
 export type AccountDAO = Schema['Account']['type'];

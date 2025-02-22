@@ -1,4 +1,4 @@
-import { RestClient, IRequestOptions, IRestResponse } from 'typed-rest-client/RestClient';
+import { RestClient, IRequestOptions, IRestResponse } from 'typed-rest-client';
 import { Logger } from "@aws-lambda-powertools/logger";
 const logger = new Logger({ serviceName: "api-clist", });
 

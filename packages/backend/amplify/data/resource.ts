@@ -50,7 +50,9 @@ export const schema = a.schema({
     .model({
       lastActivityBy: a.id().required(),
       text: a.string().required(),
+      type: a.string(),
       refId: a.id().required(), // Lose coupling for now
+      refType: a.string().required(),
       createdAt: a.datetime(),
       userId: a.id(),
       createdBy: a.belongsTo('UserProfile', 'userId'),
