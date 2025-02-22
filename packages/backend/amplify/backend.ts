@@ -125,6 +125,18 @@ const transactionMapping = new EventSourceMapping(
 
 transactionMapping.node.addDependency(policy);
 
+const commentMapping = new EventSourceMapping(
+  Stack.of(tables["Comment"]),
+  "createActionCommentEventStreamMapping",
+  {
+    target: createActionLambda,
+    eventSourceArn: tables["Comment"].tableStreamArn,
+    startingPosition: StartingPosition.LATEST,
+  }
+);
+
+commentMapping.node.addDependency(policy);
+
 
 // Extend add environment and access for table functions
 for (const key in tables) {
