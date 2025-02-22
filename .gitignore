@@ -28,4 +28,4 @@ dist-ssr
 amplify/function/import-accounts/__pycache__/csv_parser.cpython-313.pyc
 amplify/function/import-accounts/__pycache__/test_csv_parser.cpython-313.pyc
 amplify/function/import-accounts/__pycache__/utils.cpython-313.pyc
-apps/backend/amplify_outputs.json
+packages/backend/amplify_outputs.json

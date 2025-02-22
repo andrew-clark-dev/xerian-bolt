@@ -1,6 +1,6 @@
 import { generateClient } from 'aws-amplify/data';
 import { v4 as uuidv4 } from 'uuid';
-import type { Schema } from '../../../backend/amplify/data/resource';
+import type { Schema } from '../../../../packages/backend/amplify/data/resource';
 import { currentUserId } from './profile.service';
 import { checkedFutureResponse, checkedResponse } from './utils/error.utils';
 

@@ -1,86 +1,67 @@
 import { generateClient } from 'aws-amplify/data';
-import { v4 as uuidv4 } from 'uuid';
-import type { Schema } from '../../../backend/amplify/data/resource';
-import { currentUserId } from './profile.service';
-import { checkedFutureResponse, checkedResponse } from './utils/error.utils';
+import type { Schema } from '../../../../packages/backend/amplify/data/resource';
+import { currentUserId, UserProfile } from './profile.service';
+import { checkedResponse } from './utils/error.utils';
 
 const client = generateClient<Schema>();
 
-export type Sale = Schema['Sale']['type'];
-export type SaleItem = Schema['SaleItem']['type'];
-export type SaleCreate = Omit<Sale, 'id' | 'createdAt' | 'updatedAt' | 'lastActivityBy' | 'status'>;
-export type SaleUpdate = Partial<Omit<Sale, 'number' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>> & { number: string };
-export type SaleStatus = Schema['Sale']['type']['status'];
-
-export type Transaction = Schema['Transaction']['type'];
+export type Comment = Schema['Comment']['type'];
+export type CommentCreate = Omit<Comment, 'id' | 'createdAt' | 'updatedAt' | 'lastActivityBy' | 'status'>;
+export type CommentUpdate = Partial<Omit<Comment, 'id' | 'createdAt' | 'updatedAt' | 'lastActivityBy'>> & { id: string };
 
 
 
-interface ListSalesOptions {
+
+interface ListCommentsOptions {
   limit?: number;
   nextToken?: string | null;
   sort?: {
-    field: keyof Sale;
+    field: keyof Comment;
     direction: 'asc' | 'desc';
   };
 }
 
-class SaleService {
+class CommentService {
 
 
-
-  async findSale(number: string): Promise<Sale | null> {
-    const response = client.models.Sale.get({ number });
-    const sale = await checkedFutureResponse(response) as Sale;
-    return sale;
-
-  }
-
-  async getSale(number: string): Promise<Sale> {
-    const sale = await this.findSale(number);
-    if (!sale) {
-      throw new Error('Sale not found');
-    }
-    return sale;
-  }
-
-  async createSale(sale: SaleCreate): Promise<Sale> {
-    const response = await client.models.Sale.create({
-      ...sale,
-      id: uuidv4(),
+  async createComment(comment: CommentCreate): Promise<Comment> {
+    const response = await client.models.Comment.create({
+      ...comment,
       lastActivityBy: await currentUserId(),
-      status: 'Pending',
     });
 
-    return checkedResponse(response) as Sale;
+    return checkedResponse(response) as Comment;
   }
 
-  async updateSale(update: SaleUpdate): Promise<Sale> {
-    const response = await client.models.Sale.update({
+  async updateComment(update: CommentUpdate): Promise<Comment> {
+    const response = await client.models.Comment.update({
       ...update,
       lastActivityBy: await currentUserId()
     });
 
-    return checkedResponse(response) as Sale;
+    return checkedResponse(response) as Comment;
   }
 
-  async listSales(options: ListSalesOptions = {}): Promise<{ sales: Sale[]; nextToken: string | null }> {
-    const response = await client.models.Sale.list({
+  async listCommentsByUser(user: UserProfile, options: ListCommentsOptions = {}): Promise<{ comments: Comment[]; nextToken: string | null }> {
+    const response = await client.models.Comment.list({
       limit: options.limit || 10,
       nextToken: options.nextToken,
+      filter: {
+        userId: {
+          eq: user.id
+        }
+      }
     });
 
-    return { sales: checkedResponse(response) as Sale[], nextToken: response.nextToken ?? null };
+    return { comments: checkedResponse(response) as Comment[], nextToken: response.nextToken ?? null };
+  }
+
+  async listCommentsByRef(refId: string): Promise<{ comments: Comment[] }> {
+    const response = await client.models.Comment.listCommentByRefId({ refId });
+    return { comments: checkedResponse(response) as Comment[] };
   }
 
 
-  async getTransaction(sale: Sale): Promise<Transaction> {
-    if (!sale.transaction) {
-      throw new Error('Transaction not found');
-    }
-    const response = await client.models.Transaction.get({ id: sale.transaction });
-    return checkedResponse(response) as Transaction;
-  }
 }
 
-export const saleService = new SaleService();
+export const commentService = new CommentService();

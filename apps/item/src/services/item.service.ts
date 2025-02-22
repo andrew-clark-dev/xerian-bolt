@@ -1,5 +1,5 @@
 import { generateClient } from 'aws-amplify/data';
-import type { Schema } from '../../../backend/amplify/data/resource';
+import type { Schema } from '../../../../packages/backend/amplify/data/resource';
 import { currentUserId } from './profile.service';
 import { checkedFutureResponse, checkedNotNullFutureResponse, checkedResponse } from './utils/error.utils';
 
