@@ -13,7 +13,7 @@ import { EventType } from 'aws-cdk-lib/aws-s3';
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 import { importReceiveFunction, importAccountFunction, importItemFunction, IMPORT_DIRS, importSaleFunction } from './data/import/resource';
 import { itemHookFunction } from './function/item-hook/resource';
-import { createHttpWebhookApi } from './api/rest-api';
+import { createHttpWebhookApi } from './function/item-hook/config/rest-api';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
