@@ -1,6 +1,6 @@
 import { getCurrentUser } from 'aws-amplify/auth';
 import { generateClient } from 'aws-amplify/data';
-import type { Schema } from '../../../backend/amplify/data/resource';
+import type { Schema } from '../../../../packages/backend/amplify/data/resource';
 import { checkedNotNullFutureResponse } from './utils/error.utils';
 
 const client = generateClient<Schema>();

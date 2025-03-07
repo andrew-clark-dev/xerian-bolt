@@ -140,6 +140,12 @@ export async function findFirst(query: string): Promise<Item | null> {
 
 }
 
+export async function findItemById(id: string): Promise<Item | null> {
+    const item = await itemClient.get(id);
+
+    return item ? toItem(item) : null;
+}
+
 export async function paged(cursor?: string | null, from?: string): Promise<Page<ExternalItem>> {
     let params = cursor ? { ...itemParams, ...{ cursor: cursor } } : itemParams;
     params = from ? { ...params, ...{ 'created:gte': from } } : params;
@@ -180,4 +186,11 @@ export function toGroup(exItem: ExternalItem): ItemGroup {
         statuses: toStatuses(exItem),
         itemSku: exItem.sku,
     } as ItemGroup;
+}
+
+
+export async function pagedSales(cursor?: string | null, from?: string): Promise<Page<ExternalItem>> {
+    let params = cursor ? { ...itemParams, ...{ cursor: cursor } } : itemParams;
+    params = from ? { ...params, ...{ 'created:gte': from } } : params;
+    return itemClient.fetch(params);
 }
