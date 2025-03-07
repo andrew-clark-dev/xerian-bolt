@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "eu-central-1_jFn5ctU75",
+    "user_pool_id": "eu-central-1_y7vyVWzVq",
     "aws_region": "eu-central-1",
-    "user_pool_client_id": "2v4fhrc45mi688npb8cgk7ofhl",
-    "identity_pool_id": "eu-central-1:b1668996-b593-4255-bc03-c235d523d624",
+    "user_pool_client_id": "40fl7gnl9j07v92juk6ircnrur",
+    "identity_pool_id": "eu-central-1:0d1a8b0c-7ee1-4096-af8d-e9d30f6b10c1",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -52,7 +52,7 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://spdnomlp25etloz7q7tpdgl4ge.appsync-api.eu-central-1.amazonaws.com/graphql",
+    "url": "https://in6vnrftyfdgva4c4z47woxmu4.appsync-api.eu-central-1.amazonaws.com/graphql",
     "aws_region": "eu-central-1",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
@@ -344,24 +344,10 @@
               "isRequired": true,
               "attributes": []
             },
-            "type": {
-              "name": "type",
-              "isArray": false,
-              "type": "String",
-              "isRequired": false,
-              "attributes": []
-            },
             "refId": {
               "name": "refId",
               "isArray": false,
               "type": "ID",
-              "isRequired": true,
-              "attributes": []
-            },
-            "refType": {
-              "name": "refType",
-              "isArray": false,
-              "type": "String",
               "isRequired": true,
               "attributes": []
             },
@@ -2287,11 +2273,11 @@
   },
   "storage": {
     "aws_region": "eu-central-1",
-    "bucket_name": "amplify-xerianbackend-andrew-s-drivebucket92e67ee0-7hov9famnyyh",
+    "bucket_name": "amplify-dovlpb22b1peo-latest-b-drivebucket92e67ee0-10buo0dzl3t6",
     "buckets": [
       {
         "name": "drive",
-        "bucket_name": "amplify-xerianbackend-andrew-s-drivebucket92e67ee0-7hov9famnyyh",
+        "bucket_name": "amplify-dovlpb22b1peo-latest-b-drivebucket92e67ee0-10buo0dzl3t6",
         "aws_region": "eu-central-1",
         "paths": {
           "data/${cognito-identity.amazonaws.com:sub}/*": {

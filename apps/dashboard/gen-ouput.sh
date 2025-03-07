@@ -1,0 +1,1 @@
+npx ampx generate outputs --branch latest --app-id dovlpb22b1peo --output-dir .

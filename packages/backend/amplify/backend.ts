@@ -12,6 +12,8 @@ import { resetDataFunction } from './function/reset-data/resource';
 import { EventType } from 'aws-cdk-lib/aws-s3';
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 import { importReceiveFunction, importAccountFunction, importItemFunction, IMPORT_DIRS, importSaleFunction } from './data/import/resource';
+import { itemHookFunction } from './function/item-hook/resource';
+import { createHttpWebhookApi } from './api/rest-api';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -28,6 +30,7 @@ const backend = defineBackend({
   importItemFunction,
   importReceiveFunction,
   importSaleFunction,
+  itemHookFunction,
 });
 
 // extract L1 CfnUserPool resources
@@ -177,3 +180,6 @@ bucket.addEventNotification(
   { prefix: IMPORT_DIRS.PROCESSING_DIR + 'Sale', suffix: '.csv' }
 );
 
+// REST API
+
+createHttpWebhookApi(backend, backend.itemHookFunction.resources.lambda);
