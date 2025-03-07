@@ -75,6 +75,15 @@ export async function findFirst(query: string): Promise<Account | null> {
 
 }
 
+export async function getAccountById(id: string): Promise<Account> {
+    return (await findAccountById(id))!;
+}
+
+export async function findAccountById(id: string): Promise<Account | null> {
+    const account = await accountClient.get(id);
+    return account ? toAccount(account) : null;
+}
+
 export async function paged(cursor?: string | null): Promise<Page<ExternalAccount>> {
     const params = cursor ? { ...accountParams, ...{ cursor: cursor } } : accountParams;
     return accountClient.fetch(params);
