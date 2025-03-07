@@ -24,7 +24,7 @@ export function createHttpWebhookApi(backend: Backend<any>, lambda: IFunction) {
 
     // Add a webhook event route
     httpApi.addRoutes({
-        path: "/event",
+        path: "/cc-item-event",
         methods: [HttpMethod.POST],
         integration: lambdaIntegration,
     });
